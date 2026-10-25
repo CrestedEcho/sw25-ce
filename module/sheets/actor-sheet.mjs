@@ -14,6 +14,7 @@ import { Util } from "../helpers/utils.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equipcard.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
+import { spellCostOptions } from "../rules/spell-ui.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -1599,6 +1600,11 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       return;
     }
     
+    if (type === "spell") {
+      const opt = await spellCostOptions(token.actor, token.actor.items.get(id) ?? this.actor.items.get(id), cost);
+      if (!opt) return;
+      return mpCost(token, opt.cost, opt.label, type, meta);
+    }
     mpCost(token, cost, name, type, meta);
   }
 

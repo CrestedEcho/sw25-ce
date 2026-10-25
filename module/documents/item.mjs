@@ -1,6 +1,7 @@
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
+import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "../helpers/utils.mjs";
 
@@ -3059,6 +3060,11 @@ export class SW25Item extends Item {
       const name = item.name;
       const type = item.type;
       const meta = 1;
+      if (type === "spell") {
+        const opt = await spellCostOptions(token.actor, item, cost);
+        if (!opt) return;
+        return mpCost(token, opt.cost, opt.label, type, meta);
+      }
       mpCost(token, cost, name, type, meta);
     }
 

@@ -111,11 +111,12 @@ test("unknown keys and predicates are kept as notes, never errors", () => {
   assert.deepEqual(r.situational[0].notes, ["moon.full"]);
 });
 
-test("Priest surcharge resolves by god rank but is a note (not applied)", () => {
+test("Priest surcharge resolves by god rank (spell-kind rule for the cast dialog)", () => {
   const priest = load("classes/priest.json");
-  const { notes } = RE.collectRules([{ ...cls(priest, 1), selectors: { godRank: "minor" } }]);
-  assert.equal(notes[0].key, "spell.mpSurcharge.outOfInfluence");
-  assert.equal(notes[0].value, 2);
+  const { active } = RE.collectRules([{ ...cls(priest, 1), selectors: { godRank: "minor" } }]);
+  const r = active.find((x) => x.key === "spell.mpSurcharge.outOfInfluence");
+  assert.equal(r.kind, "spell");
+  assert.equal(r.value, 2);
 });
 
 test("every Writer class/feat rule key resolves (or is documented in RULE_KEYS.md, pending engine approval)", () => {

@@ -1,4 +1,5 @@
 // Chat button handler
+import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { powerRoll } from "./powerroll.mjs";
 import { mpCost, hpCost } from "./mpcost.mjs";
 import { targetRollDialog, targetSelectDialog } from "../helpers/dialogs.mjs";
@@ -1665,6 +1666,11 @@ export async function chatButton(chatMessage, buttonType) {
     const name = item.name;
     const type = item.type;
     const meta = 1;
+    if (type === "spell") {
+      const opt = await spellCostOptions(token.actor, item, cost);
+      if (!opt) return;
+      return mpCost(token, opt.cost, opt.label, type, meta);
+    }
     mpCost(token, cost, name, type, meta);
   }
 

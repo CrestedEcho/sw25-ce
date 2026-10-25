@@ -34,6 +34,7 @@ export const ACTOR_TARGETS = {
  *       check  = predicate-scoped check modifier list (classRules.checkMods)
  *       flag   = boolean passive switch read by roll/chat code (ruleFlags)
  *       equip  = equipment permission (rankAllowed -> rankCheck; warns, never blocks)
+ *       spell  = read by the spell cast dialog (spell-cast.mjs)
  *       note   = recorded and shown, not applied (no sheet support yet)                       */
 export const KEY_ALIASES = {
   "attack.critThreshold": { target: "critMod", kind: "legacy" },
@@ -49,7 +50,7 @@ export const KEY_ALIASES = {
   "defense.bonus": { target: "defense", kind: "actor" },
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
-  "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "note" },
+  "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "spell" },
   "equip.rankAllowed": { target: "equip.rankAllowed", kind: "equip" },
   "attack.noStray": { target: "noStray", kind: "flag" },
 };
