@@ -5,6 +5,7 @@
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
+import { spellDamage, magicDamageTaken } from "../rules/spell-power.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
@@ -137,11 +138,12 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
   docs.push(...actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid })));
   const spells = spellsForSkill(skill, docs);
   if (!spells.length) return ui.notifications.warn(`No ${skill.schools.join("/")} spells up to Lv${skill.level} found.`);
-  const opts = spells.map((s, n) => `<option value="${n}">Lv${s.level} · ${esc(s.name)} (${esc(s.cost.raw || `MP${s.cost.base ?? "?"}`)})</option>`).join("");
+  const opts = spells.map((s, n) => `<option value="${n}"${n === 0 ? " selected" : ""}>Lv${s.level} · ${esc(s.name)} (${esc(s.cost.raw || `MP${s.cost.base ?? "?"}`)})</option>`).join("");
   const pick = await foundry.applications.api.DialogV2.prompt({ window: { title: `${skills[index].name}: cast` },
     content: `<label>Spell <select name="s" size="12" style="width:100%">${opts}</select></label>`,
-    ok: { label: "Next", callback: (_e, b) => b.form.elements.s.value } }).catch(() => null);
-  if (pick == null || pick === "") return;
+    ok: { label: "Next", callback: (_e, b) => b.form.elements.s.value } }).catch((err) => { if (err) console.error("sw25 | cast dialog", err); return null; });
+  if (pick == null) return;
+  if (pick === "") return ui.notifications.warn("Pick a spell first.");
   const meta = spells[Number(pick)];
   const viewParts = view.parts ?? []; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
   const core = Math.max(0, viewParts.findIndex((p) => p.isCore));
@@ -155,14 +157,46 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
       + (viewParts.length > 1 ? `<br><label>Paid by <select name="part">${viewParts.map((p, n) => `<option value="${n}" ${n === core ? "selected" : ""}>${esc(p.name)}${p.isCore ? " ★" : ""} (MP ${p.mpValue ?? p.mp ?? 0})</option>`).join("")}</select></label>` : "");
     const res = await foundry.applications.api.DialogV2.prompt({ window: { title: "Spell cost" }, content,
       render: (_e, dlg) => { const f = dlg.element.querySelector("form"); f?.elements.rank?.addEventListener("change", (ev) => { f.elements.mp.value = defaultCost(meta, ev.target.value); }); if (f?.elements.rank) f.elements.mp.value = defaultCost(meta, f.elements.rank.value); },
-      ok: { label: "Cast", callback: (_e, b) => { const f = b.form.elements; return { mp: Number(f.mp.value) || 0, hp: Number(f.hp.value) || 0, rank: f.rank?.value ?? null, part: f.part ? Number(f.part.value) : core }; } } }).catch(() => null);
+      ok: { label: "Cast", callback: (_e, b) => { const f = b.form.elements; return { mp: Number(f.mp.value) || 0, hp: Number(f.hp.value) || 0, rank: f.rank?.value ?? null, part: f.part ? Number(f.part.value) : core }; } } }).catch((err) => { if (err) console.error("sw25 | cast cost dialog", err); return null; });
     if (!res) return; ({ mp, hp, rank } = res); partIndex = res.part;
   }
   const out = applySbCost(rawParts, viewParts, { mp, hp, partIndex });
   if (out.index < 0) return ui.notifications.warn("This stat block has no parts to pay MP from.");
   if (out.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${out.mpBefore}) — cast anyway.`);
   await actor.update({ "system.sb.parts": out.parts });
+  if (meta.power) {
+    const rolls = [];
+    for (let n = 0; n < 20; n++) { const r = await new Roll("2d6").evaluate(); rolls.push(r.total); if (n === 0 && r.total <= 2) break; if (r.total < Math.max(8, meta.powerCrit || 10)) break; }
+    const mpow = skill.magicPower ?? 0;
+    out.damage = { ...spellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: mpow, rolls }), magicPower: mpow };
+  }
   const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
   return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out) });
 };
+
+/** Chat buttons on spell cards: apply magic damage to targeted tokens (Defense ignored, "Magic Damage +N" weak point added). */
+Hooks.on("renderChatMessageHTML", (_msg, el) => {
+  el.querySelectorAll?.("[data-sw25-magic-dmg]").forEach((b) => b.addEventListener("click", async (ev) => {
+    ev.preventDefault(); const amount = Number(b.dataset.sw25MagicDmg) || 0;
+    const targets = [...(game.user.targets ?? [])].map((t) => t.actor).filter(Boolean);
+    if (!targets.length) return ui.notifications.warn("Target one or more tokens first.");
+    const lines = [];
+    for (const a of targets) {
+      const weak = a.system?.sb?.weakPoint ?? "";
+      const dmg = magicDamageTaken(amount, weak);
+      if (a.type === "character") {
+        const before = Number(a.system.hp?.value) || 0; await a.update({ "system.hp.value": before - dmg });
+        lines.push(`${foundry.utils.escapeHTML(a.name)}: ${dmg} → HP ${before - dmg}`);
+      } else {
+        const raw = a._source.system?.sb ?? {}; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
+        const viewParts = a.system.sbView?.parts ?? []; const core = Math.max(0, viewParts.findIndex((p) => p.isCore));
+        const out = applySbCost(rawParts, viewParts, { mp: 0, hp: dmg, partIndex: core });
+        if (out.index < 0) { lines.push(`${foundry.utils.escapeHTML(a.name)}: no parts`); continue; }
+        await a.update({ "system.sb.parts": out.parts });
+        lines.push(`${foundry.utils.escapeHTML(a.name)}: ${dmg}${dmg > amount ? ` (incl. weak point +${dmg - amount})` : ""} → HP ${out.hpAfter}`);
+      }
+    }
+    ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>Magic damage applied</b><br>${lines.join("<br>")}</div>` });
+  }));
+});
 export { ARRAY_FIELDS };
