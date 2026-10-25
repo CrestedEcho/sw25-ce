@@ -69,7 +69,18 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   const mv = view.movement ?? {};
   const fmtMove = (v, m) => (v == null ? "—" : `${v}${m ? ` (${m})` : ""}`);
   const classLevels = (raw.classLevels ?? []).map((c) => `${classNames[c.classSlug] ?? (c.classSlug ? c.classSlug[0].toUpperCase() + c.classSlug.slice(1) : "?")} ${c.level ?? ""}`.trim());
+  // Calm-NPC Person summary: Lv / HP / MP / Def from the main part. Inputs carry data-sb-path (no name),
+  // so the Combat-tab part inputs remain the only form fields for that path (single source of truth).
+  const ci = Math.max(0, (view.parts ?? []).findIndex((p) => p.isCore));
+  const cp = (view.parts ?? [])[ci];
+  const pct = (v, m) => (m > 0 ? Math.max(0, Math.min(100, Math.round((Number(v ?? m) / m) * 100))) : 0);
+  const summary = type === "npc" && cp ? {
+    level: view.level ?? "—", def: cp.defense ?? "—",
+    hp: cp.hpValue ?? cp.hp, hpMax: cp.hp ?? 0, hpPct: pct(cp.hpValue, cp.hp), hpPath: `system.sb.parts.${ci}.hpValue`,
+    mp: cp.mpValue ?? cp.mp, mpMax: cp.mp ?? 0, mpPct: pct(cp.mpValue, cp.mp), mpPath: `system.sb.parts.${ci}.mpValue`,
+  } : null;
   return {
+    summary,
     type, isNPC: type === "npc", isMonster: type !== "npc", hostile, isGM,
     accent: accentFor(type, hostile), roleLine: roleLine(type, view),
     typeIcon: type === "npc" ? null : monsterTypeIcon(view.monsterType), portrait: img,

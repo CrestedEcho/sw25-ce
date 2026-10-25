@@ -1,12 +1,4 @@
 <div class="sb-grid">
-  {{#if isMonster}}
-  <div class="f"><label>Intellect</label><input class="sb-in" type="text" name="system.sb.intelligence" value="{{sb.intelligence}}"></div>
-  <div class="f"><label>Perception</label><input class="sb-in" type="text" name="system.sb.perception" value="{{sb.perception}}"></div>
-  <div class="f"><label>Disposition</label><input class="sb-in" type="text" name="system.sb.disposition" value="{{sb.disposition}}"></div>
-  <div class="f"><label>Soulscars</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.soulscars}}</div>
-  <div class="f w2"><label>Languages</label><input class="sb-in" type="text" name="sbList.languages" value="{{languages}}"></div>
-  <div class="f w2"><label>Habitat</label><input class="sb-in" type="text" name="sbList.habitat" value="{{habitat}}"></div>
-  {{/if}}
   <div class="f"><label>Reputation / Weakness</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.reputation}} / {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.weakness}}</div>
   <div class="f w2"><label>Weak point</label><input class="sb-in" type="text" name="system.sb.weakPoint" value="{{sb.weakPoint}}"></div>
   <div class="f"><label>Initiative</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.initiative}}</div>

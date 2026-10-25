@@ -67,6 +67,15 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
   activateListeners(html) {
     super.activateListeners(html);
     const root = html[0] ?? html;
+    // Person-tab HP/MP summary inputs write the same path as the Combat-tab part inputs (no form name -> no duplicate field).
+    root.querySelectorAll("[data-sb-path]").forEach((el) => el.addEventListener("change", (ev) => {
+      ev.stopPropagation(); const v = el.value.trim();
+      const parts = foundry.utils.deepClone(this.actor._source.system?.sb?.parts ?? []);
+      const [, , , idx, key] = el.dataset.sbPath.split(".");
+      if (!parts[Number(idx)]) return;
+      parts[Number(idx)][key] = v === "" ? null : Number(v);
+      this.actor.update({ "system.sb.parts": parts });
+    }));
     if (!this.isEditable) return;
     root.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", (ev) => this._onAction(ev, el)));
   }

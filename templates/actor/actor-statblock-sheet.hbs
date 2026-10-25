@@ -16,9 +16,15 @@
 </header>
 <nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
 <section class="sheet-body sb-body">
-  <div class="tab" data-group="primary" data-tab="combat">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}{{#if isMonster}}{{#if descriptionHTML}}<h3>Description</h3><div class="sb-notes">{{{descriptionHTML}}}</div>{{/if}}{{/if}}</div>
+  <div class="tab" data-group="primary" data-tab="combat">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
   {{#if isNPC}}
   <div class="tab" data-group="primary" data-tab="person">
+    {{#if summary}}<div class="sb-summary">
+      <span><b>Lv</b> {{summary.level}}</span>
+      <span class="sb-sbar"><b>HP</b><input class="sb-in w-xs" type="text" data-sb-path="{{summary.hpPath}}" value="{{summary.hp}}" {{#unless editable}}disabled{{/unless}}>/{{summary.hpMax}}<span class="sb-bar"><span style="width:{{summary.hpPct}}%"></span></span></span>
+      {{#if summary.mpMax}}<span class="sb-sbar"><b>MP</b><input class="sb-in w-xs" type="text" data-sb-path="{{summary.mpPath}}" value="{{summary.mp}}" {{#unless editable}}disabled{{/unless}}>/{{summary.mpMax}}<span class="sb-bar"><span style="width:{{summary.mpPct}}%"></span></span></span>{{/if}}
+      <span><b>Def</b> {{summary.def}}</span>
+    </div>{{/if}}
     <div class="sb-grid">
       <div class="f"><label>Race</label><input class="sb-in" type="text" name="system.sb.race" value="{{sb.race}}"></div>
       <div class="f"><label>Attitude</label><select class="sb-in" name="system.sb.attitude">{{selectOptions attitudes selected=sb.attitude}}</select></div>
@@ -47,12 +53,20 @@
   </div>
   {{else}}
   <div class="tab" data-group="primary" data-tab="lore">
+    <h3>Ecology</h3>
     <div class="sb-grid">
       <div class="f"><label>Category</label><input class="sb-in" type="text" name="system.sb.monsterType" value="{{sb.monsterType}}"></div>
       <div class="f"><label>Level</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.level}}</div>
       <div class="f w2"><label>Source</label><input class="sb-in" type="text" name="system.sb.source" value="{{sb.source}}"></div>
       <div class="f"><label>Death checks</label><input type="checkbox" name="system.sb.useDeathCheck" {{checked sb.useDeathCheck}}></div>
+  <div class="f"><label>Intellect</label><input class="sb-in" type="text" name="system.sb.intelligence" value="{{sb.intelligence}}"></div>
+  <div class="f"><label>Perception</label><input class="sb-in" type="text" name="system.sb.perception" value="{{sb.perception}}"></div>
+  <div class="f"><label>Disposition</label><input class="sb-in" type="text" name="system.sb.disposition" value="{{sb.disposition}}"></div>
+  <div class="f"><label>Soulscars</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.soulscars}}</div>
+  <div class="f w2"><label>Languages</label><input class="sb-in" type="text" name="sbList.languages" value="{{languages}}"></div>
+  <div class="f w2"><label>Habitat</label><input class="sb-in" type="text" name="sbList.habitat" value="{{habitat}}"></div>
     </div>
+    {{#if descriptionHTML}}<h3>Description</h3><div class="sb-notes">{{{descriptionHTML}}}</div>{{/if}}
   </div>
   <div class="tab" data-group="primary" data-tab="notes"><h3>Description</h3>{{editor descriptionHTML target="system.sb.description" button=true owner=owner editable=editable}}</div>
   {{/if}}

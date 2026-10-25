@@ -1,3 +1,4 @@
+import { nonCombatFeats } from "../rules/noncombat.mjs";
 import {
   onManageActiveEffect,
   prepareActiveEffectCategories,
@@ -675,6 +676,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.battleaccessories = battleaccessories;
     context.gear = gear;
     context.combatabilities = combatabilities;
+    context.nonCombatFeats = nonCombatFeats(combatabilities);
     context.enhancearts = enhancearts;
     context.eashow = eashow;
     context.magicalsongs = magicalsongs;

@@ -26,12 +26,12 @@ const captain = { title: "Guard Captain", settlement: "Harvesgard", faction: "Ha
   relationships: [{ name: "Lord of Harvesgard", relation: "sworn to" }], services: [{ name: "Gate pass", price: 50, notes: "if attitude friendly" }],
   notes: "<p>Stern but fair.</p>", secrets: "Takes bribes from the smugglers' guild.", intelligence: "Average", perception: "Five senses",
   level: 6, reputation: 12, weakness: 16, weakPoint: "Accuracy +1", initiative: 14, movement: { ground: 13 }, fortitude: { value: 7 }, willpower: { value: 6 },
-  parts: [{ name: "Longsword", accuracy: { value: 8 }, damage: "2d+8", evasion: { value: 7 }, defense: 6, hp: 42, mp: 12, isCore: true }],
+  parts: [{ name: "Longsword", accuracy: { value: 8 }, damage: "2d+8", evasion: { value: 7 }, defense: 6, hp: 42, hpValue: 30, mp: 12, mpValue: 9, isCore: true }],
   uniqueSkills: [{ name: "Power Strike", tags: ["declared"], description: "+damage, −evasion this round." }, { name: "Shield Training", tags: ["passive"], description: "Defense already included." }, { name: "Rally (preview: all tags)", tags: ["major", "minor", "prep"], description: "Preview-only row showing the remaining tag icons." }],
   loot: [{ roll: "Always", item: "Captain's Badge", price: 100 }, { roll: "2-7", item: "Purse (50G)", price: 50 }, { roll: "8+", item: "Fine Longsword", price: 440 }],
   overrides: { parts: { 0: { defense: { value: 7, locked: true } } } } };
 const portrait = `file://${root}/assets/portrait.png`;
-for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monster", kobold, null], ["npc_captain", "Captain Marla Voss", "npc", captain, null], ["npc_captain_hostile", "Captain Marla Voss", "npc", { ...captain, hostile: true }, null]]) {
+for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monster", kobold, null], ["monster_kobold_lore", "Kobold", "monster", kobold, "lore"], ["npc_captain", "Captain Marla Voss", "npc", captain, null], ["npc_captain_hostile", "Captain Marla Voss", "npc", { ...captain, hostile: true }, null]]) {
   const view = prepareStatBlock(raw, {}, type);
   const ctx = { ...buildStatBlockContext({ type, view, raw, isGM: true, img: portrait }), actor: { name }, cssClass: "sw25 sheet actor", editable: true, owner: true,
     attitudes: { "": "—", friendly: "Friendly", neutral: "Neutral", hostile: "Hostile" }, items: [], notesHTML: raw.notes, secretsHTML: raw.secrets, descriptionHTML: raw.description };

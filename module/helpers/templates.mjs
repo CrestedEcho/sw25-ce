@@ -22,6 +22,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/parts/actor-battleaccessories.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-items.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-combatabilities.hbs",
+    "systems/sw25-ce/templates/actor/parts/actor-noncombatfeats.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-enhancearts.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-magicalsongs.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-ridingtricks.hbs",
