@@ -69,12 +69,43 @@ export function parseMp(v) {
     if (hp) out.hpCost = Number(hp[1]); if (mako) out.makoStone = Number(mako[1]); out.flag = out.flag ? out.flag + "+extra" : "extra"; }
   return out;
 }
+/** Private book Power table (gen/data/rules/power-table.json, NEVER committed): { table: { "<power>": [v3..v12] } }.
+ * Read at build time; missing/unreadable file -> null (weapons without their own powerTable keep blank rows). */
+export const POWER_TABLE_FILE = path.join(DATA, "rules", "power-table.json");
+export const powerTableWarnings = new Set();
+let PT_CACHE;
+export function loadPowerTable(file = POWER_TABLE_FILE) {
+  try { const j = JSON.parse(fs.readFileSync(file, "utf8")); const t = j && typeof j.table === "object" ? j.table : j;
+    return t && typeof t === "object" ? t : null; }
+  catch (e) { if (e.code !== "ENOENT") console.warn(`power table unreadable (${file}): ${e.message}`); return null; }
+}
+const globalPowerTable = () => (PT_CACHE === undefined ? (PT_CACHE = loadPowerTable()) : PT_CACHE);
+/** Row [v3..v12] for a numeric power from the table; warns (once per value) when the value isn't there. */
+export function powerRow(power, table = globalPowerTable(), who = "") {
+  if (power === null || power === undefined || power === "" || typeof power === "object" || !table) return null;
+  const row = table[String(Number(power))];
+  if (Array.isArray(row) && row.length === 10) return row.map(Number);
+  const msg = `power ${power} not in power table${who ? ` (${who})` : ""}`;
+  if (!powerTableWarnings.has(msg)) { powerTableWarnings.add(msg); console.warn(msg); }
+  return null;
+}
+const ownRow = (t) => (Array.isArray(t) && t.length === 10 ? t.map(Number) : null);
+const ptFields = (row) => (row ? Object.fromEntries(row.map((v, i) => [`pt${i + 3}`, v])) : {});
 /** Weapon roll fields: power, crit (cvalue), own Accuracy/Extra Damage modifiers, and the book row as pt3..pt12
- * (the shipped Reference Power Table is blank, so without these every roll read 0). */
-export function weaponSystem(d) {
+ * (the shipped Reference Power Table is blank, so without these every roll read 0). An explicit powerTable wins;
+ * otherwise the row comes from the private Power table by power value. */
+export function weaponSystem(d, table = globalPowerTable()) {
   const out = { power: d.power ?? null, cvalue: d.critThreshold ?? 10, hit: Number(d.accuracy) || 0, dmod: Number(d.extraDamage) || 0 };
-  if (Array.isArray(d.powerTable) && d.powerTable.length === 10) d.powerTable.forEach((v, i) => { out[`pt${i + 3}`] = Number(v); });
-  return out;
+  return Object.assign(out, ptFields(ownRow(d.powerTable) ?? powerRow(d.power, table, d.slug ?? d.name)));
+}
+/** Spell power fields: numeric power -> pt3..pt12 (own powerTable, else table row); {rate} object without a table gets one. */
+export function spellPowerFields(d, table = globalPowerTable()) {
+  if (d.power && typeof d.power === "object") {
+    if (ownRow(d.power.table) || d.power.rate == null) return { power: d.power };
+    const row = powerRow(d.power.rate, table, d.slug); return { power: row ? { ...d.power, table: row } : d.power };
+  }
+  if (!d.power) return {};
+  return { power: d.power, ...ptFields(ownRow(d.powerTable) ?? powerRow(d.power, table, d.slug)) };
 }
 const hasPowerTable = (d) => Array.isArray(d.powerTable) ? d.powerTable.length > 0 : !!(d.power || d.powerTable || d.powerByDeityRank || d.weapon?.table);
 const desc = (d) => [d.summary, d.description].filter((x) => x && x !== "null").map((t) => `<p>${String(t).replace(/</g, "&lt;")}</p>`).join("");
@@ -90,7 +121,7 @@ export function toDoc(cat, d) {
       const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
       const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
       Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
-      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { power: d.power, powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
+      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { ...spellPowerFields(d), powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     }
     case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}) } };
     case "gods": {
@@ -490,6 +521,6 @@ async function main() {
   check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
   fs.writeFileSync(path.join(OUT, "folders.txt"), Object.entries(trees).map(([k, v]) => `== ${k}\n${v}`).join("\n\n") + "\n");
   fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...(ta ? { testActors: { list: ta.list, gaps: ta.gaps, todos: ta.todos } } : {}), ...(rb ? { rules: { list: rb.list, broken: rb.broken } } : {}), ...check }, null, 2));
-  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
+  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos, powerTable: PT_CACHE ? "loaded" : "missing", powerTableWarnings: [...powerTableWarnings] }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });
