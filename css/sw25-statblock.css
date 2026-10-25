@@ -95,9 +95,18 @@
 .fw-table { table-layout:fixed; } .fw-table input, .fw-table select { width:100%; box-sizing:border-box; min-width:0; }
 .fw-table td.v input, .fw-table td:last-child input { text-align:center; }
 .fw-mp input { width:5ch !important; flex:none; text-align:center; }
-/* Calm NPC Person summary (v3 mockup): Lv · HP red bar · MP teal bar · Def; HP/MP editable */
-.sb-summary { display:flex; gap:14px; align-items:center; padding:4px 0 6px; border-bottom:1px solid #3a251233; margin-bottom:6px; }
-.sb-sbar { display:flex; align-items:center; gap:4px; flex:1; } .sb-sbar .sb-in { width:3.5ch; text-align:right; }
-.sb-bar { flex:1; height:11px; min-width:60px; border:1.5px solid var(--bar); border-radius:3px; overflow:hidden; background:rgba(0,0,0,.04); }
+/* HP/MP vitals (v3 mockups): Person summary on calm NPCs, top of Combat on hostile NPCs + monsters; red HP / teal MP */
+.sb-summary { display:flex; gap:12px; align-items:center; margin-bottom:6px; } .sb-summary .sb-vitals { flex:1; margin:0; }
+.sb-vitals { background:rgba(0,0,0,.05); border:1px solid #3a251233; border-radius:4px; padding:4px 8px; margin-bottom:8px; display:flex; flex-direction:column; gap:3px; }
+.sb-vrow { display:flex; gap:14px; align-items:center; } .sb-vname { width:9em; font-weight:bold; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-sbar { display:flex; align-items:center; gap:4px; flex:1; } .sb-sbar b { font-size:11px; }
+.sb-sheet .sb-sbar .sb-in { width:3.6ch; text-align:center; border:1px solid #3a251244; border-radius:3px; background:#fff8; }
+.sb-bar { flex:1; height:11px; min-width:50px; border:1.5px solid var(--bar); border-radius:3px; overflow:hidden; background:rgba(0,0,0,.04); }
 .sb-bar > span { display:block; height:100%; background:var(--bar); }
-.sb-sbar { --bar:#9a2a1f; } .sb-sbar + .sb-sbar { --bar:#2f6b6b; }
+.sb-sbar.hp { --bar:#9a2a1f; } .sb-sbar.mp { --bar:#2f6b6b; } .sb-vdef { white-space:nowrap; }
+/* v3 final: header right column (toggles + token badge), read-only Person-tab stat block copy */
+.sb-hdr-right { margin-left:auto; display:flex; flex-direction:column; align-items:flex-end; gap:5px; align-self:flex-start; }
+.sb-token-badge { font:bold 11px Georgia,serif; color:#f3e6c8; background:#6b6b6b; padding:2px 9px; border-radius:9px; white-space:nowrap; }
+.sb-token-badge.disp-hostile { background:var(--sb-rust); } .sb-token-badge.disp-neutral { background:var(--sb-teal); } .sb-token-badge.disp-friendly { background:#3f6b2f; }
+.sb-person-combat .sb-add, .sb-person-combat .sb-del, .sb-person-combat .sb-lock, .sb-person-combat .sb-edit-only { display:none; }
+.sb-person-combat .sb-in:disabled { color:inherit; opacity:1; }

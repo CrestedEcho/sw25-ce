@@ -19,3 +19,24 @@ test("NPC Person summary uses main part, current values, and the Combat-tab path
   assert.equal(c.summary.hpPath, "system.sb.parts.1.hpValue"); assert.equal(c.summary.mpPath, "system.sb.parts.1.mpValue");
   assert.equal(buildStatBlockContext({ type: "monster", view: prepareStatBlock(raw, {}, "monster"), raw, isGM: true }).summary, null);
 });
+
+test("vitals: one row per part, core first; combat block for monsters + hostile NPCs only", () => {
+  const m = { parts: [{ name: "Head", hp: 30, mp: 20 }, { name: "Body", hp: 50, hpValue: 25, isCore: true }, { name: "Tail", hp: 20, mp: 0 }] };
+  const c = buildStatBlockContext({ type: "monster", view: prepareStatBlock(m, {}, "monster"), raw: m });
+  assert.deepEqual(c.vitals.map((v) => [v.i, v.name, v.isCore]), [[1, "Body", true], [0, "Head", false], [2, "Tail", false]]);
+  assert.equal(c.multiPart, true); assert.equal(c.showVitalsInCombat, true); assert.equal(c.vitals[0].hpPct, 50);
+  const calm = buildStatBlockContext({ type: "npc", view: prepareStatBlock(raw, {}, "npc"), raw });
+  assert.equal(calm.showVitalsInCombat, true); assert.equal(calm.summaryRows.length, 1);
+  const host = { ...raw, hostile: true };
+  assert.equal(buildStatBlockContext({ type: "npc", view: prepareStatBlock(host, {}, "npc"), raw: host }).showVitalsInCombat, true);
+});
+
+import { npcToggleDisposition, DISPOSITION_LABELS } from "../module/rules/statblock.mjs";
+test("NPC toggles -> disposition: hostile wins, fellow friendly, else neutral", () => {
+  assert.equal(npcToggleDisposition({ hostile: true }), "HOSTILE");
+  assert.equal(npcToggleDisposition({ hostile: false }), "NEUTRAL");
+  assert.equal(npcToggleDisposition({ fellow: true }), "FRIENDLY");
+  assert.equal(npcToggleDisposition({ hostile: true, fellow: true }), "HOSTILE");
+  assert.equal(npcToggleDisposition({ hostile: false, fellow: true }), "FRIENDLY", "un-hostiled Fellow returns to Friendly");
+  assert.equal(DISPOSITION_LABELS[-1], "Hostile"); assert.equal(DISPOSITION_LABELS[0], "Neutral");
+});

@@ -10,21 +10,17 @@
     <div class="sb-sub">{{roleLine}}</div>
     <div class="sb-src">{{sb.source}}</div>
   </div>
-  {{#if isNPC}}<label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>
+  {{#if isNPC}}<div class="sb-hdr-right"><label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>
   <label class="sb-toggle sb-fellow-toggle{{#if fellowOn}} on{{/if}}" title="Fellow mode: players see the public Fellow card (system.fellow)">Fellow <input type="checkbox" name="system.fellow.enabled" {{checked fellowOn}} {{#unless editable}}disabled{{/unless}}><i></i></label>
-  {{#if fellowOn}}<a class="sb-fellow-open" data-action="fellow-card" title="Open Fellow card">Card</a>{{/if}}{{/if}}
+  {{#if fellowOn}}<a class="sb-fellow-open" data-action="fellow-card" title="Open Fellow card">Card</a>{{/if}}
+  <span class="sb-token-badge disp-{{tokenDispositionKey}}" title="Prototype token disposition">Token: {{tokenDisposition}}</span></div>{{/if}}
 </header>
 <nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
 <section class="sheet-body sb-body">
-  <div class="tab" data-group="primary" data-tab="combat">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
+  <div class="tab" data-group="primary" data-tab="combat">{{#if showVitalsInCombat}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=vitals multi=multiPart}}{{/if}}{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
   {{#if isNPC}}
   <div class="tab" data-group="primary" data-tab="person">
-    {{#if summary}}<div class="sb-summary">
-      <span><b>Lv</b> {{summary.level}}</span>
-      <span class="sb-sbar"><b>HP</b><input class="sb-in w-xs" type="text" data-sb-path="{{summary.hpPath}}" value="{{summary.hp}}" {{#unless editable}}disabled{{/unless}}>/{{summary.hpMax}}<span class="sb-bar"><span style="width:{{summary.hpPct}}%"></span></span></span>
-      {{#if summary.mpMax}}<span class="sb-sbar"><b>MP</b><input class="sb-in w-xs" type="text" data-sb-path="{{summary.mpPath}}" value="{{summary.mp}}" {{#unless editable}}disabled{{/unless}}>/{{summary.mpMax}}<span class="sb-bar"><span style="width:{{summary.mpPct}}%"></span></span></span>{{/if}}
-      <span><b>Def</b> {{summary.def}}</span>
-    </div>{{/if}}
+    {{#if summary}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=summaryRows}}{{/if}}
     <div class="sb-grid">
       <div class="f"><label>Race</label><input class="sb-in" type="text" name="system.sb.race" value="{{sb.race}}"></div>
       <div class="f"><label>Attitude</label><select class="sb-in" name="system.sb.attitude">{{selectOptions attitudes selected=sb.attitude}}</select></div>
@@ -43,6 +39,8 @@
     {{#each relationships}}<div class="sb-row"><input class="sb-in" type="text" name="system.sb.relationships.{{i}}.name" value="{{name}}" placeholder="Name"> (<input class="sb-in" type="text" name="system.sb.relationships.{{i}}.relation" value="{{relation}}" placeholder="relation">){{#if @root.editable}}<a class="sb-del" data-action="del" data-field="relationships" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</div>{{else}}<div class="muted">—</div>{{/each}}
     <h3>Services {{#if editable}}<a class="sb-add" data-action="add" data-field="services"><i class="fas fa-plus"></i></a>{{/if}}</h3>
     {{#each services}}<div class="sb-row"><input class="sb-in" type="text" name="system.sb.services.{{i}}.name" value="{{name}}" placeholder="Service"> — <input class="sb-in w-xs" type="text" name="system.sb.services.{{i}}.price" value="{{price}}" data-dtype="Number">G, <input class="sb-in" type="text" name="system.sb.services.{{i}}.notes" value="{{notes}}" placeholder="notes">{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="services" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</div>{{else}}<div class="muted">—</div>{{/each}}
+    <h3>Combat stat block</h3>
+    <div class="sb-person-combat" title="Read-only here; edit on the Combat tab">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
   </div>
   <div class="tab" data-group="primary" data-tab="inventory">
     <ol class="sb-items">{{#each items}}<li class="item" data-item-id="{{_id}}"><img src="{{img}}"> <span>{{name}}</span> <small>{{type}}</small>{{#if @root.editable}}<a data-action="item-edit"><i class="fas fa-edit"></i></a> <a data-action="item-del"><i class="fas fa-trash"></i></a>{{/if}}</li>{{else}}<li class="muted">Drag weapons, armour or gear here (display only).</li>{{/each}}</ol>

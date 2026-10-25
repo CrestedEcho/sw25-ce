@@ -3,6 +3,7 @@
  * Data: system.sb.* (derived view system.sbView); overrides system.sb.overrides.<path>.{value,locked} with quill.
  * The legacy sw25 sheet stays selectable via Sheet Configuration.
  */
+import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
@@ -29,6 +30,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const TE = foundry.applications.ux.TextEditor.implementation;
     const enrich = (h) => TE.enrichHTML(h ?? "", { secrets: this.actor.isOwner, relativeTo: this.actor });
     Object.assign(base, ctx, {
+      tokenDispositionKey: String(DISPOSITION_LABELS[this.actor.prototypeToken?.disposition] ?? "").toLowerCase(),
+      tokenDisposition: DISPOSITION_LABELS[this.actor.prototypeToken?.disposition] ?? "—",
       fellowOn: !!this.actor.system.fellow?.enabled, attitudes: ATTITUDES, editable: this.isEditable, owner: this.actor.isOwner,
       items: this.actor.items.contents.map((i) => ({ _id: i.id, name: i.name, img: i.img, type: i.type })),
       notesHTML: await enrich(raw.notes), secretsHTML: game.user.isGM ? await enrich(raw.secrets) : "",
@@ -67,13 +70,19 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
   activateListeners(html) {
     super.activateListeners(html);
     const root = html[0] ?? html;
-    // Person-tab HP/MP summary inputs write the same path as the Combat-tab part inputs (no form name -> no duplicate field).
+    // HP/MP vitals inputs (Person summary / Combat block) have no form name: they write the same per-part
+    // value the Parts table edits (locked max -> its override), so there is a single source of truth.
+    // Person-tab copy of the combat stat block is read-only (disabled fields are not submitted -> no duplicate names).
+    root.querySelectorAll(".sb-person-combat input, .sb-person-combat select").forEach((el) => { el.disabled = true; });
     root.querySelectorAll("[data-sb-path]").forEach((el) => el.addEventListener("change", (ev) => {
-      ev.stopPropagation(); const v = el.value.trim();
+      ev.stopPropagation(); const v = el.value.trim(); const val = v === "" ? null : Number(v);
+      if (v !== "" && !Number.isFinite(val)) return this.render(false);
+      const path = el.dataset.sbPath;
+      if (el.dataset.locked) return this.actor.update({ [`system.sb.overrides.${path}.value`]: val });
+      const [, idx, key] = path.split(".");
       const parts = foundry.utils.deepClone(this.actor._source.system?.sb?.parts ?? []);
-      const [, , , idx, key] = el.dataset.sbPath.split(".");
       if (!parts[Number(idx)]) return;
-      parts[Number(idx)][key] = v === "" ? null : Number(v);
+      parts[Number(idx)][key] = val;
       this.actor.update({ "system.sb.parts": parts });
     }));
     if (!this.isEditable) return;

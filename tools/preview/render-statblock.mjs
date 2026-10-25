@@ -9,7 +9,7 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.
 fs.mkdirSync(out, { recursive: true });
 const fix = (s) => s.replaceAll("systems/sw25-ce/", `file://${root}/`).replaceAll("../assets/", `file://${root}/assets/`);
 const T = (p) => fix(fs.readFileSync(path.join(root, "templates/actor", p), "utf8"));
-for (const p of ["sb-num", "sb-pair", "sb-combat"]) Handlebars.registerPartial(`file://${root}/templates/actor/sb/${p}.hbs`, T(`sb/${p}.hbs`));
+for (const p of ["sb-num", "sb-pair", "sb-combat", "sb-vitals"]) Handlebars.registerPartial(`file://${root}/templates/actor/sb/${p}.hbs`, T(`sb/${p}.hbs`));
 Handlebars.registerHelper("eq", (a, b) => a === b);
 Handlebars.registerHelper("checked", (v) => (v ? "checked" : ""));
 Handlebars.registerHelper("selectOptions", (o, { hash }) => new Handlebars.SafeString(Object.entries(o).map(([k, v]) => `<option value="${k}" ${k === hash.selected ? "selected" : ""}>${v}</option>`).join("")));
@@ -30,10 +30,17 @@ const captain = { title: "Guard Captain", settlement: "Harvesgard", faction: "Ha
   uniqueSkills: [{ name: "Power Strike", tags: ["declared"], description: "+damage, −evasion this round." }, { name: "Shield Training", tags: ["passive"], description: "Defense already included." }, { name: "Rally (preview: all tags)", tags: ["major", "minor", "prep"], description: "Preview-only row showing the remaining tag icons." }],
   loot: [{ roll: "Always", item: "Captain's Badge", price: 100 }, { roll: "2-7", item: "Purse (50G)", price: 50 }, { roll: "8+", item: "Fine Longsword", price: 440 }],
   overrides: { parts: { 0: { defense: { value: 7, locked: true } } } } };
+const wyvern = { level: 8, monsterType: "Mythical", source: "Example only (invented)", reputation: 14, weakness: 19, weakPoint: "Physical Damage +2", initiative: 15, movement: { ground: 20, other: 30 }, fortitude: { value: 8 }, willpower: { value: 7 },
+  parts: [{ name: "Torso", accuracy: { value: 9 }, damage: "2d+9", evasion: { value: 8 }, defense: 9, hp: 58, hpValue: 44, mp: 20, mpValue: 20 },
+    { name: "Head", accuracy: { value: 10 }, damage: "2d+10", evasion: { value: 9 }, defense: 7, hp: 46, hpValue: 31, mp: 24, mpValue: 18, isCore: true },
+    { name: "Wing L", accuracy: { value: 8 }, damage: "2d+6", evasion: { value: 10 }, defense: 5, hp: 30, hpValue: 12, mp: 10, mpValue: 10 },
+    { name: "Wing R", accuracy: { value: 8 }, damage: "2d+6", evasion: { value: 10 }, defense: 5, hp: 30, hpValue: 30, mp: 10, mpValue: 6 }],
+  uniqueSkills: [{ name: "Tail Sweep", tags: ["major"], description: "Hits all adjacent foes." }, { name: "Flight", tags: ["passive"], description: "Evasion +1 while airborne." }],
+  loot: [{ roll: "Always", item: "Wyvern Scale", price: 200, materialCard: "Red A" }, { roll: "2-8", item: "Wyvern Fang", price: 300 }, { roll: "9+", item: "Wyvern Heart", price: 900 }] };
 const portrait = `file://${root}/assets/portrait.png`;
-for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monster", kobold, null], ["monster_kobold_lore", "Kobold", "monster", kobold, "lore"], ["npc_captain", "Captain Marla Voss", "npc", captain, null], ["npc_captain_hostile", "Captain Marla Voss", "npc", { ...captain, hostile: true }, null]]) {
+for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monster", kobold, null], ["monster_kobold_lore", "Kobold", "monster", kobold, "lore"], ["monster_multipart", "Example Wyvern", "monster", wyvern, null], ["npc_captain", "Captain Marla Voss", "npc", captain, null], ["npc_captain_hostile", "Captain Marla Voss", "npc", { ...captain, hostile: true }, null]]) {
   const view = prepareStatBlock(raw, {}, type);
-  const ctx = { ...buildStatBlockContext({ type, view, raw, isGM: true, img: portrait }), actor: { name }, cssClass: "sw25 sheet actor", editable: true, owner: true,
+  const ctx = { ...buildStatBlockContext({ type, view, raw, isGM: true, img: portrait }), actor: { name }, cssClass: "sw25 sheet actor", editable: true, owner: true, tokenDisposition: raw.hostile ? "Hostile" : "Neutral", tokenDispositionKey: raw.hostile ? "hostile" : "neutral",
     attitudes: { "": "—", friendly: "Friendly", neutral: "Neutral", hostile: "Hostile" }, items: [], notesHTML: raw.notes, secretsHTML: raw.secrets, descriptionHTML: raw.description };
   const first = tab ?? ctx.initialTab;
   let html = sheet(ctx).replace(`data-tab="${first}">`, `data-tab="${first}" class="item active">`).replace(/<a class="item" data-tab="([a-z]+)" class="item active">/, '<a class="item active" data-tab="$1">');

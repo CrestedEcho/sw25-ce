@@ -1,0 +1,9 @@
+{{!-- Editable HP/MP rows bound to system.sb.parts.<i> (same values as the Parts table). Core part first. --}}
+<div class="sb-vitals{{#if multi}} is-multi{{/if}}">
+{{#each rows}}<div class="sb-vrow">
+  {{#if ../multi}}<span class="sb-vname">{{name}}{{#if isCore}} ★{{/if}}</span>{{/if}}
+  <span class="sb-sbar hp"><b>HP</b><input class="sb-in w-xs" type="text" data-sb-path="parts.{{i}}.hpValue" value="{{hp}}" {{#unless @root.editable}}disabled{{/unless}}>/<input class="sb-in w-xs" type="text" data-sb-path="parts.{{i}}.hp" {{#if hpLocked}}data-locked="1"{{/if}} value="{{hpMax}}" {{#unless @root.editable}}disabled{{/unless}}><span class="sb-bar"><span style="width:{{hpPct}}%"></span></span></span>
+  {{#if mpMax}}<span class="sb-sbar mp"><b>MP</b><input class="sb-in w-xs" type="text" data-sb-path="parts.{{i}}.mpValue" value="{{mp}}" {{#unless @root.editable}}disabled{{/unless}}>/<input class="sb-in w-xs" type="text" data-sb-path="parts.{{i}}.mp" {{#if mpLocked}}data-locked="1"{{/if}} value="{{mpMax}}" {{#unless @root.editable}}disabled{{/unless}}><span class="sb-bar"><span style="width:{{mpPct}}%"></span></span></span>{{else}}<span class="sb-sbar mp muted"><b>MP</b> —</span>{{/if}}
+  {{#if ../def}}<span class="sb-vdef"><b>Def</b> {{../def}}</span>{{/if}}
+</div>{{/each}}
+</div>

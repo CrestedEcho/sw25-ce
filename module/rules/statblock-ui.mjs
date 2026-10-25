@@ -4,7 +4,7 @@
  *   lock/quill per numeric field (system.sb.overrides.<path>.{value,locked}).
  * - Hostile toggle / attitude / disposition -> prototype + placed token disposition.
  */
-import { dispositionFor } from "./statblock.mjs";
+import { dispositionFor, npcToggleDisposition } from "./statblock.mjs";
 
 const SYS = "sw25-ce";
 const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
@@ -47,12 +47,16 @@ function panel(actor, open) {
   </details>`;
 }
 
-export async function syncDisposition(actor) {
-  const key = dispositionFor(actor.system.sbView ?? actor.system.sb ?? {}, actor.type);
+/** Set prototype + every placed token (all scenes' active tokens of this actor) to the derived disposition. */
+export async function syncDisposition(actor, { toggled = false } = {}) {
+  let key = dispositionFor(actor.system.sbView ?? actor.system.sb ?? {}, actor.type);
+  if (toggled && actor.type === "npc") key = npcToggleDisposition({ hostile: !!actor.system.sb?.hostile, fellow: !!actor.system.fellow?.enabled });
   const d = CONST.TOKEN_DISPOSITIONS[key];
   if (d === undefined) return;
   if (actor.prototypeToken?.disposition !== d) await actor.update({ "prototypeToken.disposition": d }, { sw25Slot: true });
-  for (const t of actor.getActiveTokens(false, true)) if (t.disposition !== d && t.isOwner) await t.update({ disposition: d });
+  const docs = new Set(actor.getActiveTokens(false, true));
+  for (const sc of game.scenes ?? []) for (const t of sc.tokens) if (t.actorId === actor.id) docs.add(t);
+  for (const t of docs) if (t.disposition !== d && t.isOwner) await t.update({ disposition: d });
 }
 
 export function registerStatBlockUI() {
@@ -65,7 +69,8 @@ export function registerStatBlockUI() {
   Hooks.on("updateActor", (actor, changes, options, userId) => {
     if (!mine(userId) || !["npc", "monster"].includes(actor.type) || options?.sw25Slot) return;
     const sb = changes.system?.sb ?? {};
-    if (["hostile", "attitude", "disposition"].some((k) => k in sb)) syncDisposition(actor);
+    const fellowToggled = foundry.utils.hasProperty(changes, "system.fellow.enabled");
+    if (fellowToggled || ["hostile", "attitude", "disposition"].some((k) => k in sb)) syncDisposition(actor, { toggled: fellowToggled || "hostile" in sb });
   });
   Hooks.on("renderActorSheet", (app, html) => {
     const actor = app.actor;

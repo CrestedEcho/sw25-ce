@@ -108,6 +108,11 @@ export function dispositionFor(sb, type) {
   return "HOSTILE"; // Hostile / Hungry / Instructed / unknown
 }
 
+/** NPC Hostile / Fellow toggles -> token disposition key (CrestedEcho 2026-10-25):
+ * Hostile ON -> Hostile; otherwise Fellow ON -> Friendly; otherwise Neutral. */
+export const npcToggleDisposition = ({ hostile = false, fellow = false } = {}) => (hostile ? "HOSTILE" : fellow ? "FRIENDLY" : "NEUTRAL");
+export const DISPOSITION_LABELS = { "-2": "Secret", "-1": "Hostile", 0: "Neutral", 1: "Friendly" };
+
 /** Writer monster/NPC JSON -> {name, type, system.sb} (unknown fields remain in the caller's flags). */
 export function statBlockFromData(d) {
   const sb = {}; const keys = Object.keys(STAT_DEFAULTS());
