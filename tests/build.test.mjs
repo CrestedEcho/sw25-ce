@@ -28,6 +28,11 @@ test("MP text parsing", () => {
 });
 test("spell element, god folder, chain-attack todo", () => {
   const e = toDoc("spells", load("spells/earthquake.json")); assert.equal(e.system.element, "earth");
-  const g = toDoc("spells", { ...load("spells/fist-of-god.json") }); assert.ok(g.flags["sw25-ce"].warnings.includes("power-table-empty")); assert.equal(g.system.mpcost, 8);
+  const g = toDoc("spells", { slug: "x", name: "X", mpCost: "MP8-12", power: null, todo: "power table not parsed" }); assert.ok(g.flags["sw25-ce"].warnings.includes("power-table-empty")); assert.equal(g.system.mpcost, 8);
   const c = toDoc("feats", load("feats/chain-attack.json")); assert.ok(c.flags["sw25-ce"].todo);
+});
+test("deity-rank power, spell weapon, mpRule", () => {
+  const f = toDoc("spells", load("spells/fist-of-god.json")); assert.equal(f.system.powerByDeityRank.major.power, 30); assert.ok(!(f.flags["sw25-ce"].warnings ?? []).includes("power-table-empty"));
+  const b = toDoc("spells", load("spells/daemons-blade.json")); assert.equal(b.system.weapon.power, 50); assert.equal(b.system.powerCrit, 10); assert.ok(!b.flags["sw25-ce"].warnings);
+  const p = toDoc("spells", load("spells/perfect-cancellation.json")); assert.equal(p.system.mpcost, 33); assert.equal(p.system.mpRule.base, 33);
 });
