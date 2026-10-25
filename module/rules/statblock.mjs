@@ -104,9 +104,8 @@ export function prepareStatBlock(sbIn, legacy = {}, type = "monster") {
 export function dispositionFor(sb, type) {
   const a = String((type === "npc" ? sb.attitude : sb.disposition) ?? "").toLowerCase();
   if (type === "npc") { if (sb.hostile) return "HOSTILE"; return a === "neutral" ? "NEUTRAL" : a === "hostile" ? "HOSTILE" : "FRIENDLY"; }
-  if (a === "friendly") return "FRIENDLY";
-  if (a === "neutral") return "NEUTRAL";
-  return "HOSTILE"; // Hostile / Hungry / Instructed / unknown
+  // Monsters: the Hostile toggle always wins; the Lore "Disposition" text is descriptive only.
+  return sb.neutral ? "NEUTRAL" : "HOSTILE";
 }
 
 /** NPC Hostile / Fellow toggles -> token disposition key (CrestedEcho 2026-10-25):
@@ -124,5 +123,7 @@ export function statBlockFromData(d) {
   for (const k of keys) if (d[k] !== undefined) sb[k] = d[k];
   if (d.weakPoint === undefined && d.weakpoint) sb.weakPoint = d.weakpoint;
   if (d.movement === undefined && d.movementSpeed !== undefined) sb.movement = parseMovement(d.movementSpeed);
+  // Import only: seed the monster Hostile toggle from the Lore Disposition text once; afterwards the toggle wins.
+  if (sb.neutral === undefined && /^(neutral|friendly)$/i.test(String(sb.disposition ?? "").trim())) sb.neutral = true;
   return sb;
 }

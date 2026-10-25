@@ -51,8 +51,7 @@ function panel(actor, open) {
 export async function syncDisposition(actor, { toggled = false } = {}) {
   let key = dispositionFor(actor.system.sbView ?? actor.system.sb ?? {}, actor.type);
   if (toggled && actor.type === "npc") key = npcToggleDisposition({ hostile: !!actor.system.sb?.hostile, fellow: !!actor.system.fellow?.enabled });
-  else if (actor.type !== "npc" && actor.system.sb?.neutral) key = "NEUTRAL";
-  if (toggled && actor.type !== "npc") key = monsterToggleDisposition({ neutral: !!actor.system.sb?.neutral });
+  if (actor.type !== "npc") key = monsterToggleDisposition({ neutral: !!actor.system.sb?.neutral }); // toggle always wins
   const d = CONST.TOKEN_DISPOSITIONS[key];
   if (d === undefined) return;
   if (actor.prototypeToken?.disposition !== d) await actor.update({ "prototypeToken.disposition": d }, { sw25Slot: true });

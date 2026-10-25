@@ -43,7 +43,9 @@ test("hostile toggle / attitude -> disposition", () => {
   assert.equal(dispositionFor({ hostile: true, attitude: "friendly" }, "npc"), "HOSTILE");
   assert.equal(dispositionFor({ hostile: false, attitude: "neutral" }, "npc"), "NEUTRAL");
   assert.equal(dispositionFor({ hostile: false }, "npc"), "FRIENDLY");
-  assert.equal(dispositionFor({ disposition: "Neutral" }, "monster"), "NEUTRAL");
+  assert.equal(dispositionFor({ disposition: "Neutral" }, "monster"), "HOSTILE", "monster toggle wins over Lore Disposition");
+  assert.equal(dispositionFor({ disposition: "Friendly" }, "monster"), "HOSTILE");
+  assert.equal(dispositionFor({ disposition: "Hostile", neutral: true }, "monster"), "NEUTRAL");
 });
 
 test("kobold builds into monster with sb, loot, prototype disposition", () => {
