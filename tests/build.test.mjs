@@ -41,8 +41,7 @@ test("documented-but-unapplied keys are not errors", async () => {
   const all = ["chain-attack", "dodge", "targeting"].map((f) => ({ cat: "feats", d: load(`feats/${f}.json`) }));
   const r = await checkRefs(all);
   assert.deepEqual(r.unmappedKeys, {});
-  for (const k of ["attack.extraAttack"]) assert.ok(r.documentedNotApplied[k], k);
-  assert.ok(!r.documentedNotApplied["counter.track"], "counter.track is applied now");
+  for (const k of ["attack.extraAttack", "counter.track"]) assert.ok(!r.documentedNotApplied[k], k);
   assert.ok(!r.documentedNotApplied["attack.noStray"], "noStray is applied now");
   const f = toDoc("spells", load("spells/fist-of-god.json")); assert.equal(f.system.mpcost, 8); assert.ok(f.system.mpRule.byDeityRank); assert.ok(!f.flags["sw25-ce"].warnings);
 });

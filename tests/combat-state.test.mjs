@@ -70,3 +70,14 @@ test("Dodge: counter.track defs, manual +/- badge state, @counter value, resets"
   assert.equal(CS.resetCounters(c, defs, { reset: "turn" })["dodge.evasions"], 2);
   assert.equal(RE.evalValue("-@counter:dodge.evasions", { counters: { "dodge.evasions": 3 } }), -3);
 });
+
+test("Chain Attack: extra attack button only for 1H melee wrestling", () => {
+  const { active, notes } = RE.collectRules([feat(load("feats/chain-attack.json"))]);
+  assert.equal(notes.length, 0);
+  const x = RE.extraAttacks(active, { category: "Wrestling", usage: "1H", ranged: false });
+  assert.equal(x.length, 1);
+  assert.deepEqual([x[0].count, x[0].maxPerTurn, x[0].sameTarget, x[0].noAccuracyPenalty], [1, 1, true, true]);
+  assert.equal(RE.extraAttacks(active, { category: "Wrestling", usage: "2H" }).length, 0, "2H stance");
+  assert.equal(RE.extraAttacks(active, { category: "Sword", usage: "1H" }).length, 0, "other category");
+  assert.equal(RE.extraAttacks(active, { category: "Wrestling", usage: "1H#", ranged: true }).length, 0, "ranged");
+});

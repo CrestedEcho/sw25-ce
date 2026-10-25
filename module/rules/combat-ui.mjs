@@ -38,7 +38,13 @@ export function attackCardData(actor, phase, item = null) {
   const ranged = RANGED.includes(String(weapon.category ?? "").toLowerCase());
   const lines = [];
   if (ranged && eng.flags?.noStray) lines.push("Targeting: this attack never strays into a skirmish.");
-  const data = { phase, actorId: actor.id, itemId: w.id, lines, buttons: [] };
+  const buttons = [];
+  if (phase === "hit") for (const x of RE.extraAttacks(eng.active, { category: weapon.category, usage: w.system.usage, ranged })) {
+    const left = x.maxPerTurn == null ? x.count : Math.min(x.count, x.maxPerTurn - extraUsedThisTurn(actor, x.source));
+    for (let k = 0; k < left; k++) buttons.push({ label: `${x.source}: extra attack`, action: "extraAttack", used: false,
+      source: x.source, sameTarget: x.sameTarget, noAccuracyPenalty: x.noAccuracyPenalty, maxPerTurn: x.maxPerTurn });
+  }
+  const data = { phase, actorId: actor.id, itemId: w.id, lines, buttons };
   return data;
 }
 /** Store attack-card extras on a message (rendered by renderChatMessageHTML). */
@@ -59,6 +65,28 @@ function renderAttackCard(msg, el) {
   el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
 }
 export const ATTACK_BUTTONS = {};
+function turnKey() { const c = game.combat; return c ? `${c.id}:${c.round}:${c.turn}` : "none"; }
+function extraUsedThisTurn(actor, source) {
+  const f = actor.getFlag(SYS, "extraAttacks");
+  return f?.turn === turnKey() ? Number(f.used?.[source]) || 0 : 0;
+}
+ATTACK_BUTTONS.extraAttack = async (msg, d, i) => {
+  const b = d.buttons[i];
+  const actor = game.actors.get(d.actorId);
+  if (!actor?.isOwner || b.used) return;
+  if (b.maxPerTurn != null && extraUsedThisTurn(actor, b.source) >= b.maxPerTurn)
+    return ui.notifications.warn(`${b.source}: already used this turn.`);
+  const f = actor.getFlag(SYS, "extraAttacks");
+  const used = f?.turn === turnKey() ? { ...(f.used ?? {}) } : {};
+  used[b.source] = (Number(used[b.source]) || 0) + 1;
+  await actor.setFlag(SYS, "extraAttacks", { turn: turnKey(), used });
+  const buttons = d.buttons.map((x, k) => (k === i ? { ...x, used: true } : x));
+  await msg.setFlag(SYS, "attackCard", { ...d, buttons });
+  const w = actor.items.get(d.itemId);
+  const bits = [b.sameTarget ? "same target" : null, b.noAccuracyPenalty ? "no accuracy penalty" : null].filter(Boolean).join(", ");
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<p><b>${esc(b.source)}</b>: extra attack with ${esc(w?.name ?? "the weapon")}${bits ? ` (${bits})` : ""}. Roll its hit check from the sheet.</p>` });
+};
 async function onAttackButton(msg, d, i) {
   const b = d.buttons?.[i];
   const fn = b && ATTACK_BUTTONS[b.action];

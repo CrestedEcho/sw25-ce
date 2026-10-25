@@ -36,6 +36,7 @@ export const ACTOR_TARGETS = {
  *       equip  = equipment permission (rankAllowed -> rankCheck; warns, never blocks)
  *       spell  = read by the spell cast dialog (spell-cast.mjs)
  *       counter = named per-character counter (value = name), read as @counter:<name>
+ *       attack = chat-card attack options (extra attack button)
  *       note   = recorded and shown, not applied (no sheet support yet)                       */
 export const KEY_ALIASES = {
   "attack.critThreshold": { target: "critMod", kind: "legacy" },
@@ -52,6 +53,7 @@ export const KEY_ALIASES = {
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
   "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "spell" },
+  "attack.extraAttack": { target: "extraAttack", kind: "attack" },
   "counter.track": { target: "counter", kind: "counter" },
   "spell.extraTargets": { target: "spell.extraTargets", kind: "spell" },
   "spell.mpMultiplier": { target: "spell.mpMultiplier", kind: "spell" },
@@ -295,6 +297,27 @@ export function weaponExtras(active, weapon, ctx = {}) {
     const { rules, situational } = rulesFor(active.filter((r) => r.kind === "weapon"), t, { ...ctx, weapon });
     const c = combine(0, rules);
     out[t.split(".")[1]] = { value: c.value, steps: c.steps, situational };
+  }
+  return out;
+}
+
+/**
+ * Extra attacks offered for this weapon (attack.extraAttack): [{ source, count, maxPerTurn, sameTarget, noAccuracyPenalty }].
+ * weapon = { category, usage, ranged }. Checks attack.melee, weapon.category:<c>, weapon.stance:1H (usage starts with "1H").
+ */
+export function extraAttacks(active = [], weapon = {}) {
+  const out = [];
+  for (const r of active) {
+    if (r.kind !== "attack" || r.target !== "extraAttack") continue;
+    const pred = [].concat(r.predicate ?? []).map(String);
+    if (pred.includes("attack.melee") && weapon.ranged) continue;
+    const cat = pred.find((t) => t.startsWith("weapon.category:"));
+    if (cat && normCat(cat.slice(16)) !== normCat(weapon.category)) continue;
+    const st = pred.find((t) => t.startsWith("weapon.stance:"));
+    if (st && !String(weapon.usage ?? "").toUpperCase().startsWith(st.slice(14).toUpperCase())) continue;
+    const max = pred.find((t) => t.startsWith("extra.maxPerTurn:"));
+    out.push({ source: r.source?.name ?? "Extra attack", count: Number(r.value) || 1, maxPerTurn: max ? Number(max.slice(17)) || 1 : null,
+      sameTarget: pred.includes("extra.sameTarget"), noAccuracyPenalty: pred.includes("extra.noAccuracyPenalty") });
   }
   return out;
 }
