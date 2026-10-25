@@ -71,3 +71,26 @@ test("buildFolders: every entry foldered, Level 2 sorts before Level 10", () => 
   assert.ok(f.every((x) => x.type === "Item" && x._key === `!folders!${x._id}`));
   assert.equal(f.find((x) => x.name === "Nature Magic").folder, null);
 });
+import { testActorDoc, artPath } from "../tools/build-compendia.mjs";
+import { parseMagicSkill } from "../module/rules/sb-cast.mjs";
+test("test actors: PC embeds, fellow, multi-part mainPart first, castable magic, art paths", () => {
+  const lib = { classes: { fighter: { slug: "fighter", name: "Fighter", category: "major", tier: "warrior" } }, feats: {} };
+  const ctx = { lookup: (c, s) => lib[c]?.[s], gaps: [] };
+  const pc = testActorDoc("pcs", { slug: "pc", name: "PC", classes: [{ slug: "fighter", level: 2 }], feats: ["nope"], money: 40, abilities: { base: { tech: 7 }, dexterity: 18, correction: { dexterity: 11 } },
+    gear: { weapons: [{ name: "Sword", category: "sword" }], accessories: [{ name: "Belt", slot: "waist" }], items: ["Lifegrass x2"] } }, ctx);
+  assert.equal(pc.type, "character"); assert.equal(pc.system.money, 40); assert.equal(pc.system.abilities.dex.valuebase, 11);
+  assert.equal(pc.items.find((i) => i.type === "skill").system.skilllevel, 2);
+  assert.equal(pc.items.find((i) => i.name === "Lifegrass").system.quantity, 2);
+  assert.ok(ctx.gaps.some((g) => g.includes('"nope"')));
+  assert.equal(pc.img, artPath("pcs", "pc", "portrait")); assert.equal(pc.prototypeToken.texture.src, "assets/sw25-content/actors/pcs/pc-token.webp");
+  const f = testActorDoc("npcs", { slug: "fellow", name: "W", fellow: true, hostile: false, mp: 10, actionTable: [{ action: "Attack" }] }, ctx);
+  assert.equal(f.system.fellow.enabled, true); assert.equal(f.prototypeToken.disposition, 1);
+  const n = testActorDoc("npcs", { slug: "n", name: "N", type: "npc", hostile: false, disposition: "Hostile", parts: [{ name: "x", hp: 5 }] }, ctx);
+  assert.equal(n.prototypeToken.disposition, 0);
+  const m = testActorDoc("monsters", { slug: "m", name: "M", type: "monster", parts: [{ name: "Wing" }, { name: "Head", mainPart: true }],
+    uniqueSkills: [{ name: "Truespeech Magic 3", icon: "major", text: "t" }], magic: [{ school: "truespeech", level: 3, power: { value: 4, fixed: 11 } }] }, ctx);
+  assert.deepEqual(m.system.sb.parts.map((p) => [p.name, p.isCore]), [["Head", true], ["Wing", false]]);
+  assert.equal(m.prototypeToken.disposition, -1);
+  assert.deepEqual(parseMagicSkill(m.system.sb.uniqueSkills[0]), { schools: ["truespeech"], level: 3 });
+  assert.equal(m.system.sb.uniqueSkills[0].description, "t");
+});

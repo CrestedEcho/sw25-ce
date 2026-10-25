@@ -6,7 +6,7 @@
  * Deterministic _id from category+slug; flags.sw25-ce.slug is what grant refs resolve against.
  * The Writer JSON is kept verbatim in flags.sw25-ce.data for later richer mapping.
  */
-import { statBlockFromData, dispositionFor } from "../module/rules/statblock.mjs";
+import { statBlockFromData, dispositionFor, npcToggleDisposition, parseMovement } from "../module/rules/statblock.mjs";
 import fs from "node:fs"; import path from "node:path"; import crypto from "node:crypto";
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -228,6 +228,86 @@ export function folderTree(folders, entries) {
   walk("", ""); if (direct[""]) lines.push(`(root) ${direct[""]}`); return lines.join("\n");
 }
 
+// ---------- Private test actors (sw25-test-actors): never committed, built only into OUT ----------
+export const TEST_ACTORS = { name: "sw25-test-actors", label: "SW2.5 Test Actors (private)", type: "Actor" };
+const TA_FOLDERS = { pcs: ["PCs", 1], npcs: ["NPCs", 2], monsters: ["Monsters", 3] };
+export const artPath = (group, slug, kind) => `assets/sw25-content/actors/${group}/${slug}-${kind}.webp`;
+const embed = (actorId, doc, extra = {}) => { const _id = idFor(`embed:${actorId}`, doc.flags?.["sw25-ce"]?.slug ?? doc.name); const { folder, sort, _key, ...rest } = doc; return { ...rest, ...extra, _id, _key: `!actors.items!${actorId}.${_id}` }; };
+/** Writer unique skill {name, icon, part, text} -> sb uniqueSkill; magic[] attaches {school, level, power} to the "<School> Magic N" skill. */
+export function sbSkill(u, magic = []) {
+  const m = String(u.name ?? "").match(/([A-Za-z]+)\s+Magic\s+(\d+)/i);
+  const mg = m && magic.find((x) => String(x.school).toLowerCase() === m[1].toLowerCase());
+  const { text, icon, ...rest } = u;
+  return { ...rest, description: u.description ?? text ?? "", tags: u.tags ?? (icon ? [icon] : []), magic: u.magic ?? (mg ? { school: mg.school, level: mg.level, power: mg.power } : (m ? { school: m[1].toLowerCase(), level: Number(m[2]) } : null)) };
+}
+/** One test-actor JSON -> Actor doc. ctx = { lookup(cat, slug) -> Writer data | undefined, gaps: [] } */
+export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: [] }) {
+  const _id = idFor("test-actors", `${group}/${d.slug}`);
+  const gap = (msg) => ctx.gaps.push(`${group}/${d.slug}: ${msg}`);
+  const base = { _id, name: d.name, img: artPath(group, d.slug, "portrait"), folder: null, sort: 0, effects: [], _key: `!actors!${_id}`,
+    flags: { "sw25-ce": { slug: d.slug, testActor: true, source: d.source ?? "", ...(d.todo ? { todo: d.todo } : {}) } } };
+  const token = (disp) => ({ name: d.name, texture: { src: artPath(group, d.slug, "token") }, disposition: disp, actorLink: group === "pcs" });
+  const items = [];
+  const addRef = (cat, slug, extra = {}) => { const src = ctx.lookup(cat, slug); if (!src) { gap(`unresolved ${cat} ref "${slug}"`); return null; } const it = embed(_id, toDoc(cat, src), extra); items.push(it); return it; };
+  if (group === "pcs") {
+    for (const c of d.classes ?? []) addRef("classes", c.slug, {}) && (items.at(-1).system.skilllevel = c.level);
+    for (const f of d.feats ?? []) addRef("feats", f);
+    const g = d.gear ?? {};
+    const gearItem = (x, type, sys) => { const slug = x.slug ?? x.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      items.push(embed(_id, { name: x.name, type, img: "icons/svg/item-bag.svg", flags: { "sw25-ce": { slug, data: x } }, system: { description: "", rules: [], quantity: 1, price: x.price ?? "", ...sys } })); };
+    for (const w of g.weapons ?? []) gearItem(w, "weapon", { type: w.category ?? "", usage: w.stance ?? "", hit: w.accuracy ?? 0, dmod: w.extraDamage ?? 0, range: w.range ?? "", reqstr: w.minStr ?? null, power: w.power ?? null, cr: w.critThreshold ?? null });
+    for (const a of g.armor ?? []) gearItem(a, "armor", { type: a.category ?? "", pp: a.defense ?? 0, dodge: a.evasion ?? 0, reqstr: a.minStr ?? null });
+    for (const a of g.accessories ?? []) { if (!a.slot) gap(`accessory "${a.name}" has no slot`); gearItem(a, "accessory", { accpart: a.slot ?? "" }); }
+    for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); gearItem({ name: m ? m[1] : s }, "item", { quantity: m ? Number(m[2]) : 1 }); }
+    const ab = d.abilities ?? {}; const B = ab.base ?? {}; const C = ab.correction ?? {};
+    const A = { dex: ["dexterity", "tech"], agi: ["agility", "tech"], str: ["strength", "body"], vit: ["vitality", "body"], int: ["intelligence", "mind"], mnd: ["spirit", "mind"] };
+    const abilities = {}; for (const [k, [long, b]] of Object.entries(A)) { abilities[k] = { racevalue: B[b] ?? "", valuebase: C[long] ?? ((ab[long] ?? 0) - (B[b] ?? 0)) }; if (ab[long] != null && (B[b] ?? 0) + (C[long] ?? 0) !== ab[long]) gap(`${long} ${ab[long]} != base ${B[b]} + correction ${C[long]}`); }
+    if (d.racialAbilities?.length) gap("racialAbilities kept as flags only (no raceability items built)");
+    if (d.languages?.length) gap("languages kept as flags only (character language items not built)");
+    Object.assign(base.flags["sw25-ce"], { racialAbilities: d.racialAbilities ?? [], languages: d.languages ?? [], derived: d.derived ?? {} });
+    return { ...base, type: "character", items, prototypeToken: token(1),
+      system: { race: d.race ?? "", class: d.race ?? "", money: d.money ?? 0, faith: d.derived?.deity ?? "", hp: { value: d.hp ?? "" }, mp: { value: d.mp ?? "" }, abilities, attributes: { advlevel: { value: d.adventurerLevel ?? "" } } } };
+  }
+  if (d.fellow) {
+    const rows = (d.actionTable ?? []).map((r) => ({ action: r.action ?? "", kind: /attack/i.test(r.action ?? "") ? "attack" : "check", dialogue: r.dialogue ?? "", value: r.value ?? "", effect: r.effect ?? "", mp: r.mp ?? 0 }));
+    const classes = (d.classes ?? []).map((c) => { const k = ctx.lookup("classes", c.slug); if (!k) gap(`unresolved classes ref "${c.slug}"`); return `${k?.name ?? c.slug} ${c.level}`; }).join(", ");
+    const fellow = { enabled: true, race: d.race ?? "", gender: d.gender ?? "", age: d.age ?? "", level: d.adventurerLevel ?? 1, classes, languages: d.languages ?? [], intro: d.introduction ?? "",
+      wantsExp: d.wants?.experience ?? true, wantsReward: d.wants?.reward ?? true, owner: "", mp: { value: d.mp ?? 0, max: d.mp ?? 0 }, rows, consumables: d.consumables ?? [] };
+    if (!d.parts) gap("Fellow has no stat block parts (sb left empty; Fellow card only)");
+    return { ...base, type: "npc", items, prototypeToken: token(1),
+      system: { description: "", sb: { ...statBlockFromData(d), hostile: false, race: d.race ?? "", classLevels: d.classes ?? [] }, fellow } };
+  }
+  // NPC / monster stat blocks (Kobold format)
+  const parts = (d.parts ?? []).map((p) => { const { mainPart, ...q } = p; return { ...q, isCore: !!mainPart }; });
+  const mi = parts.findIndex((p) => p.isCore); if (mi > 0) parts.unshift(...parts.splice(mi, 1));
+  if (parts.length > 1 && mi < 0) gap("multi-part without mainPart");
+  const magic = d.magic ?? [];
+  const sb = { ...statBlockFromData({ ...d, parts }), parts, uniqueSkills: (d.uniqueSkills ?? []).map((u) => sbSkill(u, magic)), description: d.description ?? "" };
+  if (d.movementFly) sb.movement = { ...parseMovement(d.movementSpeed), other: d.movementFly, otherMode: "Fly" };
+  if (d.linkedForm) base.flags["sw25-ce"].linkedForm = d.linkedForm;
+  for (const m of magic) if (!sb.uniqueSkills.some((u) => u.magic?.school === m.school)) gap(`magic ${m.school} has no matching "<School> Magic N" skill`);
+  const isNpc = group === "npcs";
+  if (isNpc) { sb.hostile = d.hostile === true; }
+  const disp = { FRIENDLY: 1, NEUTRAL: 0, HOSTILE: -1 }[isNpc ? npcToggleDisposition({ hostile: sb.hostile }) : (sb.neutral ? "NEUTRAL" : "HOSTILE")];
+  return { ...base, type: isNpc ? "npc" : "monster", items, prototypeToken: token(disp), system: { description: d.description ?? "", monlevel: d.level ?? 1, sb } };
+}
+/** Build the test-actor source docs (+ folders). Returns { docs, gaps, todos, list }. */
+export function buildTestActors(dir, lookup) {
+  const docs = []; const gaps = []; const todos = {}; const list = {}; const folders = [];
+  for (const [group, [fname, sort]] of Object.entries(TA_FOLDERS)) {
+    const fid = idFor("folder:test-actors", group);
+    folders.push({ _id: fid, name: fname, type: "Actor", folder: null, sorting: "a", sort: sort * 100000, color: null, description: "", flags: {}, _key: `!folders!${fid}` });
+    const gdir = path.join(dir, group); if (!fs.existsSync(gdir)) continue;
+    for (const f of fs.readdirSync(gdir).filter((x) => x.endsWith(".json") && !x.startsWith("_")).sort()) {
+      const d = JSON.parse(fs.readFileSync(path.join(gdir, f), "utf8"));
+      const doc = testActorDoc(group, d, { lookup, gaps }); doc.folder = fid; docs.push(doc);
+      (list[fname] ??= []).push(`${doc.name} [${doc.type}${doc.system.fellow?.enabled ? ", fellow" : ""}, token ${({ 1: "Friendly", 0: "Neutral", "-1": "Hostile" })[doc.prototypeToken.disposition]}]`);
+      if (d.todo) todos[`${group}/${d.slug}`] = d.todo;
+    }
+  }
+  return { docs: [...folders, ...docs], gaps, todos, list };
+}
+
 async function main() {
   const report = {}; const trees = {}; const gaps = [];
   const all = [];
@@ -251,9 +331,19 @@ async function main() {
     report[p.name] = n; (report.folders ??= {})[p.name] = folders.length; (trees[p.name] = folderTree(folders, entries));
     gaps.push(...entries.filter(({ d }) => cat === "items").flatMap(({ d }) => [!d.rank && `${d.slug}: no rank`, ["accessory", "gear"].includes(d.type) && !d.slot && `${d.slug}: no slot`].filter(Boolean)));
   }
+  // private test actors (gen/data/test-actors) -> sw25-test-actors
+  const taDir = path.join(DATA, "test-actors"); let ta = null;
+  if (fs.existsSync(taDir)) {
+    const lib = {}; for (const { cat, d } of all) (lib[cat] ??= new Map()).set(d.slug, d);
+    for (const cat of ["classes", "feats"]) { const dd = path.join(DATA, cat); if (fs.existsSync(dd)) for (const d of listData(dd)) (lib[cat] ??= new Map()).has(d.slug) || lib[cat].set(d.slug, d); }
+    ta = buildTestActors(taDir, (cat, slug) => lib[cat]?.get(slug));
+    const out = path.join(srcRoot, TEST_ACTORS.name); fs.mkdirSync(out, { recursive: true });
+    for (const doc of ta.docs) fs.writeFileSync(path.join(out, `${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
+    report[TEST_ACTORS.name] = ta.docs.filter((x) => !x._key.startsWith("!folders")).length;
+  }
   if (!JSON_ONLY) {
     const { compilePack } = await import("@foundryvtt/foundryvtt-cli");
-    for (const p of Object.values(PACKS)) {
+    for (const p of [...Object.values(PACKS), TEST_ACTORS]) {
       const s = path.join(srcRoot, p.name);
       if (!fs.existsSync(s) || !fs.readdirSync(s).length) continue;
       await compilePack(s, path.join(OUT, "packs", p.name), { log: false });
@@ -263,7 +353,7 @@ async function main() {
   const spellNotes = all.filter((x) => x.cat === "spells").map(({ d }) => { const doc = toDoc("spells", d); const f = doc.flags["sw25-ce"]; return f.warnings ? { slug: d.slug, mp: f.mp.raw, warnings: f.warnings } : null; }).filter(Boolean);
   check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
   fs.writeFileSync(path.join(OUT, "folders.txt"), Object.entries(trees).map(([k, v]) => `== ${k}\n${v}`).join("\n\n") + "\n");
-  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...check }, null, 2));
+  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...(ta ? { testActors: { list: ta.list, gaps: ta.gaps, todos: ta.todos } } : {}), ...check }, null, 2));
   console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });
