@@ -34,6 +34,17 @@ export function magicDamageTaken(amount, weakPoint, revealed = true) {
   const a = Math.max(0, Number(amount) || 0);
   return a > 0 ? a + (revealed ? magicWeakBonus(weakPoint) : 0) : 0;
 }
+/** "Physical Damage +2 points" -> 2. */
+export function physicalWeakBonus(weakPoint) {
+  const m = String(weakPoint ?? "").match(/^\s*physical\s+damage\s*\+\s*(\d+)/i);
+  return m ? Number(m[1]) : 0;
+}
+/** Damage taken by kind: physical subtracts Defense (min 0) then adds a revealed "Physical Damage +N"; magic ignores Defense. */
+export function damageTaken(amount, { kind = "magic", defense = 0, weakPoint = "", revealed = true } = {}) {
+  if (kind !== "physical") return magicDamageTaken(amount, weakPoint, revealed);
+  const a = Math.max(0, (Number(amount) || 0) - (Number(defense) || 0));
+  return a > 0 ? a + (revealed ? physicalWeakBonus(weakPoint) : 0) : 0;
+}
 /** True when a spell carries the compendium {rate, table} power object (vs the legacy numeric power + pt3..pt12). */
 export const hasPowerObject = (sys) => !!sys && typeof sys.power === "object" && sys.power !== null && Array.isArray(sys.power.table);
 /** Roll damage with an async 2d6 roller (returns a total). Rerolls on crit; shared by monster and PC casting. */

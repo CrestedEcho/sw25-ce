@@ -5,7 +5,8 @@
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
-import { rollSpellDamage, magicDamageTaken } from "../rules/spell-power.mjs";
+import { rollSpellDamage } from "../rules/spell-power.mjs";
+import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
@@ -173,27 +174,8 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
 
 /** Chat buttons on spell cards: apply magic damage to targeted tokens (Defense ignored, "Magic Damage +N" weak point added). */
 Hooks.on("renderChatMessageHTML", (_msg, el) => {
-  el.querySelectorAll?.("[data-sw25-magic-dmg]").forEach((b) => b.addEventListener("click", async (ev) => {
-    ev.preventDefault(); const amount = Number(b.dataset.sw25MagicDmg) || 0;
-    const targets = [...(game.user.targets ?? [])].map((t) => t.actor).filter(Boolean);
-    if (!targets.length) return ui.notifications.warn("Target one or more tokens first.");
-    const lines = [];
-    for (const a of targets) {
-      const weak = a.system?.sb?.weakPoint ?? "";
-      const dmg = magicDamageTaken(amount, weak, a.system?.sb?.weaknessRevealed === true);
-      if (a.type === "character") {
-        const before = Number(a.system.hp?.value) || 0; await a.update({ "system.hp.value": before - dmg });
-        lines.push(`${foundry.utils.escapeHTML(a.name)}: ${dmg} → HP ${before - dmg}`);
-      } else {
-        const raw = a._source.system?.sb ?? {}; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
-        const viewParts = a.system.sbView?.parts ?? []; const core = Math.max(0, viewParts.findIndex((p) => p.isCore));
-        const out = applySbCost(rawParts, viewParts, { mp: 0, hp: dmg, partIndex: core });
-        if (out.index < 0) { lines.push(`${foundry.utils.escapeHTML(a.name)}: no parts`); continue; }
-        await a.update({ "system.sb.parts": out.parts });
-        lines.push(`${foundry.utils.escapeHTML(a.name)}: ${dmg}${dmg > amount ? ` (incl. weak point +${dmg - amount})` : ""} → HP ${out.hpAfter}`);
-      }
-    }
-    ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>Magic damage applied</b><br>${lines.join("<br>")}</div>` });
+  el.querySelectorAll?.("[data-sw25-magic-dmg]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.preventDefault(); applyDamageToTargets(Number(b.dataset.sw25MagicDmg) || 0, "magic");
   }));
 });
 export { ARRAY_FIELDS };

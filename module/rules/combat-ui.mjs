@@ -4,6 +4,7 @@
  */
 import * as CS from "./combat-state.mjs";
 import * as RE from "./engine.mjs";
+import { applyDamageToTargets } from "./apply-damage.mjs";
 
 const SYS = CS.SYS;
 const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? "");
@@ -54,7 +55,8 @@ export async function annotateAttackCard(actor, messageId, phase, item = null) {
   const msg = messageId ? game.messages.get(messageId) : null;
   if (!msg || !msg.isOwner) return;
   const data = attackCardData(actor, phase, item);
-  if (!data || (!data.lines.length && !data.buttons.length)) return;
+  if (data && phase === "damage") { const t = Number(msg.flags?.sw25?.total); if (Number.isFinite(t)) data.applyDamage = t; }
+  if (!data || (!data.lines.length && !data.buttons.length && data.applyDamage == null)) return;
   await msg.setFlag(SYS, "attackCard", data);
 }
 function renderAttackCard(msg, el) {
@@ -63,7 +65,9 @@ function renderAttackCard(msg, el) {
   const lines = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join("");
   const btns = (d.buttons ?? []).map((b, i) => `<button type="button" class="sw-attack-btn" data-i="${i}" ${b.used ? "disabled" : ""}>${esc(b.label)}${b.used ? " (used)" : ""}</button>`).join("");
   const links = (d.links ?? []).map((l) => `<div><a class="content-link" draggable="true" data-link data-uuid="${esc(l.uuid)}" data-type="JournalEntry"><i class="fas fa-book-open"></i> ${esc(l.label)}</a></div>`).join("");
-  const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${links}${btns}</div>`;
+  const apply = d.applyDamage != null ? `<button type="button" class="sw-attack-apply" title="Physical damage: target's Defense is subtracted. Applies to the tokens targeted when you click.">Apply damage ${Number(d.applyDamage)}</button>` : "";
+  const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${links}${btns}${apply}</div>`;
+  el.querySelector(".sw-attack-apply")?.addEventListener("click", (ev) => { ev.preventDefault(); applyDamageToTargets(d.applyDamage, "physical"); });
   (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
   el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
 }
