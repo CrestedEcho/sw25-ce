@@ -1,0 +1,103 @@
+{
+  "id": "sw25-ce",
+  "title": "Sword World 2.5 (CE Edition)",
+  "description": "Sword World 2.5 system for Foundry VTT v14. Fork of jeannjeann/sw25-fvtt (MIT) by Jean.N, ported/maintained by CrestedEcho.",
+  "authors": [
+    {
+      "name": "Jean.N"
+    },
+    {
+      "name": "CrestedEcho"
+    }
+  ],
+  "url": "https://github.com/CrestedEcho/sw25-ce",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "changelog": "CHANGELOG.md",
+  "media": [
+    {
+      "type": "setup",
+      "url": "systems/sw25-ce/assets/sw25fvtt.png",
+      "thumbnail": "systems/sw25-ce/assets/sw25fvtt.png"
+    }
+  ],
+  "version": "3.0.0-ce.9",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "esmodules": [
+    "module/sw25.mjs"
+  ],
+  "styles": [
+    "css/sw25.css",
+    "fonts/MingCute/MingCute.css",
+    "css/sw25-sheet-v2.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "ja",
+      "name": "日本語(Japanese)",
+      "path": "lang/ja.json"
+    },
+    {
+      "lang": "ko",
+      "name": "한국어(Korean)",
+      "path": "lang/ko.json"
+    }
+  ],
+  "packs": [
+    {
+      "name": "manual",
+      "label": "Manual",
+      "type": "JournalEntry",
+      "path": "packs/manual"
+    },
+    {
+      "name": "reference",
+      "label": "Reference",
+      "type": "JournalEntry",
+      "path": "packs/reference"
+    },
+    {
+      "name": "macro",
+      "label": "Macros",
+      "type": "Macro",
+      "path": "packs/macro"
+    }
+  ],
+  "packFolders": [
+    {
+      "name": "Sword World 2.5",
+      "sorting": "m",
+      "packs": [
+        "manual"
+      ],
+      "folders": [
+        {
+          "name": "Tools",
+          "sorting": "m",
+          "packs": [
+            "reference"
+          ]
+        }
+      ]
+    }
+  ],
+  "socket": true,
+  "manifest": "https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json",
+  "download": "https://github.com/CrestedEcho/sw25-ce/releases/download/v3.0.0-ce.9/sw25-ce.zip",
+  "background": "systems/sw25-ce/assets/sw25fvtt.png",
+  "grid": {
+    "distance": 1,
+    "units": "m"
+  },
+  "primaryTokenAttribute": "hp",
+  "secondaryTokenAttribute": "mp",
+  "type": "system"
+}

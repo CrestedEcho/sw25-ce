@@ -1,0 +1,44 @@
+{{!-- ce.7 Equipment Card (docked left, visible on every tab) --}}
+{{#*inline "eqcSlot"}}
+<div class="eqc-slot {{#if slot.item}}filled{{/if}} {{#if slot.locked}}locked{{/if}} {{#if slot.warn}}warn{{/if}}" data-sw-drop="slot" data-slot="{{slot.key}}" {{#if slot.item}}data-item-id="{{slot.item.id}}"{{/if}}
+     data-tooltip="{{#if slot.locked}}{{localize 'SW25.EquipCard.TwoHanded'}}{{else if slot.warn}}{{slot.warn}}{{else if slot.item}}{{slot.item.name}}{{else}}{{slot.label}}{{/if}}">
+  <div class="eqc-box">
+    {{#if slot.item}}
+      <img class="eqc-item-open" src="{{slot.item.img}}" alt="{{slot.item.name}}"/>
+      <a class="eqc-unequip" data-tooltip="{{localize 'SW25.EquipCard.Unequip'}}">&times;</a>
+      {{#if slot.warn}}<span class="eqc-warn"><i class="fas fa-triangle-exclamation"></i></span>{{/if}}
+    {{else}}
+      <img class="eqc-ph {{#if slot.mirror}}mirror{{/if}}" src="{{slot.icon}}" alt=""/>
+      {{#if slot.locked}}<i class="fas fa-lock eqc-lock"></i>{{/if}}
+    {{/if}}
+  </div>
+  <div class="eqc-label">{{slot.label}}</div>
+  {{#if slot.item}}<div class="eqc-name">{{slot.item.name}}</div>{{/if}}
+</div>
+{{/inline}}
+<aside class="sw-equipcard">
+  <div class="eqc-head"><span class="ribbon">{{localize "SW25.EquipCard.Title"}}</span></div>
+  <div class="eqc-grid">
+    <div class="eqc-col">{{#each equipCard.left as |slot|}}{{> eqcSlot slot=slot}}{{/each}}</div>
+    <div class="eqc-portrait {{#if equipCard.portrait.fit}}fit{{/if}}" style="--px:{{equipCard.portrait.x}}%;--py:{{equipCard.portrait.y}}%;--pz:{{equipCard.portrait.zoom}}">
+      {{#if equipCard.portrait.fit}}<img class="eqc-pbg" src="{{equipCard.portrait.src}}" alt=""/>{{/if}}
+      <img class="eqc-pimg" src="{{equipCard.portrait.src}}" alt="{{actor.name}}"/>
+      {{#if equipCard.portrait.canEdit}}<a class="eqc-edit-portrait" data-tooltip="{{localize 'SW25.EquipCard.EditPortrait'}}"><i class="fas fa-crop-simple"></i></a>{{/if}}
+    </div>
+    <div class="eqc-col">{{#each equipCard.right as |slot|}}{{> eqcSlot slot=slot}}{{/each}}</div>
+  </div>
+  <div class="eqc-bottom">{{#each equipCard.bottom as |slot|}}{{> eqcSlot slot=slot}}{{/each}}</div>
+  <div class="eqc-chips">
+    <span class="eqc-chip" data-tooltip="{{localize 'SW25.V2.Tip.Defense'}}"><i class="fas fa-shield-halved"></i> {{localize "SW25.V2.Defense"}} <b>{{equipCard.defense}}</b></span>
+    <span class="eqc-chip" data-tooltip="{{localize 'SW25.V2.Tip.Evasion'}}"><i class="fas fa-wind"></i> {{localize "SW25.V2.Evasion"}} <b>{{equipCard.evasion}}</b></span>
+  </div>
+  <details class="eqc-other" {{#if equipCard.otherOpen}}open{{/if}}>
+    <summary>{{localize "SW25.EquipCard.Other"}} ({{equipCard.others.length}})</summary>
+    <ul class="eqc-other-list">
+      {{#each equipCard.others as |it|}}
+      <li class="eqc-other-row" data-item-id="{{it.id}}"><img class="eqc-item-open" src="{{it.img}}" alt=""/><span class="eqc-item-open">{{it.name}}</span><a class="eqc-unequip" data-tooltip="{{localize 'SW25.EquipCard.Unequip'}}">&times;</a></li>
+      {{/each}}
+      <li class="eqc-other-drop" data-sw-drop="other"><i class="fas fa-plus"></i> {{localize "SW25.EquipCard.DropHere"}}</li>
+    </ul>
+  </details>
+</aside>

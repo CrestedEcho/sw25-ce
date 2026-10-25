@@ -1,0 +1,25 @@
+<div class="panel ce7-feats"><span class="ribbon">{{localize "SW25.V2.Feats.Title"}}</span>
+  <div class="ce7-feat-slots">
+    {{#each ce7feats.slots as |s|}}
+    <div class="ce7-feat-slot {{#if s.locked}}locked{{/if}} {{#if s.item}}filled item{{/if}}" data-sw-drop="feat" data-level="{{s.level}}" {{#if s.item}}data-item-id="{{s.item.id}}"{{/if}} {{#if s.locked}}data-tooltip="{{s.lockTip}}"{{/if}}>
+      <span class="lv">{{localize "SW25.V2.Feats.Slot" level=s.level}}</span>
+      {{#if s.item}}<img src="{{s.item.img}}" alt=""/><a class="item-edit nm">{{s.item.name}}</a><a class="ce7-feat-clear" data-tooltip="{{localize 'SW25.EquipCard.Unequip'}}">&times;</a>
+      {{else}}{{#if s.locked}}<i class="fas fa-lock"></i>{{else}}<span class="ph">{{localize "SW25.V2.Feats.DropFeat"}}</span>{{/if}}{{/if}}
+    </div>
+    {{/each}}
+  </div>
+  <div class="grid2">
+    <div class="ce7-feat-list" data-sw-drop="auto"><h4>{{localize "SW25.V2.Feats.Auto"}}</h4>
+      {{#each ce7feats.auto as |it|}}<div class="item ce7-row" data-item-id="{{it.id}}"><img src="{{it.img}}" alt=""/><a class="item-edit">{{it.name}}</a><a class="ce7-feat-clear">&times;</a></div>{{/each}}
+      <div class="ce7-drop-row"><i class="fas fa-plus"></i> {{localize "SW25.V2.Feats.DropFeat"}}</div>
+    </div>
+    <div class="ce7-feat-list" data-sw-drop="racial"><h4>{{localize "SW25.V2.Feats.Racial"}}</h4>
+      {{#each ce7feats.racial as |it|}}<div class="item ce7-row" data-item-id="{{it.id}}"><img src="{{it.img}}" alt=""/><a class="item-edit">{{it.name}}</a></div>{{/each}}
+    </div>
+  </div>
+  {{#if ce7feats.unassigned.length}}
+  <div class="ce7-feat-list unassigned"><h4>{{localize "SW25.V2.Feats.Unassigned"}}</h4>
+    {{#each ce7feats.unassigned as |it|}}<div class="item ce7-row" data-item-id="{{it.id}}"><img src="{{it.img}}" alt=""/><a class="item-edit">{{it.name}}</a></div>{{/each}}
+  </div>
+  {{/if}}
+</div>

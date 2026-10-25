@@ -1,0 +1,126 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name"/></h1>
+      <div class="grid grid-2col">
+        <div class="flexrow flex-group-left resource">
+          <span class="resource-label">{{localize "SW25.Item.Skill.Skilllevel"}}</span>
+          <span class="resource-label-l">{{system.skilllevel}}</span>
+        </div>
+        <div class="flexrow flex-group-right resource">
+          <span class="resource-label">{{localize "SW25.Item.Skill.Skillexp"}}</span>
+          <span class="resource-label">{{system.skillexp}}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Sheet Tab Navigation --}}
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="description">{{localize "SW25.Description"}}</a>
+    <a class="item" data-tab="details">{{localize "SW25.Details"}}</a>
+    <a class="item" data-tab="effects">{{localize "SW25.Effects"}}</a>
+  </nav>
+
+  {{!-- Sheet Body --}}
+  <section class="sheet-body" style="height: 65%;">
+
+    {{!-- Description Tab --}}
+    <div class="tab description" data-group="primary" data-tab="description">
+      <section class="grid grid-4col">
+        <aside class="sidebar flex-between">
+          <div class="flexcol">
+            <span><b>{{localize "SW25.Check"}}{{localize "SW25.Basenumber"}}</b></span>
+            <div class="flexrow">
+              <label for="{{item._id}}system.skillmod" style="text-align: right;">{{localize "SW25.Modifier"}}</span>
+              <input id="{{item._id}}system.skillmod" class="resource-label" style="text-align: center;" type="text" name="system.skillmod" value="{{system.skillmod}}" data-dtype="Number"/>
+            </div>
+            <hr>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Dex.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.dex}}</span>
+            </div>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Agi.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.agi}}</span>
+            </div>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Str.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.str}}</span>
+            </div>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Vit.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.vit}}</span>
+            </div>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Int.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.int}}</span>
+            </div>
+            <div class="flexrow flex-group-right">
+              <span class="resource-label flexlarge">{{localize "SW25.Ability.Mnd.long"}}</span>
+              <span class="resource-label flexlarge" style="text-align: left;">: {{system.skillbase.mnd}}</span>
+            </div>
+          </div>
+        </aside>
+        <section class="main grid-span-3">
+          <span><b>{{localize "SW25.Description"}}</b></span>
+          {{editor system.description target="system.description" rollData=rollData button=true owner=owner editable=editable}}
+        </section>
+      </section>
+    </div>
+
+    {{!-- Details Tab --}}
+    <div class="tab details" data-group="primary" data-tab="details">
+      <div class="flexrow grid grid-8col nogapmargin">
+        <span style="text-align: center;"><label for="{{item._id}}system.skilllevel"><b>{{localize "SW25.Item.Skill.Skilllevel"}}</b></label><br>
+          <input id="{{item._id}}system.skilllevel" type="text" name="system.skilllevel" value="{{system.skilllevel}}" data-dtype="Number"/></span>
+        <span style="text-align: center;"><b>{{localize "SW25.Item.Skill.Exptable"}}</b><br>
+          <select name="system.exptable">
+            {{selectOptions config.exptables selected=system.exptable blank="-"}}
+          </select>
+        </span>
+        <span class="grid-span-2" style="text-align: center;"><b>{{localize "SW25.Item.Skill.Skilltype"}}</b><br>
+          <select name="system.skilltype">
+            {{selectOptions config.skillTypes selected=system.skilltype localize=true blank="-"}}
+          </select>
+        </span>
+        <div class="grid-span-3">
+          <input class="checkbox--hidden" id="{{item._id}}system.dedicated" type="checkbox" name="system.dedicated" data-dtype="Boolean" {{#if system.dedicated}} checked {{/if}}/>
+          <label class="checkbox--label" for="{{item._id}}system.dedicated">{{localize "SW25.Item.Invoker"}}</label>
+        </div>
+      </div>
+
+      {{!-- ce.7 class-rule framework: optional data read by the character sheet; empty = no effect --}}
+      <details class="sw-classrules" style="margin-top:8px">
+        <summary><b>{{localize "SW25.Item.Skill.Rules"}}</b></summary>
+        <p class="notes">{{localize "SW25.Item.Skill.RulesHint"}}</p>
+        <div class="flexrow grid grid-4col nogapmargin">
+          <label>{{localize "SW25.Item.Skill.CritMod"}}<input type="number" name="system.rules.critMod" value="{{system.rules.critMod}}" data-dtype="Number"/></label>
+          <label>{{localize "SW25.Item.Skill.MinStrMult"}}<input type="number" step="0.5" min="0" name="system.rules.minStrMult" value="{{system.rules.minStrMult}}" data-dtype="Number"/></label>
+          <label class="grid-span-2"><input type="checkbox" name="system.rules.attackOnly" data-dtype="Boolean" {{#if system.rules.attackOnly}}checked{{/if}}/> {{localize "SW25.Item.Skill.AttackOnly"}}</label>
+          <label>{{localize "SW25.Item.Skill.CastPenaltyMetal"}}<input type="number" name="system.rules.castPenalty.metal" value="{{system.rules.castPenalty.metal}}" data-dtype="Number"/></label>
+          <label>{{localize "SW25.Item.Skill.CastPenaltyNonmetal"}}<input type="number" name="system.rules.castPenalty.nonmetal" value="{{system.rules.castPenalty.nonmetal}}" data-dtype="Number"/></label>
+          <label>{{localize "SW25.Item.Skill.CastPenaltyNonmetalStr"}}<input type="number" name="system.rules.castPenalty.nonmetalMinStr" value="{{system.rules.castPenalty.nonmetalMinStr}}" data-dtype="Number"/></label>
+        </div>
+        <h4>{{localize "SW25.Item.Skill.AutoFeats"}}</h4>
+        <ul class="af-list" style="list-style:none;padding:0;margin:0">
+          {{#each system.autoFeats as |f i|}}
+          <li class="flexrow" style="align-items:center;gap:6px">
+            <span style="flex:0 0 60px">Lv <input class="af-level" type="number" min="1" max="20" data-index="{{i}}" value="{{f.level}}" style="width:40px"/></span>
+            <span style="flex:1">{{#if f.name}}{{f.name}}{{else}}{{f.uuid}}{{/if}}</span>
+            <a class="af-remove" data-index="{{i}}" style="flex:0 0 20px"><i class="fas fa-trash"></i></a>
+          </li>
+          {{/each}}
+        </ul>
+        <div class="af-drop" style="border:1px dashed #999;padding:6px;text-align:center;margin-top:4px">{{localize "SW25.Item.Skill.AutoFeatsDrop"}}</div>
+      </details>
+    </div>
+
+    {{!-- Effects Tab --}}
+    <div class="tab effects" data-group="primary" data-tab="effects">
+      {{> "systems/sw25-ce/templates/item/parts/item-effects.hbs"}}
+    </div>
+
+  </section>
+</form>

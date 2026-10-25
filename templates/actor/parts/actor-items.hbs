@@ -1,0 +1,63 @@
+<ol class='items-list'>
+  <li class='item flexrow items-header'>
+    <div class='item-name'>{{localize "TYPES.Item.item"}}</div>
+    <div class='item-element' style="flex: 0 0 60px;">{{localize "SW25.Quantity"}}</div>
+    <div class='item-controls'>
+      <a class='item-control item-create' title='{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.item")}}' data-type='item' >
+        <i class='fas fa-plus'></i>
+        {{localize 'DOCUMENT.New' type=''}}
+      </a>
+    </div>
+  </li>
+  {{#each gear as |item id|}}
+    <li class='item' data-item-id='{{item._id}}'>
+      <div class="flexrow flex-group-center">
+        <div class='item-name'>
+          <div class='item-image'>
+            <a class='rollable' data-roll-type='item'>
+              <img class="roll-icon" src='{{item.img}}' title='{{item.name}}'/>
+            </a>
+          </div>
+          <h4 class="item-label">{{item.name}}</h4>
+        </div>
+        {{> "systems/sw25-ce/templates/actor/parts/actor-useitems.hbs" item=item}}
+        <div class='item-quantity item-prop flexrow flex-group-center' style="flex: 0 0 60px;">
+          <a class="quantity-button" data-action="decrease" data-property="item.system.quantity">
+            <i class="fas fa-minus"></i>
+          </a>
+          <input class="qt-change" type="text" name="quantityInput" value="{{item.system.quantity}}" data-dtype="Number"/>
+          <a class="quantity-button" data-action="increase" data-property="item.system.quantity">
+            <i class="fas fa-plus"></i>
+          </a>
+        </div>
+        {{#if ../isOwner}}
+          <div class='item-controls'>
+            <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.item")}}'>
+              <i class='fas fa-edit'></i>
+            </a>
+            {{#if ../system.isEdit}}
+            <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=(localize "TYPES.Item.item")}}'>
+              <i class='fas fa-trash'></i>
+            </a>
+            {{/if}}
+          </div>
+        {{else}}
+          <div class='item-controls'>
+            <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.item")}}'>
+              <i class='fa-solid fa-eye'></i>
+            </a>
+          </div>
+        {{/if}}
+      </div>
+      <div class="item-description nogapmargin">
+        <div class="flexrow">
+          <div style="flex: 0 0 60px;"></div>
+          <div style="font-size: 0.8em;">
+            {{{system.description}}}
+          </div>
+          <div style="flex: 0 0 50px;"></div>
+        </div>
+      </div>
+    </li>
+  {{/each}}
+</ol>

@@ -1,0 +1,979 @@
+{
+  "Actor": {
+    "types": [
+      "character",
+      "npc",
+      "monster"
+    ],
+    "templates": {
+      "base": {
+        "hp": {
+          "value": "",
+          "max": "",
+          "hpmod": "",
+          "efhpmod": 0
+        },
+        "mp": {
+          "value": "",
+          "min": 0,
+          "max": "",
+          "mpmod": "",
+          "efmpmod": 0
+        },
+        "race": "",
+        "biography": ""
+      },
+      "money": 0,
+      "efcmod": 0,
+      "efspcmod": 0,
+      "efallskadvmod": 0,
+      "efallmgpacmod": 0,
+      "effect": {
+        "vitres": 0,
+        "mndres": 0,
+        "init": 0,
+        "mknow": 0,
+        "allck": 0,
+        "allsk": 0,
+        "allmgp": 0,
+        "hit": 0,
+        "dmg": 0,
+        "efcvalue": 0,
+        "efspellcvalue": 0,
+        "dodge": 0
+      },
+      "fellow": {
+        "toFellow": false,
+        "fellowmemo": "",
+        "fellowtype": "fellow",
+        "showaction": false,
+        "tabletype": "fellow",
+        "canceldialog": "",
+        "attributes": {
+          "skill": "",
+          "fellowexp": true,
+          "fellowreward": true,
+          "langlist": "",
+          "showaction": false
+        }
+      },
+      "daemon": {
+        "toFellow": false,
+        "fellowmemo": "",
+        "fellowtype": "daemon",
+        "showaction": false,
+        "tabletype": "daemon",
+        "canceldialog": "",
+        "attributes": {
+          "skill": "",
+          "fellowexp": false,
+          "fellowreward": false,
+          "langlist": "",
+          "showaction": false
+        }
+      }
+    },
+    "character": {
+      "templates": [
+        "base",
+        "fellow"
+      ],
+      "attributes": {
+        "advlevel": {
+          "value": "",
+          "mod": "0"
+        },
+        "mglevel": {
+          "value": ""
+        },
+        "move": {
+          "limited": "3",
+          "normal": "",
+          "max": "",
+          "movemod": "",
+          "efmovemod": 0
+        },
+        "age": "",
+        "gender": "",
+        "born": "",
+        "faith": "",
+        "grace": true,
+        "honer": {
+          "rank": "-",
+          "value": 0
+        },
+        "impurity": 0,
+        "fumble": 0,
+        "useexp": 0,
+        "totalexp": 3000,
+        "hitweapon": "",
+        "attackskill": "",
+        "dodgeskill": "",
+        "herbskill": "",
+        "potionskill": "",
+        "repairskill": "",
+        "protectionpoint": 0,
+        "magicprotection": 0,
+        "hitmod": 0,
+        "efhitmod": 0,
+        "dmod": 0,
+        "efdmod": 0,
+        "ltmod": 0,
+        "crmod": 0,
+        "efwphalfmod": 0,
+        "efsphalfmod": 0,
+        "dodgemod": 0,
+        "efdodgemod": 0,
+        "ppmod": 0,
+        "efppmod": 0,
+        "mppmod": 0,
+        "efmppmod": 0,
+        "dreduce": 0,
+        "efdreduce": 0,
+        "showfeature": false,
+        "showspell": false,
+        "scpower": 0,
+        "scskill": "",
+        "scmod": 0,
+        "efscmod": 0,
+        "efscckmod": 0,
+        "efscpwmod": 0,
+        "efmpsc": 0,
+        "cnpower": 0,
+        "cnskill": "",
+        "cnmod": 0,
+        "efcnmod": 0,
+        "efcnckmod": 0,
+        "efcnpwmod": 0,
+        "efmpcn": 0,
+        "wzpower": 0,
+        "wzskill": "",
+        "wzmod": 0,
+        "efwzmod": 0,
+        "efwzckmod": 0,
+        "efwzpwmod": 0,
+        "efmpwz": 0,
+        "prpower": 0,
+        "prskill": "",
+        "prmod": 0,
+        "efprmod": 0,
+        "efprckmod": 0,
+        "efprpwmod": 0,
+        "efmppr": 0,
+        "mtpower": 0,
+        "mtskill": "",
+        "mtmod": 0,
+        "efmtmod": 0,
+        "efmtckmod": 0,
+        "efmtpwmod": 0,
+        "efmpmt": 0,
+        "frpower": 0,
+        "frskill": "",
+        "frmod": 0,
+        "effrmod": 0,
+        "effrckmod": 0,
+        "effrpwmod": 0,
+        "efmpfr": 0,
+        "drpower": 0,
+        "drskill": "",
+        "drmod": 0,
+        "efdrmod": 0,
+        "efdrckmod": 0,
+        "efdrpwmod": 0,
+        "efmpdr": 0,
+        "dmpower": 0,
+        "dmskill": "",
+        "dmmod": 0,
+        "efdmmod": 0,
+        "efdmckmod": 0,
+        "efdmpwmod": 0,
+        "efmpdm": 0,
+        "abpower": 0,
+        "abskill": "",
+        "abmod": 0,
+        "efabmod": 0,
+        "efabckmod": 0,
+        "efabpwmod": 0,
+        "efmpab": 0,
+        "bmpower": 0,
+        "bmskill": "",
+        "bmmod": 0,
+        "efbmmod": 0,
+        "efbmckmod": 0,
+        "efbmpwmod": 0,
+        "efmpbm": 0,
+        "efmpall": 0,
+        "efmckall": 0,
+        "efmpwall": 0,
+        "efmsckmod": 0,
+        "efmspwmod": 0,
+        "efatckmod": 0,
+        "efewckmod": 0,
+        "efewpwmod": 0,
+        "languages": {
+          "conv": [],
+          "read": []
+        }
+      },
+      "abilities": {
+        "dex": {
+          "value": "",
+          "mod": "",
+          "basename": "A",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        },
+        "agi": {
+          "value": "",
+          "mod": "",
+          "basename": "B",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        },
+        "str": {
+          "value": "",
+          "mod": "",
+          "basename": "C",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        },
+        "vit": {
+          "value": "",
+          "mod": "",
+          "basename": "D",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        },
+        "int": {
+          "value": "",
+          "mod": "",
+          "basename": "E",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        },
+        "mnd": {
+          "value": "",
+          "mod": "",
+          "basename": "F",
+          "valuebase": "",
+          "valuegrowth": 0,
+          "valuemodify": 0,
+          "efvaluemodify": 0,
+          "efmodify": 0,
+          "racevalue": ""
+        }
+      },
+      "lt": 0,
+      "cr": 0,
+      "lootmod": 0,
+      "eflootmod": 0,
+      "color": {
+        "main": {
+          "bg": "#000000",
+          "text": "#ffffff"
+        },
+        "sub": {
+          "bg": "#efe6d8",
+          "text": "#000000"
+        }
+      },
+      "class": "Human",
+      "deposit": 0,
+      "debt": 0,
+      "equipSlots": {
+        "head": "",
+        "face": "",
+        "ear": "",
+        "neck": "",
+        "back": "",
+        "armor": "",
+        "shield": "",
+        "rhand": "",
+        "lhand": "",
+        "waist": "",
+        "mainHand": "",
+        "offHand": "",
+        "feet": "",
+        "other": []
+      },
+      "belt": {
+        "slots": []
+      }
+    },
+    "npc": {
+      "templates": [
+        "base",
+        "fellow"
+      ],
+      "overview": "",
+      "gminfo": "",
+      "limited": false,
+      "isgm": false,
+      "udname": "",
+      "ppbase": 0,
+      "mppbase": 0,
+      "pp": 0,
+      "mpp": 0,
+      "langage": "",
+      "attributes": {
+        "advlevel": {
+          "value": ""
+        },
+        "skilllist": "",
+        "age": "",
+        "gender": "",
+        "ppmod": 0,
+        "efppmod": 0,
+        "mppmod": 0,
+        "efmppmod": 0,
+        "dreduce": 0,
+        "efdreduce": 0,
+        "languages": {
+          "conv": [],
+          "read": [],
+          "advlevel": {
+            "value": ""
+          }
+        }
+      }
+    },
+    "monster": {
+      "templates": [
+        "base",
+        "daemon"
+      ],
+      "monlevel": 1,
+      "exp": 0,
+      "overview": "",
+      "gminfo": "",
+      "hpbase": 0,
+      "mpbase": 0,
+      "ppbase": 0,
+      "mppbase": 0,
+      "attributes": {
+        "hitmod": 0,
+        "efhitmod": 0,
+        "dmod": 0,
+        "efdmod": 0,
+        "dodgemod": 0,
+        "efdodgemod": 0,
+        "ppmod": 0,
+        "efppmod": 0,
+        "mppmod": 0,
+        "efmppmod": 0,
+        "dreduce": 0,
+        "efdreduce": 0,
+        "scpower": 0,
+        "scskill": "",
+        "scmod": 0,
+        "efscmod": 0,
+        "efscckmod": 0,
+        "efscpwmod": 0,
+        "efmpsc": 0,
+        "cnpower": 0,
+        "cnskill": "",
+        "cnmod": 0,
+        "efcnmod": 0,
+        "efcnckmod": 0,
+        "efcnpwmod": 0,
+        "efmpcn": 0,
+        "wzpower": 0,
+        "wzskill": "",
+        "wzmod": 0,
+        "efwzmod": 0,
+        "efwzckmod": 0,
+        "efwzpwmod": 0,
+        "efmpwz": 0,
+        "prpower": 0,
+        "prskill": "",
+        "prmod": 0,
+        "efprmod": 0,
+        "efprckmod": 0,
+        "efprpwmod": 0,
+        "efmppr": 0,
+        "mtpower": 0,
+        "mtskill": "",
+        "mtmod": 0,
+        "efmtmod": 0,
+        "efmtckmod": 0,
+        "efmtpwmod": 0,
+        "efmpmt": 0,
+        "frpower": 0,
+        "frskill": "",
+        "frmod": 0,
+        "effrmod": 0,
+        "effrckmod": 0,
+        "effrpwmod": 0,
+        "efmpfr": 0,
+        "drpower": 0,
+        "drskill": "",
+        "drmod": 0,
+        "efdrmod": 0,
+        "efdrckmod": 0,
+        "efdrpwmod": 0,
+        "efmpdr": 0,
+        "dmpower": 0,
+        "dmskill": "",
+        "dmmod": 0,
+        "efdmmod": 0,
+        "efdmckmod": 0,
+        "efdmpwmod": 0,
+        "efmpdm": 0,
+        "abpower": 0,
+        "abskill": "",
+        "abmod": 0,
+        "efabmod": 0,
+        "efabckmod": 0,
+        "efabpwmod": 0,
+        "efmpab": 0,
+        "bmpower": 0,
+        "bmskill": "",
+        "bmmod": 0,
+        "efbmmod": 0,
+        "efbmckmod": 0,
+        "efbmpwmod": 0,
+        "efmpbm": 0,
+        "efmpall": 0,
+        "efmckall": 0,
+        "efmpwall": 0,
+        "languages": {
+          "conv": [],
+          "read": []
+        }
+      },
+      "pp": 0,
+      "mpp": 0,
+      "type": "",
+      "intelligence": "",
+      "perception": "",
+      "reaction": "",
+      "impurity": 0,
+      "language": "",
+      "habitat": "",
+      "popularity": 0,
+      "weakpoint": 0,
+      "weakness": "",
+      "preemptive": 0,
+      "move": "",
+      "part": "",
+      "corepart": "",
+      "loot": "",
+      "showimp": false,
+      "showpt": false,
+      "usespell": false,
+      "limited": false,
+      "isgm": false,
+      "udname": ""
+    }
+  },
+  "Item": {
+    "types": [
+      "weapon",
+      "armor",
+      "accessory",
+      "item",
+      "spell",
+      "enhancearts",
+      "magicalsong",
+      "ridingtrick",
+      "alchemytech",
+      "phasearea",
+      "tactics",
+      "infusion",
+      "barbarousskill",
+      "essenceweave",
+      "otherfeature",
+      "check",
+      "resource",
+      "combatability",
+      "skill",
+      "raceability",
+      "language",
+      "monsterability",
+      "action",
+      "session"
+    ],
+    "templates": {
+      "base": {
+        "description": "",
+        "clickitem": "all"
+      },
+      "item": {
+        "quantity": 1,
+        "qmax": "",
+        "qmin": "",
+        "type": "",
+        "price": ""
+      },
+      "roll": {
+        "checkbase": 0,
+        "ckpdbt": true,
+        "ckmdbt": true,
+        "ckcdbt": true,
+        "ckhrbt": true,
+        "ckmrbt": true,
+        "checkskill": "",
+        "checkabi": "",
+        "checkmod": 0,
+        "powerbase": 0,
+        "pwpdbt": true,
+        "pwmdbt": true,
+        "pwcdbt": true,
+        "pwhrbt": true,
+        "pwmrbt": true,
+        "powerskill": "",
+        "powerabi": "",
+        "powermod": 0,
+        "skilllist": "",
+        "usepower": false,
+        "usedice": false,
+        "formula": "2d6",
+        "customdice": false,
+        "customformula": "",
+        "powertable": [],
+        "power": 0,
+        "cvalue": 10,
+        "totalcvalue": null,
+        "showpowmod": false,
+        "halfpow": false,
+        "halfpowmod": "",
+        "lethaltech": "",
+        "criticalray": "",
+        "pharmtool": "",
+        "powup": "",
+        "applycheck": "-",
+        "applycheck1": "-",
+        "applycheck2": "-",
+        "applycheck3": "-",
+        "applypower": "on",
+        "autouseres": false,
+        "resuse": "",
+        "itemlist": "",
+        "resusequantity": 0
+      },
+      "battle": {
+        "equip": true,
+        "dedicated": false,
+        "category": "",
+        "rank": "",
+        "reqstr": ""
+      },
+      "ability": {
+        "constant": false,
+        "prep": false,
+        "main": false,
+        "aux": false,
+        "decla": false,
+        "overview": "",
+        "level": 1
+      }
+    },
+    "weapon": {
+      "templates": [
+        "base",
+        "item",
+        "roll",
+        "battle"
+      ],
+      "type": "",
+      "usage": "",
+      "hit": 0,
+      "dmod": 0,
+      "range": ""
+    },
+    "armor": {
+      "templates": [
+        "base",
+        "item",
+        "roll",
+        "battle"
+      ],
+      "dodge": 0,
+      "pp": 0,
+      "mpp": 0
+    },
+    "accessory": {
+      "templates": [
+        "base",
+        "item",
+        "roll",
+        "battle"
+      ],
+      "accpart": "",
+      "deffect": ""
+    },
+    "item": {
+      "templates": [
+        "base",
+        "item",
+        "roll"
+      ],
+      "uses": {
+        "value": 0,
+        "max": 0
+      }
+    },
+    "spell": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "type": "",
+      "basempcost": 0,
+      "mpcost": 0,
+      "target": "",
+      "rangeshape": "",
+      "time": 0,
+      "resist": "",
+      "prop": "",
+      "faith": "",
+      "sect": "",
+      "magispfere": "",
+      "fairytype": "",
+      "fairyprop": "",
+      "hpresist": false,
+      "excost1": "",
+      "extime1": "",
+      "expansion1": "",
+      "excost2": "",
+      "extime2": "",
+      "expansion2": "",
+      "efallmgpmod": 0
+    },
+    "enhancearts": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "time": 0,
+      "basempcost": 0,
+      "mpcost": 0
+    },
+    "magicalsong": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "type": "",
+      "resist": "",
+      "prop": "",
+      "sing": "",
+      "pet": "",
+      "singpoint": 0,
+      "upget": 0,
+      "downget": 0,
+      "charmget": 0,
+      "upadd": 0,
+      "downadd": 0,
+      "charmadd": 0,
+      "upcond": 0,
+      "downcond": 0,
+      "charmcond": 0,
+      "upcost": 0,
+      "downcost": 0,
+      "charmcost": 0
+    },
+    "ridingtrick": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "premise": "",
+      "support": "",
+      "rtpart": ""
+    },
+    "alchemytech": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "time": 0,
+      "target": "",
+      "rangeshape": "",
+      "red": 0,
+      "green": 0,
+      "black": 0,
+      "white": 0,
+      "gold": 0
+    },
+    "phasearea": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "type": "",
+      "time": 0,
+      "prop": "",
+      "mincost": 0,
+      "maxcost": 0
+    },
+    "tactics": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "type": "",
+      "cost": "",
+      "line": "",
+      "rank": "",
+      "get": "",
+      "premise": "",
+      "cond": ""
+    },
+    "infusion": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "premise": "",
+      "ipart": "",
+      "humanoid": ""
+    },
+    "barbarousskill": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "race": "",
+      "basempcost": 0,
+      "mpcost": 0,
+      "resist": "",
+      "base": "",
+      "resistbase": "-",
+      "rank": ""
+    },
+    "essenceweave": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "hpcost": "",
+      "basehpcost": "",
+      "maxhpcost": 0,
+      "premise": "",
+      "target": "",
+      "rangeshape": "",
+      "time": 0,
+      "resist": ""
+    },
+    "check": {
+      "templates": [
+        "base",
+        "roll"
+      ],
+      "checkfixmod": "",
+      "showbtcheck": false,
+      "checkmethod": "normal",
+      "efckmod": 0,
+      "efallckmod": 0
+    },
+    "resource": {
+      "templates": [
+        "base",
+        "item",
+        "roll"
+      ]
+    },
+    "combatability": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "type": "",
+      "vag": false,
+      "dancer": false,
+      "condtype": "",
+      "cond": "",
+      "use": "",
+      "app": "",
+      "risk": "",
+      "secret": false,
+      "scholl": "",
+      "honercost": 0,
+      "sectype": "",
+      "limcond": "",
+      "featSource": "",
+      "featLevel": 0
+    },
+    "skill": {
+      "templates": [
+        "base"
+      ],
+      "skilllevel": 1,
+      "skillexp": 0,
+      "exptable": "",
+      "skilltype": "",
+      "skillmod": "0",
+      "skillbase": {
+        "dex": "",
+        "agi": "",
+        "str": "",
+        "vit": "",
+        "int": "",
+        "mnd": ""
+      },
+      "efallskmod": 0,
+      "rules": {
+        "critMod": 0,
+        "minStrMult": 1,
+        "attackOnly": true,
+        "castPenalty": {
+          "metal": 0,
+          "nonmetal": 0,
+          "nonmetalMinStr": 10
+        }
+      },
+      "autoFeats": []
+    },
+    "raceability": {
+      "templates": [
+        "base",
+        "roll"
+      ],
+      "featSource": "",
+      "featLevel": 0
+    },
+    "language": {
+      "templates": [
+        "base"
+      ],
+      "conversation": false,
+      "reading": false
+    },
+    "monsterability": {
+      "templates": [
+        "base",
+        "roll",
+        "ability"
+      ],
+      "remark": "",
+      "usedice1": false,
+      "label1": "Label1",
+      "checkbase1": 0,
+      "checkbasefix1": 7,
+      "checkbasemod1": 0,
+      "usefix1": false,
+      "checkmod1": 0,
+      "customdice1": false,
+      "customformula1": "2d6",
+      "usedice2": false,
+      "label2": "Label2",
+      "checkbase2": 0,
+      "checkbasefix2": 7,
+      "checkbasemod2": 0,
+      "usefix2": false,
+      "checkmod2": 0,
+      "customdice2": false,
+      "customformula2": "2d6",
+      "usedice3": false,
+      "label3": "Label3",
+      "checkbase3": 0,
+      "checkbasefix3": 7,
+      "checkbasemod3": 0,
+      "usefix3": false,
+      "checkmod3": 0,
+      "customdice3": false,
+      "customformula3": "2d6",
+      "labelmonpow": "PowerLabel",
+      "efmod": 0,
+      "efallckmod": 0,
+      "efallmgpmod": 0
+    },
+    "action": {
+      "templates": [
+        "base",
+        "roll"
+      ],
+      "usedice1": true,
+      "label1": "Label1",
+      "checkskill1": "",
+      "checkabi1": "",
+      "checkbase1": 0,
+      "checkbasefix1": 7,
+      "checkbasemod1": 0,
+      "usefix1": false,
+      "checkmod1": 0,
+      "customdice1": false,
+      "customformula1": "2d6",
+      "ckpdbt1": true,
+      "ckmdbt1": true,
+      "ckcdbt1": true,
+      "ckhrbt1": true,
+      "ckmrbt1": true,
+      "usedice2": false,
+      "label2": "Label2",
+      "checkskill2": "",
+      "checkabi2": "",
+      "checkbase2": 0,
+      "checkbasefix2": 7,
+      "checkbasemod2": 0,
+      "usefix2": false,
+      "checkmod2": 0,
+      "customdice2": false,
+      "customformula2": "2d6",
+      "ckpdbt2": true,
+      "ckmdbt2": true,
+      "ckcdbt2": true,
+      "ckhrbt2": true,
+      "ckmrbt2": true,
+      "usepower": false,
+      "actiondice": "",
+      "actionresult": "",
+      "actionvalue": "",
+      "dialog": "",
+      "action": "",
+      "actioneffect": "",
+      "target": "",
+      "basempcost": "",
+      "mpcost": ""
+    },
+    "session": {
+      "templates": [
+        "base",
+        "roll"
+      ],
+      "character": 1
+    },
+    "otherfeature": {
+      "templates": [
+        "base",
+        "roll"
+      ],
+      "type": "",
+      "overview": "",
+      "basempcost": 0,
+      "mpcost": 0
+    }
+  }
+}

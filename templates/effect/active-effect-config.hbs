@@ -1,0 +1,231 @@
+<form autocomplete="off">
+
+    <!-- Effect Header -->
+    <header class="sheet-header">
+        <img class="effect-img" src="{{ data.img }}" data-edit="img">
+        <h1 class="effect-title">
+            <input name="name" type="text" value="{{data.name}}" placeholder="{{ localize 'Name' }}"/>
+        </h1>
+    </header>
+    <!-- Effect Configuration Tabs -->
+    <nav class="sheet-tabs tabs" aria-role="{{localize 'SHEETS.FormNavLabel'}}">
+        <a class="item" data-tab="details"><i class="fas fa-book"></i> {{localize "EFFECT.TabDetails"}}</a>
+        <a class="item" data-tab="duration"><i class="fas fa-clock"></i> {{localize "EFFECT.TabDuration"}}</a>
+        <a class="item" data-tab="effects"><i class="fas fa-cogs"></i> {{localize "EFFECT.TabEffects"}}</a>
+    </nav>
+
+    {{!-- Sheet Body --}}
+    <section class="sheet-body">
+
+        <!-- Details Tab -->
+        <section class="tab" data-tab="details">
+            <div class="form-group">
+                <span>{{ localize "EFFECT.IconTint" }}</span>
+                <div class="form-fields">
+                    <color-picker name="tint" value="{{data.tint}}"></color-picker>
+                </div>
+            </div>
+
+            <div class="form-group stacked">
+                <span>{{ localize "EFFECT.Description" }}</span>
+                {{editor descriptionHTML target="description" button=true editable=editable engine="prosemirror" collaborate=false}}
+            </div>
+
+            <div class="form-group">
+                <label for="{{data._id}}disabled">{{ localize "EFFECT.Disabled" }}</label>
+                <input id="{{data._id}}disabled" type="checkbox" name="disabled" {{ checked data.disabled }}/>
+            </div>
+
+            {{#if isActorEffect}}
+            <div class="form-group">
+                <label for="{{data._id}}origin">{{ localize "EFFECT.Origin" }}</label>
+                <div class="form-fields">
+                    <input id="{{data._id}}origin" type="text" name="origin" value="{{ data.origin }}" disabled/>
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if isItemEffect}}
+            <div class="form-group">
+                <label for="{{data._id}}transfer">{{ labels.transfer.name }}</label>
+                <div class="form-fields">
+                    <input id="{{data._id}}transfer" type="checkbox" name="transfer" {{checked data.transfer}}/>
+                </div>
+                <p class="hint">{{ labels.transfer.hint }}</p>
+            </div>
+            {{/if}}
+        </section>
+
+        <!-- Duration Tab -->
+        <section class="tab" data-tab="duration">
+            <div class="form-group">
+                <label for="{{data._id}}duration-seconds">{{ localize "EFFECT.DurationSecs" }}</label>
+                <div class="form-fields">
+                    <input id="{{data._id}}duration-seconds" type="number" name="duration.seconds" value="{{ data.duration.seconds }}"/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="{{data._id}}duration-startTime">{{ localize "EFFECT.StartTime" }}</label>
+                <div class="form-fields">
+                    <input id="{{data._id}}duration-startTime" type="number" name="duration.startTime" value="{{ data.duration.startTime }}"/>
+                </div>
+            </div>
+            <hr/>
+            <div class="form-group">
+                <span>{{ localize "EFFECT.DurationTurns" }}</span>
+                <div class="form-fields">
+                    <label for="{{data._id}}duration-rounds" style="flex: 1;">{{ localize "COMBAT.Rounds" }}</label>
+                    <input id="{{data._id}}duration-rounds" type="number" name="duration.rounds" value="{{ data.duration.rounds }}"/>
+                    <label for="{{data._id}}duration-turns" style="flex: 1;">{{ localize "COMBAT.Turns" }}</label>
+                    <input id="{{data._id}}duration-turns" type="number" name="duration.turns" value="{{ data.duration.turns }}"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{data._id}}duration-combat">{{ localize "EFFECT.Combat" }}</label>
+                <div class="form-fields">
+                    <input id="{{data._id}}duration-combat" type="text" name="duration.combat" value="{{ data.duration.combat }}" disabled/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <span>{{ localize "EFFECT.StartTurns" }}</span>
+                <div class="form-fields">
+                    <label for="{{data._id}}duration-startRound" style="flex: 1;">{{ localize "COMBAT.Round" }}</label>
+                    <input id="{{data._id}}duration-startRound" type="number" name="duration.startRound" value="{{ data.duration.startRound }}"/>
+                    <label for="{{data._id}}duration-startTurn" style="flex: 1;">{{ localize "COMBAT.Turn" }}</label>
+                    <input id="{{data._id}}duration-startTurn" type="number" name="duration.startTurn" value="{{ data.duration.startTurn }}"/>
+                </div>
+            </div>
+        </section>
+
+        <!-- Effects Tab -->
+        <section class="tab" data-tab="effects">
+            <header class="effect-change effects-header flexrow">
+                <div class="key">{{ localize "EFFECT.ChangeKey" }}</div>
+                <div class="mode">{{ localize "EFFECT.ChangeMode" }}</div>
+                <div class="value">{{ localize "EFFECT.ChangeValue" }}</div>
+                <div class="effect-controls">
+                    <a class="effect-control" data-action="add"><i class="far fa-plus-square"></i></a>
+                </div>
+            </header>
+            <ol class="changes-list">
+                {{#each data.changes as |change i|}}
+                <li class="effect-change flexrow" data-index="{{i}}">
+                    <div class="key">
+                        <select name="changes.{{i}}.keyClassification" class="select-keyClassification">
+                            {{selectOptions ../effectOptions.keyClassifications selected=change.keyClassification localize=true blank="-"}}
+                        </select>
+                        {{#if (eq change.keyClassification "battle")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.battle selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "check")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.check selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "parameter")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.parameter selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "magicpower")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.magicpower selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "magicckroll")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.magicckroll selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "magicpwroll")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.magicpwroll selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "mpsave")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.mpsave selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "feature")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.feature selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "powertable")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.powertable selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "classPdamage")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.classPdamage selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "classPdecay")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.classPdecay selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "elementPdamage")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.elementPdamage selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "elementPdecay")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.elementPdecay selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "classMdamage")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.classMdamage selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "classMdecay")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.classMdecay selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "elementMdamage")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.elementMdamage selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "elementMdecay")}}
+                            <select name="changes.{{i}}.keyname" class="select-keyname">
+                                {{selectOptions ../effectOptions.elementMdecay selected=change.keyname localize=true blank="-"}}
+                            </select>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "checkname")}}
+                            <input style="max-width: calc(60% - 7px);" type="text" name="changes.{{i}}.checkname" value="{{change.checkname}}"/>
+                        {{/if}}
+                        {{#if (eq change.keyClassification "input")}}
+                            <input style="max-width: calc(60% - 7px);" type="text" name="changes.{{i}}.key" value="{{change.key}}"/>
+                        {{/if}}
+                    </div>
+                    <div class="mode">
+                        <select name="changes.{{i}}.mode" data-dtype="Number">
+                            {{selectOptions ../modes selected=change.mode}}
+                        </select>
+                    </div>
+                    <div class="value">
+                        <input type="text" name="changes.{{i}}.value" value="{{change.value}}"/>
+                    </div>
+                    <div class="effect-controls">
+                        <a class="effect-control" data-action="delete"><i class="fas fa-trash"></i></a>
+                    </div>
+                </li>
+                {{/each}}
+            </ol>
+        </section>
+    </section>
+
+    <footer class="sheet-footer">
+        <button type="submit"><i class="fas fa-save"></i> {{localize submitText}}</button>
+    </footer>
+</form>

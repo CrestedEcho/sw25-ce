@@ -1,0 +1,1463 @@
+// Import document classes.
+import { SW25Actor } from "./documents/actor.mjs";
+import { SW25Item } from "./documents/item.mjs";
+import { SW25ActiveEffect } from "./documents/active-effect.mjs";
+import { SW25Combat } from "./documents/combat.mjs";
+// Import sheet classes.
+import { SW25ActorSheet } from "./sheets/actor-sheet.mjs";
+import { SW25ItemSheet } from "./sheets/item-sheet.mjs";
+import { SW25ActiveEffectConfigV2 } from "./sheets/active-effect-config-V2.mjs";
+let SW25ActiveEffectConfig;
+
+// Import helper/utility classes and constants.
+import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
+import { SW25 } from "./helpers/config.mjs";
+import { chatButton } from "./helpers/chatbutton.mjs";
+import { customCommand } from "./helpers/customcommand.mjs";
+import { powerRoll } from "./helpers/powerroll.mjs";
+import { lootRoll } from "./helpers/lootroll.mjs";
+import { growthCheck } from "./helpers/growthcheck.mjs";
+import { actionRoll } from "./helpers/actionroll.mjs";
+import { rollreq } from "./helpers/rollrequest.mjs";
+import { targetRollDialog, targetSelectDialog } from "./helpers/dialogs.mjs";
+import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
+import { Migrator } from "./helpers/migrator.mjs";
+import { registerCe7Settings, registerCe7Hooks, runCe7Migration } from "./ce7/equipcard.mjs";
+
+// v14 compat: core "rollMode" setting became "messageMode". Returns a legacy roll-mode string.
+globalThis.sw25RollMode = function () {
+  const map = { public: "publicroll", gm: "gmroll", blind: "blindroll", self: "selfroll", ic: "publicroll" };
+  try {
+    const m = game.settings.get("core", "messageMode");
+    if (m) return map[m] ?? m;
+  } catch (e) {}
+  try { return game.settings.get("core", "rollMode"); } catch (e) {}
+  return "publicroll";
+};
+// v14 compat: ActiveEffect changes moved to system.changes and numeric mode -> string type.
+globalThis.sw25EffectChanges = function (effect) {
+  const typeMap = { custom: 0, multiply: 1, add: 2, downgrade: 3, upgrade: 4, override: 5, subtract: 2 };
+  const raw = effect.system?.changes ?? effect.changes ?? [];
+  return Array.from(raw).map((c) => {
+    let mode = c.mode;
+    if (mode === undefined && typeof c.type === "string") mode = typeMap[c.type] ?? 2;
+    let value = c.value;
+    if (c.type === "subtract") value = -Number(value);
+    return { ...c, mode, value };
+  });
+};
+
+// Export variable.
+export const rpt = {};
+export let effectVitResPC,
+  effectMndResPC,
+  effectInitPC,
+  effectMKnowPC,
+  effectVitResMon,
+  effectMndResMon,
+  effectHitMon,
+  effectDmgMon,
+  effectDodgeMon,
+  effectScpMon,
+  effectCnpMon,
+  effectWzpMon,
+  effectPrpMon,
+  effectMtpMon,
+  effectFrpMon,
+  effectDrpMon,
+  effectDmpMon,
+  effectAbpMon,
+  effectBmpMon;
+
+/* -------------------------------------------- */
+/*  Init Hook                                   */
+/* -------------------------------------------- */
+
+Hooks.once("init", function () {
+  // Add utility classes to the global game object so that they're more easily
+  // accessible in global contexts.
+  game.sw25 = {
+    SW25Actor,
+    SW25Item,
+    SW25ActiveEffect,
+    SW25Combat,
+    rollItemMacro,
+    powerRoll,
+    lootRoll,
+    growthCheck,
+    actionRoll,
+    targetRollDialog,
+    targetSelectDialog,
+  };
+
+  // Add custom constants for configuration.
+  CONFIG.SW25 = SW25;
+
+  // Define custom Document classes
+  CONFIG.Actor.documentClass = SW25Actor;
+  CONFIG.Item.documentClass = SW25Item;
+  CONFIG.ActiveEffect.documentClass = SW25ActiveEffect;
+  CONFIG.Combat.documentClass = SW25Combat;
+
+  // Active Effects are never copied to the Actor,
+  // but will still apply to the Actor from within the Item
+  // if the transfer property on the Active Effect is true.
+
+  // Register sheet application classes
+  // Register sheet application classes (v14: namespaced APIs, core registers no default V1 sheets)
+  const { Actors, Items } = foundry.documents.collections;
+  const DSC = foundry.applications.apps.DocumentSheetConfig;
+  Actors.registerSheet("sw25-ce", SW25ActorSheet, {
+    makeDefault: true,
+    label: "SW25.SheetLabels.Actor",
+  });
+  Items.registerSheet("sw25-ce", SW25ItemSheet, {
+    makeDefault: true,
+    label: "SW25.SheetLabels.Item",
+  });
+
+  // Custom Active Effect config. Registered but NOT default on v14 because the
+  // AE V2 data model (system.changes, string types) changed; core sheet stays default.
+  SW25ActiveEffectConfig = SW25ActiveEffectConfigV2;
+  DSC.registerSheet(ActiveEffect, "sw25-ce", SW25ActiveEffectConfig, {
+    makeDefault: false,
+    label: "SW25.SheetLabels.ActiveEffect",
+  });
+
+  // migration setting.
+  // ce.4: per-client sheet theme
+  game.settings.register(game.system.id, "sheetTheme", {
+    name: "SW25.V2.SettingTheme",
+    hint: "SW25.V2.SettingThemeHint",
+    scope: "client",
+    config: true,
+    type: String,
+    choices: {
+      parchment: "SW25.V2.ThemeParchment",
+      dark: "SW25.V2.ThemeDark",
+    },
+    default: "parchment",
+    // ce.5: defer, and re-render only SW2.5 document sheets (re-rendering the Settings window mid-save reverted the value)
+    onChange: () => setTimeout(() => sw25RerenderSheets(), 0),
+  });
+
+  game.settings.register(game.system.id, "debugDrops", {
+    name: "SW25.V2.SettingDebugDrops",
+    hint: "SW25.V2.SettingDebugDropsHint",
+    scope: "client",
+    config: true,
+    type: Boolean,
+    default: false,
+  });
+
+  game.settings.register(game.system.id, "systemMigrationVersion", {
+    name: "System Migration Version",
+    scope: "world",
+    config: false,
+    type: String,
+    default: "0.0.0",
+  });
+
+  Actor.prototype.migrateSystemData = function (currentVersion, storedVersion) {
+    return Migrator.migrateActor(this, currentVersion, storedVersion);
+  };
+  Item.prototype.migrateSystemData = function (currentVersion, storedVersion) {
+    return Migrator.migrateItem(this, currentVersion, storedVersion);
+  };
+
+  // ce.7: Equipment Card / belt settings and data-sync hooks
+  registerCe7Settings();
+  registerCe7Hooks();
+
+  // Preload Handlebars templates.
+  return preloadHandlebarsTemplates();
+});
+
+/**
+ * migration hook.
+ */
+Hooks.once("ready", async () => {
+  if (game.user.isGM) {
+    // multiple GM treatment
+    const isActiveGM =
+      game.user.isGM && game.user.id === game.users.activeGM?.id;
+    if (!isActiveGM) return;
+
+    const currentVersion = game.system.version;
+    const storedVersion = game.settings.get(game.system.id, "systemMigrationVersion");
+
+    if (Migrator.isVersionBefore(storedVersion, currentVersion)) {
+      ui.notifications.info(game.i18n.localize("SW25.StartMigration"));
+      await Migrator.migrateWorld(storedVersion, currentVersion);
+      await game.settings.set(game.system.id, "systemMigrationVersion", currentVersion);
+      ui.notifications.info(game.i18n.localize("SW25.CompleteMigration"));
+    }
+    // ce.7 one-time, non-destructive Equipment Card / feat-slot setup
+    await runCe7Migration();
+  }
+});
+
+/**
+ * combat hook.
+ */
+Hooks.on("updateCombat", async (combat, changes, options, userId) => {
+  if (!game.user.isGM) return;
+
+  // multiple GM treatment
+  const isActiveGM = game.user.isGM && game.user.id === game.users.activeGM?.id;
+  if (!isActiveGM) return;
+
+  const combatant = combat.previous;
+  if (!combatant) return;
+
+  let actor = combatant.actor || game.actors.get(combatant.actorId);
+
+  if (!actor && combatant.tokenId) {
+    const token = canvas.tokens.get(combatant.tokenId);
+    if (token) {
+      actor = token.actor;
+    }
+  }
+
+  if (!actor) return;
+
+  const turnEndEffect = actor.system.attributes?.turnend;
+  if (changes.turn !== undefined || changes.round !== undefined) {
+    if (turnEndEffect?.hpregenmod || turnEndEffect?.mpregenmod) {
+      const hpregen = turnEndEffect.hpregenmod || 0;
+      const mpregen = turnEndEffect.mpregenmod || 0;
+
+      const targetHP = actor.system.hp.value || 0;
+      const resultHP = targetHP + hpregen;
+      const targetMP = actor.system.mp.value || 0;
+      const resultMP = targetMP + mpregen;
+      let isView = false;
+      if (Number(hpregen) != 0 || Number(mpregen) != 0) {
+        if (CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER <= actor.ownership.default)
+          isView = true;
+
+        // Apply regen
+        const updates = {
+          "system.hp.value": resultHP,
+          "system.mp.value": resultMP,
+        };
+
+        actor.update(updates);
+      }
+
+      // Chat message
+      const speaker = ChatMessage.getSpeaker({ actor: actor });
+      const rollMode = globalThis.sw25RollMode();
+      let label =
+        actor.name + "(" + game.i18n.localize("SW25.TurnendEffect") + ")";
+
+      let chatData = {
+        speaker: speaker,
+        flavor: label,
+        rollMode: rollMode,
+      };
+
+      chatData.content = await foundry.applications.handlebars.renderTemplate(
+        "systems/sw25-ce/templates/roll/hpmp-apply.hbs",
+        {
+          targetHP: targetHP,
+          resultHP: resultHP,
+          targetMP: targetMP,
+          resultMP: resultMP,
+          hpregen: 0 < hpregen ? `+${hpregen}` : hpregen,
+          mpregen: 0 < mpregen ? `+${mpregen}` : mpregen,
+          isView: isView,
+        }
+      );
+
+      ChatMessage.create(chatData);
+    }
+  }
+});
+
+/* -------------------------------------------- */
+/*  Handlebars Helpers                          */
+/* -------------------------------------------- */
+
+// If you need to add Handlebars helpers, here is a useful example:
+// v14 removed the core block helper {{#select value}}...{{/select}}; restore it.
+{
+  Handlebars.registerHelper("select", function (selected, options) {
+    const esc = String(Handlebars.escapeExpression(selected ?? "")).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const rgx = new RegExp(` value=["']${esc}["']`);
+    return new Handlebars.SafeString(options.fn(this).replace(rgx, "$& selected"));
+  });
+}
+
+Handlebars.registerHelper("toLowerCase", function (str) {
+  return str.toLowerCase();
+});
+
+Handlebars.registerHelper("sw25pct", function (value, max) {
+  const v = Number(value), m = Number(max);
+  if (!Number.isFinite(v) || !Number.isFinite(m) || m <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((v / m) * 100)));
+});
+
+globalThis.sw25DropLog = function (...args) {
+  let on = false;
+  try { on = game.settings.get("sw25-ce", "debugDrops"); } catch (e) {}
+  (on ? console.log : console.debug)("sw25-ce | ", ...args);
+};
+
+globalThis.sw25RerenderSheets = function () {
+  const V1 = foundry.appv1?.sheets ?? {};
+  const isSheet = (app) =>
+    (V1.ActorSheet && app instanceof V1.ActorSheet) || (V1.ItemSheet && app instanceof V1.ItemSheet);
+  for (const app of Object.values(ui.windows ?? {})) {
+    if (isSheet(app) && app.rendered) app.render(false);
+  }
+};
+
+globalThis.sw25ApplyTheme = function (el) {
+  if (!el?.classList) return;
+  let theme = "parchment";
+  try { theme = game.settings.get("sw25-ce", "sheetTheme"); } catch (e) {}
+  el.classList.add("sw25v2-window");
+  el.classList.toggle("theme-dark", theme === "dark");
+  // ce.5: lighter themed treatment for every non-PC-v2 sheet (npc, monster, items)
+  const form = el.querySelector?.(".window-content > form");
+  if (form && !form.querySelector(".sw25v2-pc")) {
+    form.classList.add("sw25v2-lite");
+    form.classList.toggle("theme-dark", theme === "dark");
+  }
+};
+
+Handlebars.registerHelper("isEven", function (num) {
+  return num % 2 === 0;
+});
+
+Handlebars.registerHelper("growth", function (idx) {
+  switch (idx) {
+    case 0:
+      return "⚀";
+    case 1:
+      return "⚁";
+    case 2:
+      return "⚂";
+    case 3:
+      return "⚃";
+    case 4:
+      return "⚄";
+    case 5:
+      return "⚅";
+  }
+});
+
+Handlebars.registerHelper("localizeAbility", function (ability) {
+  switch (ability) {
+    case "dex":
+      return game.i18n.localize("SW25.Ability.Technique");
+    case "str":
+      return game.i18n.localize("SW25.Ability.Body");
+    case "int":
+      return game.i18n.localize("SW25.Ability.Heart");
+  }
+});
+
+Handlebars.registerHelper("localizeResist", function (resist) {
+  switch (resist) {
+    case "decide":
+      return game.i18n.localize("SW25.Item.Decide");
+    case "any":
+      return game.i18n.localize("SW25.Item.Any");
+    case "none":
+      return game.i18n.localize("SW25.Item.None");
+    case "disappear":
+      return game.i18n.localize("SW25.Item.Disappear");
+    case "halving":
+      return game.i18n.localize("SW25.Item.Halving");
+    case "shortening":
+      return game.i18n.localize("SW25.Item.Shortening");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizeProp", function (prop) {
+  switch (prop) {
+    case "earth":
+      return game.i18n.localize("SW25.Item.Earth");
+    case "ice":
+      return game.i18n.localize("SW25.Item.Ice");
+    case "fire":
+      return game.i18n.localize("SW25.Item.Fire");
+    case "wind":
+      return game.i18n.localize("SW25.Item.Wind");
+    case "thunder":
+      return game.i18n.localize("SW25.Item.Thunder");
+    case "energy":
+      return game.i18n.localize("SW25.Item.Energy");
+    case "cut":
+      return game.i18n.localize("SW25.Item.Cut");
+    case "impact":
+      return game.i18n.localize("SW25.Item.Impact");
+    case "poison":
+      return game.i18n.localize("SW25.Item.Poison");
+    case "disease":
+      return game.i18n.localize("SW25.Item.Disease");
+    case "mental":
+      return game.i18n.localize("SW25.Item.Mental");
+    case "mentalw":
+      return game.i18n.localize("SW25.Item.Mentalw");
+    case "curse":
+      return game.i18n.localize("SW25.Item.Curse");
+    case "curseMental":
+      return game.i18n.localize("SW25.Item.CurseMental");
+    case "mentalPoison":
+      return game.i18n.localize("SW25.Item.MentalPoison");
+    case "other":
+      return game.i18n.localize("SW25.Item.Other");
+    case "fandw":
+      return game.i18n.localize("SW25.Item.Fandw");
+    case "iandt":
+      return game.i18n.localize("SW25.Item.Iandt");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizeFairyProp", function (fairyprop) {
+  switch (fairyprop) {
+    case "fairyearth":
+      return game.i18n.localize("SW25.Item.Spell.Fairyearth");
+    case "fairyice":
+      return game.i18n.localize("SW25.Item.Spell.Fairyice");
+    case "fairyfire":
+      return game.i18n.localize("SW25.Item.Spell.Fairyfire");
+    case "fairywind":
+      return game.i18n.localize("SW25.Item.Spell.Fairywind");
+    case "fairylight":
+      return game.i18n.localize("SW25.Item.Spell.Fairylight");
+    case "fairydark":
+      return game.i18n.localize("SW25.Item.Spell.Fairydark");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizePhasetype", function (phasetype) {
+  switch (phasetype) {
+    case "ten":
+      return game.i18n.localize("SW25.Item.Phasearea.Ten");
+    case "chi":
+      return game.i18n.localize("SW25.Item.Phasearea.Chi");
+    case "jin":
+      return game.i18n.localize("SW25.Item.Phasearea.Jin");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizeStatus", function (ability) {
+  switch (ability) {
+    case "dex":
+      return game.i18n.localize("SW25.Ability.Dex.long");
+    case "agi":
+      return game.i18n.localize("SW25.Ability.Agi.long");
+    case "str":
+      return game.i18n.localize("SW25.Ability.Str.long");
+    case "vit":
+      return game.i18n.localize("SW25.Ability.Vit.long");
+    case "int":
+      return game.i18n.localize("SW25.Ability.Int.long");
+    case "mnd":
+      return game.i18n.localize("SW25.Ability.Mnd.long");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizeResistType", function (type, input) {
+  switch (type) {
+    case "Dodge":
+      return game.i18n.localize("SW25.Resist.Check.Dodge");
+    case "Vitres":
+      return game.i18n.localize("SW25.Resist.Check.Vitres");
+    case "Mndres":
+      return game.i18n.localize("SW25.Resist.Check.Mndres");
+    case "input":
+      return input;
+  }
+  return "-";
+});
+
+Handlebars.registerHelper("localizeResourceType", function (type) {
+  switch (type) {
+    case "none":
+      return game.i18n.localize("SW25.Item.Resource.Types.None");
+    case "note":
+      return game.i18n.localize("SW25.Item.Resource.Types.Note");
+    case "material":
+      return game.i18n.localize("SW25.Item.Resource.Types.Material");
+    case "lifeline":
+      return game.i18n.localize("SW25.Item.Resource.Types.Lifeline");
+    case "tacspower":
+      return game.i18n.localize("SW25.Item.Resource.Types.Tacspower");
+    case "magitech":
+      return game.i18n.localize("SW25.Item.Resource.Types.Magitech");
+    case "abyssex":
+      return game.i18n.localize("SW25.Item.Resource.Types.AbyssEx");
+  }
+  return "-";
+});
+
+Handlebars.registerHelper(
+  "backgroundStyleFromMaterialcards",
+  function (system) {
+    const map = {
+      green: "rgb(var(--material-green-color))",
+      red: "rgb(var(--material-red-color))",
+      gold: "rgb(var(--material-gold-color))",
+      black: "rgb(var(--material-black-color))",
+      white: "rgb(var(--material-white-color))",
+    };
+
+    const colors = Object.entries(map)
+      .filter(([key]) => system[key])
+      .map(([, color]) => color);
+
+    if (colors.length === 1) {
+      return `background-color: ${colors[0]};`;
+    } else if (colors.length > 1) {
+      return `background: linear-gradient(90deg, ${colors.join(",")});`;
+    } else {
+      return "";
+    }
+  }
+);
+
+Handlebars.registerHelper(
+  "resistAttributes",
+  function (type, resistinfo, hpresist) {
+    const info = resistinfo || {};
+    const resistHp = hpresist ?? false;
+
+    let resist = "";
+    let result = "";
+
+    if (info?.type) {
+      if (info.type === "input") {
+        resist = info.input ?? "";
+      } else {
+        resist = game.i18n.localize(`SW25.Resist.Check.${info.type}`);
+      }
+    } else {
+      if (type === "weapon") {
+        resist = game.i18n.localize("SW25.Resist.Check.Dodge");
+      } else if (type === "spell") {
+        resist = resistHp
+          ? game.i18n.localize("SW25.Resist.Check.Vitres")
+          : game.i18n.localize("SW25.Resist.Check.Mndres");
+      }
+    }
+
+    if (info.result) {
+      result = info.result;
+    }
+
+    let html = `data-resist="${resist}"`;
+    if (result) {
+      html += ` data-resistresult="${result}"`;
+    }
+
+    return new Handlebars.SafeString(html);
+  }
+);
+
+/* -------------------------------------------- */
+/*  Ready Hook                                  */
+/* -------------------------------------------- */
+
+Hooks.once("ready", async function () {
+  // Wait to register hotbar drop hook on ready so that modules could register earlier if they want to
+  Hooks.on("hotbarDrop", (bar, data, slot) => createItemMacro(data, slot));
+
+  // Prepare gamesystem settings.
+  game.settings.register(game.system.id, "effectVitResPC", {
+    name: game.i18n.localize("SETTING.effectVitResPC.name"),
+    hint:
+      game.i18n.localize("SETTING.effectVitResPC.hint") +
+      game.i18n.localize("SETTING.effectVitResPC.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectVitResPC.default"),
+    onChange: (value) => {
+      effectVitResPC = value;
+    },
+  });
+  effectVitResPC = game.settings.get(game.system.id, "effectVitResPC");
+  game.settings.register(game.system.id, "effectMndResPC", {
+    name: game.i18n.localize("SETTING.effectMndResPC.name"),
+    hint:
+      game.i18n.localize("SETTING.effectMndResPC.hint") +
+      game.i18n.localize("SETTING.effectMndResPC.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectMndResPC.default"),
+    onChange: (value) => {
+      effectMndResPC = value;
+    },
+  });
+  effectMndResPC = game.settings.get(game.system.id, "effectMndResPC");
+  game.settings.register(game.system.id, "effectInitPC", {
+    name: game.i18n.localize("SETTING.effectInitPC.name"),
+    hint:
+      game.i18n.localize("SETTING.effectInitPC.hint") +
+      game.i18n.localize("SETTING.effectInitPC.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectInitPC.default"),
+    onChange: (value) => {
+      effectInitPC = value;
+    },
+  });
+  effectInitPC = game.settings.get(game.system.id, "effectInitPC");
+  game.settings.register(game.system.id, "effectMKnowPC", {
+    name: game.i18n.localize("SETTING.effectMKnowPC.name"),
+    hint:
+      game.i18n.localize("SETTING.effectMKnowPC.hint") +
+      game.i18n.localize("SETTING.effectMKnowPC.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectMKnowPC.default"),
+    onChange: (value) => {
+      effectMKnowPC = value;
+    },
+  });
+  effectMKnowPC = game.settings.get(game.system.id, "effectMKnowPC");
+  game.settings.register(game.system.id, "effectVitResMon", {
+    name: game.i18n.localize("SETTING.effectVitResMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectVitResMon.hint") +
+      game.i18n.localize("SETTING.effectVitResMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectVitResMon.default"),
+    onChange: (value) => {
+      effectVitResMon = value;
+    },
+  });
+  effectVitResMon = game.settings.get(game.system.id, "effectVitResMon");
+  game.settings.register(game.system.id, "effectMndResMon", {
+    name: game.i18n.localize("SETTING.effectMndResMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectMndResMon.hint") +
+      game.i18n.localize("SETTING.effectMndResMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectMndResMon.default"),
+    onChange: (value) => {
+      effectMndResMon = value;
+    },
+  });
+  effectMndResMon = game.settings.get(game.system.id, "effectMndResMon");
+  game.settings.register(game.system.id, "effectHitMon", {
+    name: game.i18n.localize("SETTING.effectHitMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectHitMon.hint") +
+      game.i18n.localize("SETTING.effectHitMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectHitMon.default"),
+    onChange: (value) => {
+      effectHitMon = value;
+    },
+  });
+  effectHitMon = game.settings.get(game.system.id, "effectHitMon");
+  game.settings.register(game.system.id, "effectDmgMon", {
+    name: game.i18n.localize("SETTING.effectDmgMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectDmgMon.hint") +
+      game.i18n.localize("SETTING.effectDmgMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectDmgMon.default"),
+    onChange: (value) => {
+      effectDmgMon = value;
+    },
+  });
+  effectDmgMon = game.settings.get(game.system.id, "effectDmgMon");
+  game.settings.register(game.system.id, "effectDodgeMon", {
+    name: game.i18n.localize("SETTING.effectDodgeMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectDodgeMon.hint") +
+      game.i18n.localize("SETTING.effectDodgeMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectDodgeMon.default"),
+    onChange: (value) => {
+      effectDodgeMon = value;
+    },
+  });
+  effectDodgeMon = game.settings.get(game.system.id, "effectDodgeMon");
+  game.settings.register(game.system.id, "effectScpMon", {
+    name: game.i18n.localize("SETTING.effectScpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectScpMon.hint") +
+      game.i18n.localize("SETTING.effectScpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectScpMon.default"),
+    onChange: (value) => {
+      effectScpMon = value;
+    },
+  });
+  effectScpMon = game.settings.get(game.system.id, "effectScpMon");
+  game.settings.register(game.system.id, "effectCnpMon", {
+    name: game.i18n.localize("SETTING.effectCnpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectCnpMon.hint") +
+      game.i18n.localize("SETTING.effectCnpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectCnpMon.default"),
+    onChange: (value) => {
+      effectCnpMon = value;
+    },
+  });
+  effectCnpMon = game.settings.get(game.system.id, "effectCnpMon");
+  game.settings.register(game.system.id, "effectWzpMon", {
+    name: game.i18n.localize("SETTING.effectWzpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectWzpMon.hint") +
+      game.i18n.localize("SETTING.effectWzpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectWzpMon.default"),
+    onChange: (value) => {
+      effectWzpMon = value;
+    },
+  });
+  effectWzpMon = game.settings.get(game.system.id, "effectWzpMon");
+  game.settings.register(game.system.id, "effectPrpMon", {
+    name: game.i18n.localize("SETTING.effectPrpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectPrpMon.hint") +
+      game.i18n.localize("SETTING.effectPrpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectPrpMon.default"),
+    onChange: (value) => {
+      effectPrpMon = value;
+    },
+  });
+  effectPrpMon = game.settings.get(game.system.id, "effectPrpMon");
+  game.settings.register(game.system.id, "effectMtpMon", {
+    name: game.i18n.localize("SETTING.effectMtpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectMtpMon.hint") +
+      game.i18n.localize("SETTING.effectMtpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectMtpMon.default"),
+    onChange: (value) => {
+      effectMtpMon = value;
+    },
+  });
+  effectMtpMon = game.settings.get(game.system.id, "effectMtpMon");
+  game.settings.register(game.system.id, "effectFrpMon", {
+    name: game.i18n.localize("SETTING.effectFrpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectFrpMon.hint") +
+      game.i18n.localize("SETTING.effectFrpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectFrpMon.default"),
+    onChange: (value) => {
+      effectFrpMon = value;
+    },
+  });
+  effectFrpMon = game.settings.get(game.system.id, "effectFrpMon");
+  game.settings.register(game.system.id, "effectDrpMon", {
+    name: game.i18n.localize("SETTING.effectDrpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectDrpMon.hint") +
+      game.i18n.localize("SETTING.effectDrpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectDrpMon.default"),
+    onChange: (value) => {
+      effectDrpMon = value;
+    },
+  });
+  effectDrpMon = game.settings.get(game.system.id, "effectDrpMon");
+  game.settings.register(game.system.id, "effectDmpMon", {
+    name: game.i18n.localize("SETTING.effectDmpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectDmpMon.hint") +
+      game.i18n.localize("SETTING.effectDmpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectDmpMon.default"),
+    onChange: (value) => {
+      effectDmpMon = value;
+    },
+  });
+  effectDmpMon = game.settings.get(game.system.id, "effectDmpMon");
+  game.settings.register(game.system.id, "effectAbpMon", {
+    name: game.i18n.localize("SETTING.effectAbpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectAbpMon.hint") +
+      game.i18n.localize("SETTING.effectAbpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectAbpMon.default"),
+    onChange: (value) => {
+      effectAbpMon = value;
+    },
+  });
+  effectAbpMon = game.settings.get(game.system.id, "effectAbpMon");
+  game.settings.register(game.system.id, "effectBmpMon", {
+    name: game.i18n.localize("SETTING.effectBmpMon.name"),
+    hint:
+      game.i18n.localize("SETTING.effectBmpMon.hint") +
+      game.i18n.localize("SETTING.effectBmpMon.default"),
+    scope: "world",
+    config: true,
+    type: String,
+    default: game.i18n.localize("SETTING.effectBmpMon.default"),
+    onChange: (value) => {
+      effectBmpMon = value;
+    },
+  });
+  effectBmpMon = game.settings.get(game.system.id, "effectBmpMon");
+  game.settings.register(game.system.id, "fromCompendium", {
+    name: game.i18n.localize("SETTING.fromCompendium.name"),
+    hint: game.i18n.localize("SETTING.fromCompendium.hint"),
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false,
+    requiresReload: true,
+  });
+  game.settings.register(game.system.id, "defaultCharaAction", {
+    name: game.i18n.localize("SETTING.defaultCharaAction.name"),
+    hint: game.i18n.localize("SETTING.defaultCharaAction.hint"),
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+    requiresReload: true,
+  });
+
+  // Chat message button
+  Hooks.on("renderChatMessageHTML", (chatMessage, htmlEl, data) => {
+    const html = $(htmlEl);
+    html.find(".buttonclick").click(function () {
+      const button = $(this);
+      const buttonType = button.data("buttontype");
+      chatButton(chatMessage, buttonType);
+    });
+    html.find(".flavor-text").on("click", async function (event) {
+      event.preventDefault();
+      const toggler = $(event.currentTarget);
+      const message = toggler.closest(".chat-message");
+      const description = message.find(".chat-tooltip");
+      toggler.toggleClass("open", false);
+      description.slideToggle();
+    });
+  });
+  // Add listener to past message
+  $(".chat-message .buttonclick").each((index, element) => {
+    const messageId = $(element).closest(".message").attr("data-message-id");
+    $(element).on("click", (event) => {
+      const chatMessage = game.messages.get(messageId);
+      const button = $(event.currentTarget);
+      const buttonType = button.data("buttontype");
+      chatButton(chatMessage, buttonType);
+    });
+  });
+  $(".chat-message .flavor-text").each((index, element) => {
+    $(element).on("click", (event) => {
+      const toggler = $(event.currentTarget);
+      const message = toggler.closest(".chat-message");
+      const description = message.find(".chat-tooltip");
+      toggler.toggleClass("open", false);
+      description.slideToggle();
+    });
+  });
+
+  // Prepare reference data from journal or compendium
+  const entryName = "Reference Data";
+
+  async function findEntryInCompendium(entryName) {
+    const packs = game.packs
+      .filter((p) => p.documentClass.documentName === "JournalEntry")
+      .sort((a, b) => a.metadata.label.localeCompare(b.metadata.label));
+    for (const pack of packs) {
+      const index = await pack.getIndex();
+      const entryIndex = index.find((e) => e.name === entryName);
+      if (entryIndex) {
+        const compEntry = await pack.getDocument(entryIndex._id);
+        return compEntry;
+      }
+    }
+    return null;
+  }
+
+  let entry = game.journal.getName(entryName);
+  if (!entry) {
+    entry = await findEntryInCompendium(entryName);
+  }
+  if (!entry) return;
+
+  // Find power table journal
+  const ptPageTitle = "Reference Power Table";
+  let ptPage = entry.pages.contents.find((p) => p.name === ptPageTitle);
+  if (!ptPage) {
+    entry = await findEntryInCompendium(entryName);
+    if (entry) {
+      ptPage = entry.pages.contents.find((p) => p.name === ptPageTitle);
+    }
+  }
+  if (!ptPage) return;
+
+  // Prepare reference power table
+  const ptParser = new DOMParser();
+  const ptHtmlString = ptPage.text.content;
+  const ptDoc = ptParser.parseFromString(ptHtmlString, "text/html");
+  const ptDivs = ptDoc.querySelectorAll("div.pt-item");
+  let power = "";
+
+  ptDivs.forEach((div, index) => {
+    const ptText = div.querySelector("p").textContent;
+    const ptValue = Number(ptText);
+
+    if (index % 11 === 0) {
+      power = ptText;
+      rpt[power] = [];
+    } else {
+      rpt[power].push(ptValue);
+    }
+  });
+
+  // Token apply hook
+  game.socket.on("system.sw25", (data) => {
+    if (!game.user.isGM) return;
+
+    // multiple GM treatment
+    let activeGMs = game.users
+      .filter((user) => user.isGM && user.active)
+      .map((user) => user.id)
+      .sort();
+    if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
+
+    // Apply roll
+    if (data.method == "applyRoll") {
+      const targetToken = canvas.tokens.get(data.targetToken);
+      const target = targetToken.actor;
+      if (!target) return;
+      target.update({
+        "system.hp.value": data.resultHP,
+        "system.mp.value": data.resultMP,
+      });
+    }
+
+    // Apply MP cost
+    if (data.method == "applyMp") {
+      const targetToken = canvas.tokens.get(data.targetToken);
+      const target = targetToken.actor;
+      if (!target) return;
+      target.update({
+        "system.mp.value": data.resultMP,
+      });
+    }
+
+    // Apply HP cost
+    if (data.method == "applyHp") {
+      const targetToken = canvas.tokens.get(data.targetToken);
+      const target = targetToken.actor;
+      if (!target) return;
+      target.update({
+        "system.hp.value": data.resultHP,
+      });
+    }
+
+    // Apply effect
+    if (data.method == "applyEffect") {
+      const targetTokens = data.targetTokens.map((tokenId) =>
+        canvas.tokens.get(tokenId)
+      );
+      const target = targetTokens.map((token) => token.actor);
+      const targetEffects = data.targetEffects;
+      const orgActor = data.orgActor;
+      const orgId = data.orgId;
+      target.forEach((targetActor) => {
+        targetEffects.forEach((effect) => {
+          const transferEffect = foundry.utils.duplicate(effect);
+          transferEffect.disabled = false;
+          transferEffect.sourceName = orgActor;
+          transferEffect.flags = {
+            sw25: {
+              sourceName: orgActor,
+              sourceId: `Actor.${orgId}`,
+            },
+          };
+          targetActor.createEmbeddedDocuments("ActiveEffect", [transferEffect]);
+        });
+      });
+    }
+
+    // Update chat
+    if (data.method == "updateChat") {
+
+      const id = data.id;
+      const content = data.content;
+      const flags = data.flags;
+
+      const chatMessage = game.messages.get(id);
+      if (!chatMessage) {
+        ui.notifications.error(`ChatMessage ${id} not found.`);
+        return;
+      }
+
+      const updateData = {};
+      if (content !== null && content !== undefined) {
+        updateData.content = content;
+      }
+      if (flags !== null && flags !== undefined) {
+        updateData.flags = flags;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        chatMessage.update(updateData);
+      }
+    }
+  });
+
+  // preCreateActor hook
+  Hooks.on("preCreateActor", (actor, options, userId) => {
+    // Set default token
+    let displayName,
+      actorLink,
+      appendNumber,
+      prependAdjective,
+      disposition,
+      displayBars;
+    /*
+    let displayName = 0;
+    let actorLink = false;
+    let appendNumber = false;
+    let prependAdjective = false;
+    let disposition = 0;
+    let displayBars = 0;
+    */
+    switch (actor.type) {
+      case "character":
+        displayName = 50;
+        actorLink = true;
+        appendNumber = false;
+        prependAdjective = false;
+        disposition = 1;
+        displayBars = 50;
+        break;
+      case "npc":
+        displayName = 30;
+        actorLink = true;
+        appendNumber = false;
+        prependAdjective = false;
+        disposition = 0;
+        displayBars = 0;
+        break;
+      case "monster":
+        //displayName = 30;
+        actorLink = false;
+        //appendNumber = true;
+        //prependAdjective = true;
+        //disposition = -1;
+        //displayBars = 40;
+        break;
+      default:
+      /*
+        displayName = 0;
+        actorLink = false;
+        appendNumber = false;
+        prependAdjective = false;
+        disposition = 0;
+        displayBars = 0;
+      */
+    }
+    if (
+      actor._stats?.compendiumSource ||
+      options._stats?.compendiumSource ||
+      actor.folder ||
+      options.folder
+    ) {
+      displayName = actor.prototypeToken.hasOwnProperty("displayName")
+        ? actor.prototypeToken.displayName
+        : displayName;
+      actorLink = actor.prototypeToken.hasOwnProperty("actorLink")
+        ? actor.prototypeToken.actorLink
+        : actorLink;
+      appendNumber = actor.prototypeToken.hasOwnProperty("appendNumber")
+        ? actor.prototypeToken.appendNumber
+        : appendNumber;
+      prependAdjective = actor.prototypeToken.hasOwnProperty("prependAdjective")
+        ? actor.prototypeToken.prependAdjective
+        : prependAdjective;
+      disposition = actor.prototypeToken.hasOwnProperty("disposition")
+        ? actor.prototypeToken.disposition
+        : disposition;
+      displayBars = actor.prototypeToken.hasOwnProperty("displayBars")
+        ? actor.prototypeToken.displayBars
+        : displayBars;
+    }
+
+    // Update actor
+    actor.updateSource({
+      "prototypeToken.displayName": displayName,
+      "prototypeToken.actorLink": actorLink,
+      "prototypeToken.appendNumber": appendNumber,
+      "prototypeToken.prependAdjective": prependAdjective,
+      "prototypeToken.disposition": disposition,
+      "prototypeToken.displayBars": displayBars,
+    });
+  });
+
+  // createActor hook
+  Hooks.on("createActor", async (actor, options, userId) => {
+    if (!game.user.isGM) return;
+
+    // multiple GM treatment
+    const isActiveGM =
+      game.user.isGM && game.user.id === game.users.activeGM?.id;
+    if (!isActiveGM) return;
+
+    // Default item data
+    let itemData = [];
+    let resvit = false;
+    let resmnd = false;
+    let init = false;
+    let mknow = false;
+    let monres = false;
+    let monwp = false;
+    if (actor.type == "character") {
+      actor.items.forEach((item) => {
+        if (item.name == game.i18n.localize("SW25.Config.ResVit"))
+          resvit = true;
+        if (item.name == game.i18n.localize("SW25.Config.ResMnd"))
+          resmnd = true;
+        if (item.name == game.i18n.localize("SW25.Config.Init")) init = true;
+        if (item.name == game.i18n.localize("SW25.Config.MKnow")) mknow = true;
+      });
+      if (!resvit) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.ResVit"),
+          type: "check",
+          system: {
+            description: "",
+            checkskill: "adv",
+            checkabi: "vit",
+            showbtcheck: true,
+          },
+        });
+      }
+      if (!resmnd) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.ResMnd"),
+          type: "check",
+          system: {
+            description: "",
+            checkskill: "adv",
+            checkabi: "mnd",
+            showbtcheck: true,
+          },
+        });
+      }
+      if (!init) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.Init"),
+          type: "check",
+          system: {
+            description: "",
+            checkskill: "",
+            checkabi: "",
+            showbtcheck: true,
+          },
+        });
+      }
+      if (!mknow) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.MKnow"),
+          type: "check",
+          system: {
+            description: "",
+            checkskill: "",
+            checkabi: "",
+            showbtcheck: true,
+          },
+        });
+      }
+    }
+    if (actor.type == "monster") {
+      actor.items.forEach((item) => {
+        if (item.name == game.i18n.localize("SW25.Config.MonRes"))
+          monres = true;
+        if (
+          item.system.label1 == game.i18n.localize("SW25.Config.MonHit") &&
+          item.system.label2 == game.i18n.localize("SW25.Config.MonDmg") &&
+          item.system.label3 == game.i18n.localize("SW25.Config.MonDge")
+        )
+          monwp = true;
+      });
+      if (!monres) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.MonRes"),
+          type: "monsterability",
+          system: {
+            description: "",
+            usedice1: true,
+            label1: game.i18n.localize("SW25.Config.MonResVit"),
+            usefix1: true,
+            applycheck1: "-",
+            usedice2: true,
+            label2: game.i18n.localize("SW25.Config.MonResMnd"),
+            usefix2: true,
+            applycheck2: "-",
+          },
+        });
+      }
+      if (!monwp) {
+        itemData.push({
+          name: game.i18n.localize("SW25.Config.MonWp"),
+          type: "monsterability",
+          system: {
+            description: "",
+            usedice1: true,
+            label1: game.i18n.localize("SW25.Config.MonHit"),
+            usefix1: true,
+            applycheck1: "-",
+            usedice2: true,
+            label2: game.i18n.localize("SW25.Config.MonDmg"),
+            usefix2: false,
+            applycheck2: "on",
+            usedice3: true,
+            label3: game.i18n.localize("SW25.Config.MonDge"),
+            usefix3: true,
+            applycheck3: "-",
+          },
+        });
+      }
+    }
+
+    // Set default item
+    let item = await Item.create(itemData, { parent: actor });
+  });
+
+  // Custom chat command
+  let customCommandModule = "_chatcommands";
+  let chatcommands =
+    game.modules.has(customCommandModule) &&
+    game.modules.get(customCommandModule).active;
+  if (chatcommands) {
+    console.log("Enable custom chat commands");
+    game.chatCommands.register({
+      name: "/powerroll",
+      aliases: [
+        "/powroll",
+        "/powr",
+        "/rollpower",
+        "/rollpow",
+        "/rpow",
+        "/rp",
+        "/pow",
+      ],
+      module: "_chatcommands",
+      description: "Roll power table.",
+      icon: "<i class='fas fa-dice-d6'></i>",
+      callback: async (chat, parameters, messageData) => {
+        let command = "/powerroll";
+        await customCommand(command, messageData, parameters);
+        return;
+      },
+    });
+  } else {
+    console.log("Disable custom chat commands");
+  }
+
+  // Item update hook
+  Hooks.on("updateItem", async (item, updateData, options, userId) => {
+    if (!game.user.isGM) return;
+
+    // multiple GM treatment
+    const isActiveGM =
+      game.user.isGM && game.user.id === game.users.activeGM?.id;
+    if (!isActiveGM) return;
+
+    // Linking equip and effect
+    if (updateData.system && updateData.system.hasOwnProperty("equip")) {
+      for (let activeEffect of item.effects) {
+        if (updateData.system.equip) {
+          if (activeEffect.disabled) {
+            await activeEffect.update({ disabled: false });
+          }
+        } else {
+          if (!activeEffect.disabled) {
+            await activeEffect.update({ disabled: true });
+          }
+        }
+      }
+    }
+  });
+
+  // Load language from Compendium for Polyglot
+  let polyglotmodule = "polyglot";
+  let polyglot =
+    game.modules.has(polyglotmodule) && game.modules.get(polyglotmodule).active;
+  if (polyglot) {
+    let fromCompendium = game.settings.get(game.system.id, "fromCompendium");
+    if (fromCompendium) {
+      await game.polyglot.languageProvider.getLanguages(fromCompendium);
+    }
+  }
+});
+
+// SceneControl Hook
+Hooks.on("getSceneControlButtons", function (controls) {
+  const rollRequestBtn = {
+    name: "rollRequest(Skill)",
+    title: game.i18n.localize("SETTING.rollRequest"),
+    icon: "fas fa-dice-d6",
+    visible: game.user.isGM,
+    onClick: () => {
+      rollreq();
+    },
+    button: true,
+  };
+  const isV13Plus = foundry.utils.isNewerVersion(game.version, "13");
+  // v13 or newer
+  if (isV13Plus) {
+    if (!controls.tokens.tools) controls.tokens.tools = {};
+    controls.tokens.tools[rollRequestBtn.name] = rollRequestBtn;
+  }
+  // v12 or older
+  else {
+    if (controls[0] && controls[0].tools) {
+      const existingButton = controls[0].tools.find(
+        (tool) => tool.name === rollRequestBtn.name
+      );
+      if (!existingButton) {
+        controls[0].tools.push(rollRequestBtn);
+      }
+    }
+  }
+});
+
+// textarea edit hook
+Hooks.on("renderSW25ActorSheet", (app, html, data) => {
+  html.find(".textarea-editor").on("blur", async (event) => {
+    const textarea = $(event.currentTarget);
+    const path = "system." + textarea.data("path");
+    const displaypath = "system.display" + textarea.data("path");
+    const content = textarea.val();
+    const displaycontent = content.replace(/\n/g, "<br>");
+    const updateData = {};
+    updateData[path] = content;
+    updateData[displaypath] = displaycontent;
+    await app.object.update(updateData);
+  });
+});
+Hooks.on("renderSW25ItemSheet", (app, html, data) => {
+  html.find(".textarea-editor").on("blur", async (event) => {
+    const textarea = $(event.currentTarget);
+    const path = "system." + textarea.data("path");
+    const displaypath = "system.display" + textarea.data("path");
+    const content = textarea.val();
+    const displaycontent = content.replace(/\n/g, "<br>");
+    const updateData = {};
+    updateData[path] = content;
+    updateData[displaypath] = displaycontent;
+    await app.object.update(updateData);
+  });
+});
+
+// Polyglot support
+Hooks.once("polyglot.init", (LanguageProvider) => {
+  const SW25LanguageProvider = preparePolyglot(LanguageProvider);
+  game.polyglot.api.registerSystem(SW25LanguageProvider);
+});
+
+/* -------------------------------------------- */
+/*  Hotbar Macros                               */
+/* -------------------------------------------- */
+
+/**
+ * Create a Macro from an Item drop.
+ * Get an existing item macro if one exists, otherwise create a new one.
+ * @param {Object} data     The dropped data
+ * @param {number} slot     The hotbar slot to use
+ * @returns {Promise}
+ */
+async function createItemMacro(data, slot) {
+  // First, determine if this is a valid owned item.
+  if (data.type !== "Item") return;
+  if (!data.uuid.includes("Actor.") && !data.uuid.includes("Token.")) {
+    return ui.notifications.warn(
+      "You can only create macro buttons for owned Items"
+    );
+  }
+  // If it is, retrieve it based on the uuid.
+  const item = await Item.fromDropData(data);
+
+  // Create the macro command using the uuid.
+  const command = `game.sw25.rollItemMacro("${data.uuid}");`;
+  let macro = game.macros.find(
+    (m) => m.name === item.name && m.command === command
+  );
+  if (!macro) {
+    macro = await Macro.create({
+      name: item.name,
+      type: "script",
+      img: item.img,
+      command: command,
+      flags: { "sw25.itemMacro": true },
+    });
+  }
+  game.user.assignHotbarMacro(macro, slot);
+  return false;
+}
+
+/**
+ * Create a Macro from an Item drop.
+ * Get an existing item macro if one exists, otherwise create a new one.
+ * @param {string} itemUuid
+ */
+function rollItemMacro(itemUuid) {
+  // Reconstruct the drop data so that we can load the item.
+  const dropData = {
+    type: "Item",
+    uuid: itemUuid,
+  };
+  // Load the item from the uuid.
+  Item.fromDropData(dropData).then((item) => {
+    // Determine if the item loaded and if it's an owned item.
+    if (!item || !item.parent) {
+      const itemName = item?.name ?? itemUuid;
+      return ui.notifications.warn(
+        `Could not find item ${itemName}. You may need to delete and recreate this macro.`
+      );
+    }
+
+    // Trigger the item roll
+    item.roll();
+  });
+}
