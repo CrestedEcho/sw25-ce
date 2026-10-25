@@ -65,8 +65,8 @@
     </div>
   </li>
   {{#each skills as |item id|}}
-    <li class='item flexrow' data-item-id='{{item._id}}'>
-      <div class='item-name item-label' style="flex: 3;"><h4>{{item.name}}</h4></div>
+    <li class='item flexrow sw25-class-row' data-item-id='{{item._id}}'>
+      <div class='item-name item-label skill-open' style="flex: 3; cursor: pointer;" data-tooltip="Open (Shift+click: show details)"><h4>{{item.name}}</h4></div>
       <span class='item-checklevel align-center resource-label item-element' style="flex-basis:60px;{{#if ../system.isEdit}} font-size:0.8em{{/if}}">
         {{#if ../system.isEdit}}
           <a class="changesl-button" data-action="decrease" data-property="item.system.skilllevel">

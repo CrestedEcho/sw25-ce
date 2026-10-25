@@ -770,7 +770,18 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     });
 
     // Open item details
-    html.find(".item-label").click(this._showItemDetails.bind(this));
+    html.find(".item-label:not(.skill-open)").click(this._showItemDetails.bind(this));
+
+    // Classes & Feats tab: clicking a class (skill item) row or its name opens the skill item sheet,
+    // like other item rows. Rollable cells, inputs, controls and the expanded details keep their own behaviour.
+    // Shift+click on the name still toggles the inline details.
+    html.on("click", ".sw25-class-row", (ev) => {
+      if (ev.target.closest(".rollable, .powerrollable, input, select, textarea, a, .item-controls, .item-description, .small-checkitem")) return;
+      const row = ev.currentTarget;
+      if (ev.shiftKey && ev.target.closest(".skill-open")) { ev.preventDefault(); return this._showItemDetails({ preventDefault() {}, currentTarget: row.querySelector(".skill-open") }); }
+      ev.preventDefault();
+      this.actor.items.get(row.dataset.itemId)?.sheet.render(true);
+    });
     html.find(".spelllist-label").click(this._showSpellList.bind(this));
     html.find(".spell-label").click(this._showSpellDetails.bind(this));
     html.find(".action-label").click(this._showActionDetails.bind(this));
