@@ -2,6 +2,7 @@ const SW25_AE_MODES = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4
 import { effectInitPC } from "../sw25.mjs";
 import { PT } from "../helpers/powerroll.mjs";
 import * as RE from "../rules/engine.mjs";
+import { prepareStatBlock } from "../rules/statblock.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -41,6 +42,13 @@ export class SW25Actor extends Actor {
     const actorData = this;
     const systemData = actorData.system;
     const flags = actorData.flags || {};
+    // NPC/monster stat block (system.sb -> derived, non-persisted system.sbView)
+    if (actorData.type === "npc" || actorData.type === "monster") {
+      try {
+        const view = prepareStatBlock(systemData.sb, systemData, actorData.type);
+        Object.defineProperty(systemData, "sbView", { value: view, enumerable: false, configurable: true, writable: true });
+      } catch (err) { console.error("sw25-ce | stat block prepare failed", err); }
+    }
 
     // Make separate methods for each Actor type (character, npc, etc.) to keep
     // things organized.

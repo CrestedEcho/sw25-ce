@@ -6,6 +6,7 @@
  * Deterministic _id from category+slug; flags.sw25-ce.slug is what grant refs resolve against.
  * The Writer JSON is kept verbatim in flags.sw25-ce.data for later richer mapping.
  */
+import { statBlockFromData, dispositionFor } from "../module/rules/statblock.mjs";
 import fs from "node:fs"; import path from "node:path"; import crypto from "node:crypto";
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -76,7 +77,8 @@ export function toDoc(cat, d) {
     }
     case "monsters": {
       const { rules, ...msys } = sys;
-      return { ...base, type: "monster", img: "icons/svg/mystery-man.svg", system: { ...msys, monlevel: d.level }, items: [], effects: [] };
+      return { ...base, type: d.type === "npc" ? "npc" : "monster", img: "icons/svg/mystery-man.svg", system: { ...msys, monlevel: d.level, sb: statBlockFromData({ ...d, description: msys.description }) },
+        prototypeToken: { disposition: { FRIENDLY: 1, NEUTRAL: 0, HOSTILE: -1 }[dispositionFor(statBlockFromData(d), d.type === "npc" ? "npc" : "monster")] }, items: [], effects: [] };
     }
   }
 }

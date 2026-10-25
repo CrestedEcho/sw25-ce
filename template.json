@@ -467,6 +467,57 @@
             "value": ""
           }
         }
+      },
+      "sb": {
+        "level": null,
+        "reputation": 0,
+        "weakness": 0,
+        "weakPoint": "",
+        "weakPointData": null,
+        "initiative": 0,
+        "movement": {
+          "ground": null,
+          "groundMode": "",
+          "other": null,
+          "otherMode": ""
+        },
+        "fortitude": {
+          "value": 0,
+          "fixed": 7
+        },
+        "willpower": {
+          "value": 0,
+          "fixed": 7
+        },
+        "useFixed": true,
+        "parts": [],
+        "partCount": 1,
+        "coreParts": "",
+        "uniqueSkills": [],
+        "loot": [],
+        "swordShards": 0,
+        "useDeathCheck": false,
+        "description": "",
+        "source": "",
+        "monsterType": "",
+        "intelligence": "",
+        "perception": "",
+        "disposition": "",
+        "soulscars": 0,
+        "languages": [],
+        "habitat": [],
+        "title": "",
+        "faction": "",
+        "settlement": "",
+        "race": "",
+        "attitude": "",
+        "hostile": false,
+        "classLevels": [],
+        "relationships": [],
+        "services": [],
+        "notes": "",
+        "secrets": "",
+        "overrides": {}
       }
     },
     "monster": {
@@ -595,7 +646,58 @@
       "usespell": false,
       "limited": false,
       "isgm": false,
-      "udname": ""
+      "udname": "",
+      "sb": {
+        "level": null,
+        "reputation": 0,
+        "weakness": 0,
+        "weakPoint": "",
+        "weakPointData": null,
+        "initiative": 0,
+        "movement": {
+          "ground": null,
+          "groundMode": "",
+          "other": null,
+          "otherMode": ""
+        },
+        "fortitude": {
+          "value": 0,
+          "fixed": 7
+        },
+        "willpower": {
+          "value": 0,
+          "fixed": 7
+        },
+        "useFixed": true,
+        "parts": [],
+        "partCount": 1,
+        "coreParts": "",
+        "uniqueSkills": [],
+        "loot": [],
+        "swordShards": 0,
+        "useDeathCheck": false,
+        "description": "",
+        "source": "",
+        "monsterType": "",
+        "intelligence": "",
+        "perception": "",
+        "disposition": "",
+        "soulscars": 0,
+        "languages": [],
+        "habitat": [],
+        "title": "",
+        "faction": "",
+        "settlement": "",
+        "race": "",
+        "attitude": "",
+        "hostile": false,
+        "classLevels": [],
+        "relationships": [],
+        "services": [],
+        "notes": "",
+        "secrets": "",
+        "overrides": {}
+      }
     }
   },
   "Item": {

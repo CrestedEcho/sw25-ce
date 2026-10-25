@@ -3,6 +3,8 @@ import { SW25Actor } from "./documents/actor.mjs";
 import * as RulesEngine from "./rules/engine.mjs";
 import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.mjs";
 import { registerRulesUI } from "./rules/sheet-ui.mjs";
+import { registerStatBlockUI } from "./rules/statblock-ui.mjs";
+import * as StatBlock from "./rules/statblock.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat } from "./documents/combat.mjs";
@@ -81,6 +83,7 @@ Hooks.once("init", function () {
   // accessible in global contexts.
   game.sw25 = {
     rules: { ...RulesEngine, syncGrants, resyncGrants, setChoice, resolveRef },
+    statblock: StatBlock,
     SW25Actor,
     SW25Item,
     SW25ActiveEffect,
@@ -173,6 +176,7 @@ Hooks.once("init", function () {
   registerCe7Settings();
   registerCe7Hooks();
   registerRulesUI();
+  registerStatBlockUI();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
