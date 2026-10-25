@@ -38,3 +38,9 @@ test("heal spells: detected from data, Apply healing button, capped at max HP", 
 test("PC wins ties against a fixed value (weakness reveal)", () => {
   assert.equal(knowledgeUpdates(12, { weakness: 12, reputation: 10 })["system.sb.weaknessRevealed"], true);
 });
+test("Negates spells offer Resisted (no effect) next to Apply", () => {
+  const d = { rolls: [7], crits: 0, table: 3, magicPower: 4, total: 7, half: 4 };
+  assert.match(damageHTML({ heal: true, power: { rate: 10 }, powerCrit: 10, resist: "Negates" }, d), /data-sw25-heal="7".*data-sw25-resisted/s);
+  assert.match(damageHTML({ power: { rate: 10 }, powerCrit: 10, resist: "Negates" }, d), /data-sw25-magic-dmg="7".*data-sw25-resisted/s);
+  assert.doesNotMatch(damageHTML({ power: { rate: 10 }, powerCrit: 10, resist: "Half" }, d), /data-sw25-resisted/);
+});

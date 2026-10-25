@@ -85,10 +85,11 @@ export function castChatHTML(actorName, meta, { mp, hp, rank, ritual, partName }
 export function damageHTML(meta, d) {
   if (!d) return "";
   if (d.fumble) return `<div class="sw25-spelldmg"><b>Damage</b>: rolled ${d.rolls[0]}: automatic failure, no damage.</div>`;
+  const neg = /negat/i.test(meta.resist ?? "") ? ` <button type="button" data-sw25-resisted style="font-size:0.8em">Resisted (no effect)</button>` : "";
   if (meta.heal) return `<div class="sw25-spelldmg"><div><b>Healing</b> (Power ${esc(meta.power?.rate ?? "?")}, crit ${meta.powerCrit}): rolls ${d.rolls.join(" → ")}${d.crits ? ` <b>(crit ×${d.crits})</b>` : ""} = table ${d.table} + Magic Power ${d.magicPower} = <b>${d.total}</b></div>`
-    + `<div><small>Healing: capped at max HP.</small></div><div><button type="button" data-sw25-heal="${d.total}">Apply healing ${d.total}</button></div></div>`;
+    + `<div><small>Healing: capped at max HP.</small></div><div><button type="button" data-sw25-heal="${d.total}">Apply healing ${d.total}</button>${neg}</div></div>`;
   const btn = (amt, label) => `<button type="button" data-sw25-magic-dmg="${amt}">${label} ${amt}</button>`;
   return `<div class="sw25-spelldmg"><div><b>Damage</b> (Power ${esc(meta.power?.rate ?? "?")}, crit ${meta.powerCrit}): rolls ${d.rolls.join(" → ")}${d.crits ? ` <b>(crit ×${d.crits})</b>` : ""} = table ${d.table} + Magic Power ${d.magicPower} = <b>${d.total}</b></div>`
     + `<div><small>Magic damage: Defense not applied. A target's "Magic Damage +N" weak point is added on apply.</small></div>`
-    + `<div>${btn(d.total, "Apply to targets")}${/half/i.test(meta.resist ?? "") ? btn(d.half, "Resisted (half)") : ""}</div></div>`;
+    + `<div>${btn(d.total, "Apply to targets")}${/half/i.test(meta.resist ?? "") ? btn(d.half, "Resisted (half)") : ""}${neg}</div></div>`;
 }

@@ -174,6 +174,10 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
 
 /** Chat buttons on spell cards: apply magic damage to targeted tokens (Defense ignored, "Magic Damage +N" weak point added). */
 Hooks.on("renderChatMessageHTML", (_msg, el) => {
+  el.querySelectorAll?.("[data-sw25-resisted]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.preventDefault(); const names = [...(game.user.targets ?? [])].map((t) => foundry.utils.escapeHTML(t.name)).join(", ");
+    ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>Resisted</b>: no effect${names ? ` on ${names}` : ""}.</div>` });
+  }));
   el.querySelectorAll?.("[data-sw25-heal]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.preventDefault(); applyDamageToTargets(Number(b.dataset.sw25Heal) || 0, "heal");
   }));
