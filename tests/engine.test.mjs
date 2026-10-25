@@ -99,7 +99,8 @@ test("weapon extras: usesThisClass, melee, declared is situational, @choice cate
   assert.equal(ex.extraDamage.value, 2); // prof +1, fighter +1; power strike situational
   assert.equal(ex.extraDamage.situational.length, 1);
   assert.equal(RE.weaponExtras(active, { checkskill: "Fencer", category: "axe" }).extraDamage.value, 0);
-  assert.ok(notes.some((n) => n.key === "equip.rankAllowed"));
+  assert.ok(active.some((n) => n.key === "equip.rankAllowed" && n.kind === "equip"));
+  assert.ok(!notes.some((n) => n.key === "equip.rankAllowed"));
 });
 
 test("unknown keys and predicates are kept as notes, never errors", () => {

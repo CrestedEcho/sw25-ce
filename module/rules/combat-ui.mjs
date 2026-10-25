@@ -3,6 +3,7 @@
  * Pure state logic lives in combat-state.mjs.
  */
 import * as CS from "./combat-state.mjs";
+import * as RE from "./engine.mjs";
 
 const SYS = CS.SYS;
 const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? "");
@@ -18,6 +19,44 @@ export async function afterWeaponDamage(actor) {
   const cur = CS.declState(actor.getFlag(SYS, "declare"));
   if (!cur.active.length) return;
   await actor.setFlag(SYS, "declare", CS.consumeAttack(cur));
+}
+
+const RANGED = ["bow", "crossbow", "gun", "throw", "thrown"];
+/** Lines + buttons for an attack chat card, computed when the card is created (pure-ish; reads actor rules). */
+export function attackCardData(actor, phase, item = null) {
+  const sd = actor?.system ?? {};
+  const eng = sd._rules;
+  const w = item ?? (sd.itemid ? actor.items.get(sd.itemid) : null);
+  if (!eng || !w) return null;
+  const weapon = { checkskill: w.system.checkskill, category: w.system.category };
+  const ranged = RANGED.includes(String(weapon.category ?? "").toLowerCase());
+  const lines = [];
+  if (ranged && eng.flags?.noStray) lines.push("Targeting: this attack never strays into a skirmish.");
+  const data = { phase, actorId: actor.id, itemId: w.id, lines, buttons: [] };
+  return data;
+}
+/** Store attack-card extras on a message (rendered by renderChatMessageHTML). */
+export async function annotateAttackCard(actor, messageId, phase, item = null) {
+  const msg = messageId ? game.messages.get(messageId) : null;
+  if (!msg || !msg.isOwner) return;
+  const data = attackCardData(actor, phase, item);
+  if (!data || (!data.lines.length && !data.buttons.length)) return;
+  await msg.setFlag(SYS, "attackCard", data);
+}
+function renderAttackCard(msg, el) {
+  const d = msg.getFlag?.(SYS, "attackCard");
+  if (!d || el.querySelector(".sw-attack-extras")) return;
+  const lines = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join("");
+  const btns = (d.buttons ?? []).map((b, i) => `<button type="button" class="sw-attack-btn" data-i="${i}" ${b.used ? "disabled" : ""}>${esc(b.label)}${b.used ? " (used)" : ""}</button>`).join("");
+  const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${btns}</div>`;
+  (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
+  el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
+}
+export const ATTACK_BUTTONS = {};
+async function onAttackButton(msg, d, i) {
+  const b = d.buttons?.[i];
+  const fn = b && ATTACK_BUTTONS[b.action];
+  if (fn) await fn(msg, d, i);
 }
 
 function declareChips(actor, root) {
@@ -43,6 +82,16 @@ export function registerCombatUI() {
     if (!actor || actor.type !== "character") return;
     const root = html[0] ?? html;
     if (root?.querySelectorAll) declareChips(actor, root);
+  });
+  Hooks.on("renderChatMessageHTML", (msg, el) => renderAttackCard(msg, el));
+  // Rank limits warn, never block.
+  Hooks.on("updateItem", (item, changes, options, userId) => {
+    if (userId !== game.user.id || !["weapon", "armor"].includes(item.type) || !item.actor) return;
+    if (foundry.utils.getProperty(changes, "system.equip") !== true) return;
+    const eng = item.actor.system?._rules;
+    if (!eng) return;
+    const r = RE.rankCheck(eng.active, { type: item.type, category: item.system.category, rank: item.system.rank });
+    if (!r.ok) ui.notifications.warn(`${item.actor.name}: ${item.name} is rank ${r.needed}; no matching Proficiency feat (equipped anyway).`);
   });
   // Turn start: the new combatant's declarations and lingering risks end.
   Hooks.on("updateCombat", async (combat, changes) => {

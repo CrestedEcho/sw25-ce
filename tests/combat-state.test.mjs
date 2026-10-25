@@ -33,3 +33,21 @@ test("Power Strike: +4 only while declared; Evasion -2 until next turn", () => {
   assert.equal(ev({ declared: st.active, lingering: st.lingering }), 1, "risk lingers");
   assert.equal(RE.weaponExtras(active, { category: "bow" }, { declared: ["power-strike"] }).extraDamage.value, 0, "melee only");
 });
+
+test("attack.noStray is a passive flag; equip.rankAllowed checks rank by category", () => {
+  const tg = RE.collectRules([feat(load("feats/targeting.json"))]);
+  assert.equal(tg.notes.length, 0);
+  assert.equal(RE.ruleFlags(tg.active).noStray, true);
+  const wpa = load("feats/weapon-proficiency-a.json");
+  const choiceKey = wpa.choose ?? "weaponCategory";
+  const { active } = RE.collectRules([{ ...feat(wpa), choices: { [choiceKey]: "sword" } }]);
+  assert.equal(RE.rankCheck(active, { type: "weapon", category: "sword", rank: "A" }).ok, true);
+  assert.equal(RE.rankCheck(active, { type: "weapon", category: "axe", rank: "A" }).ok, false, "other category");
+  assert.equal(RE.rankCheck(active, { type: "weapon", category: "sword", rank: "S" }).ok, false, "S needs Proficiency S");
+  assert.equal(RE.rankCheck([], { type: "weapon", category: "axe", rank: "B" }).ok, true, "B is free");
+  assert.equal(RE.rankCheck([], { type: "armor", category: "metalarmor", rank: "A" }).ok, false);
+  const apa = load("feats/armor-proficiency-a.json");
+  const a = RE.collectRules([{ ...feat(apa), choices: { [apa.choose]: "Metal Armor" } }]).active;
+  assert.equal(RE.rankCheck(a, { type: "armor", category: "metalarmor", rank: "A" }).ok, true, "category names normalised");
+  assert.equal(RE.rankCheck(a, { type: "weapon", category: "metalarmor", rank: "A" }).ok, false, "armor feat does not cover weapons");
+});

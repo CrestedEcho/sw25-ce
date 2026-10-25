@@ -11,6 +11,7 @@ const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? ""
 const OV_TARGETS = ["hp.max", "mp.max", "ability.dex", "ability.agi", "ability.str", "ability.vit", "ability.int", "ability.mnd",
   "evasion", "defense", "accuracy", "magic.power.sc", "magic.power.cn", "magic.power.wz", "magic.power.pr", "magic.power.mt",
   "magic.power.fr", "magic.power.dr", "magic.power.dm", "magic.power.ab", "magic.power.bm"];
+const FLAG_LABELS = { noStray: "Targeting: ranged attacks and Area: Shot spells into a skirmish never stray" };
 const okey = (t) => t.replace(/\./g, "_");
 const quill = (title) => `<img src="${QUILL}" class="sw-quill" title="${esc(title)}" style="width:16px;height:16px;border:0;vertical-align:middle">`;
 
@@ -31,9 +32,13 @@ function overridesPanel(actor, open) {
   }).join("");
   const notes = (sd.rulesNotes ?? []).map((n) => `<li>${esc(n.source)}: <b>${esc(n.label)}</b> ${n.value != null && typeof n.value !== "object" ? esc(n.value) : ""} <i>(${esc(n.reason ?? "note")})</i></li>`).join("");
   const checks = (sd.classRules?.checkMods ?? []).map((c) => `<li>${esc(c.source)}: ${esc(c.checks?.join(", ") ?? c.key)} ${c.value > 0 ? "+" : ""}${esc(c.value)} ${c.active ? "" : "<i>(inactive)</i>"}</li>`).join("");
+  const flags = Object.entries(sd.ruleFlags ?? {}).filter(([, v]) => v).map(([k]) => `<li>${esc(FLAG_LABELS[k] ?? k)}</li>`).join("");
+  const ranks = (sd.rankWarnings ?? []).map((w) => `<li style="color:#a33"><i class="fas fa-triangle-exclamation"></i> ${esc(w.name)}: rank ${esc(w.needed)} needs a matching Proficiency feat</li>`).join("");
   return `<details class="advanced sw-overrides" data-sw25-adv="overrides" ${open ? "open" : ""}>
     <summary>${quill("Overrides")} Overrides &amp; class rules</summary>
     <table style="font-size:0.85em"><thead><tr><th>Target</th><th>Value</th><th>Misc</th><th>Lock</th><th>Manual</th></tr></thead><tbody>${rows}</tbody></table>
+    ${ranks ? `<h4>Equipment rank</h4><ul>${ranks}</ul>` : ""}
+    ${flags ? `<h4>Passive effects</h4><ul>${flags}</ul>` : ""}
     ${checks ? `<h4>Check modifiers</h4><ul>${checks}</ul>` : ""}
     ${notes ? `<h4>Rule notes (not automated)</h4><ul>${notes}</ul>` : ""}
   </details>`;

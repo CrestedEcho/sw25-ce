@@ -1,6 +1,6 @@
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
-import { afterWeaponDamage } from "../rules/combat-ui.mjs";
+import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "../helpers/utils.mjs";
 
@@ -3040,7 +3040,7 @@ export class SW25Item extends Item {
         chatMessageId = chatMessage.id;
       });
 
-      if (item.type === "weapon" && actor) await afterWeaponDamage(actor);
+      if (item.type === "weapon" && actor) { await annotateAttackCard(actor, chatMessageId, "damage", item); await afterWeaponDamage(actor); }
       return { roll, chatMessageId };
     }
 

@@ -32,6 +32,8 @@ export const ACTOR_TARGETS = {
  *       weapon = per-weapon (selected attack weapon) value
  *       legacy = routed into the existing classRules aggregate (critMod/minStrMult/castPenalty)
  *       check  = predicate-scoped check modifier list (classRules.checkMods)
+ *       flag   = boolean passive switch read by roll/chat code (ruleFlags)
+ *       equip  = equipment permission (rankAllowed -> rankCheck; warns, never blocks)
  *       note   = recorded and shown, not applied (no sheet support yet)                       */
 export const KEY_ALIASES = {
   "attack.critThreshold": { target: "critMod", kind: "legacy" },
@@ -48,8 +50,8 @@ export const KEY_ALIASES = {
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
   "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "note" },
-  "equip.rankAllowed": { target: "equip.rankAllowed", kind: "note" },
-  "attack.noStray": { target: "attack.noStray", kind: "note" },
+  "equip.rankAllowed": { target: "equip.rankAllowed", kind: "equip" },
+  "attack.noStray": { target: "noStray", kind: "flag" },
 };
 for (const t of Object.keys(ACTOR_TARGETS)) KEY_ALIASES[t] ??= { target: t, kind: "actor" };
 for (const [n, s] of Object.entries(SCHOOL_NAMES)) KEY_ALIASES[`magic.power.${n}`] ??= { target: `magic.power.${s}`, kind: "actor" };
@@ -121,6 +123,13 @@ export function setPath(obj, p, v) {
 }
 
 /* ---------------------------------------------------------------- predicates */
+/** @<id> -> choices[id]; the generic @choice falls back to the item's only/first pick (its `choose` id). */
+export function choiceValue(choices = {}, id = "choice") {
+  const v = getPath(choices ?? {}, id) ?? choices?.[id];
+  if (v != null && v !== "") return v;
+  if (id !== "choice") return null;
+  return Object.values(choices ?? {}).find((x) => x != null && x !== "" && typeof x !== "object") ?? null;
+}
 const RANGED = ["bow", "crossbow", "gun", "throw", "thrown"];
 const isMetal = (a) => a?.category === "metalarmor";
 const isNonMetal = (a) => a?.category === "nonmetalarmor";
@@ -152,7 +161,7 @@ export function testPredicate(pred = [], ctx = {}) {
     } else if ((m = t.match(/^weapon\.(\w+):(.+)$/))) {
       if (!ctx.weapon) { res.ok = false; continue; }
       let want = m[2];
-      if (want.startsWith("@")) want = getPath(ctx.source?.choices ?? {}, want.slice(1)) ?? ctx.source?.choices?.[want.slice(1)];
+      if (want.startsWith("@")) want = choiceValue(ctx.source?.choices, want.slice(1));
       if (want == null) { res.situational = true; res.notes.push(`${t}: no choice made`); continue; }
       if (String(ctx.weapon[m[1]] ?? "").toLowerCase() !== String(want).toLowerCase()) res.ok = false;
     } else if (t === "armor.metal") armorTests.push(isMetal);
@@ -283,6 +292,51 @@ export function weaponExtras(active, weapon, ctx = {}) {
     out[t.split(".")[1]] = { value: c.value, steps: c.steps, situational };
   }
   return out;
+}
+
+/** Boolean passives (kind flag) whose predicates pass: { noStray: true, ... }. */
+export function ruleFlags(active, ctx = {}) {
+  const out = {};
+  for (const r of active) {
+    if (r.kind !== "flag") continue;
+    const p = testPredicate(r.predicate, { ...ctx, source: r.source });
+    if (p.ok && !p.situational) out[r.target] = r.value !== false && r.value !== 0 && r.value != null ? r.value : out[r.target] ?? false;
+  }
+  return out;
+}
+
+/* Equipment ranks: B and below need nothing; A needs a matching rankAllowed A (or S); S/SS need S. */
+export const RANK_ORDER = ["C", "B", "A", "S", "SS"];
+const normCat = (s) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+/**
+ * item = { type: weapon|armor, category, rank }. Returns { ok, needed, allowed:[ranks], sources:[names] }.
+ * Matches predicates weapon.category:<cat|@choice> / armor.category:<cat|@choice>; a rule without a
+ * category predicate allows every category. Unmade @choice never allows (warn, not block).
+ */
+export function rankCheck(active, item = {}) {
+  const R = String(item.rank ?? "").toUpperCase();
+  const needIdx = RANK_ORDER.indexOf(R);
+  if (needIdx < RANK_ORDER.indexOf("A")) return { ok: true, needed: R || null, allowed: [], sources: [] };
+  const kind = item.type === "weapon" ? "weapon" : "armor";
+  const allowed = []; const sources = [];
+  for (const r of active) {
+    if (r.kind !== "equip" || r.target !== "equip.rankAllowed") continue;
+    let match = true;
+    for (const raw of [].concat(r.predicate ?? [])) {
+      const m = String(raw).trim().match(/^(weapon|armor)\.category:(.+)$/);
+      if (!m) continue;
+      if (m[1] !== kind) { match = false; break; }
+      let want = m[2];
+      if (want.startsWith("@")) want = choiceValue(r.source?.choices, want.slice(1));
+      if (want == null || normCat(want) !== normCat(item.category)) { match = false; break; }
+    }
+    if (!match) continue;
+    const v = String(r.value ?? "").toUpperCase();
+    allowed.push(v); sources.push(r.source?.name);
+  }
+  const best = Math.max(-1, ...allowed.map((v) => RANK_ORDER.indexOf(v)));
+  const ok = needIdx <= Math.max(best, RANK_ORDER.indexOf("B")) || (R === "SS" && best >= RANK_ORDER.indexOf("S"));
+  return { ok, needed: R, allowed, sources };
 }
 
 /** Check modifiers (check.penalty/bonus): list with active flag. */

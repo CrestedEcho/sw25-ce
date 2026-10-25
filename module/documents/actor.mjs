@@ -1368,7 +1368,7 @@ export function sw25CollectRules(actor, systemData) {
   for (const [k, a] of Object.entries(data.abilities)) { data[k] = a.value; data[`${k}mod`] = a.mod; }
   const { active, notes } = RE.collectRules(sw25RuleSources(actor), { data });
   const ctx = sw25RuleCtx(actor);
-  const eng = { active, notes, ctx, checkMods: RE.checkMods(active, ctx), report: {} };
+  const eng = { active, notes, ctx, checkMods: RE.checkMods(active, ctx), flags: RE.ruleFlags(active, ctx), report: {} };
   Object.defineProperty(sd, "_rules", { value: eng, enumerable: false, configurable: true, writable: true });
   return eng;
 }
@@ -1410,6 +1410,10 @@ function sw25ApplyFinalTargets(actor, sd) {
   if (rep["mp.max"] && Number(sd.mp.value) > sd.mp.max) sd.mp.value = sd.mp.max;
   Object.assign(eng.report, rep);
   sd.rulesReport = eng.report;
+  sd.ruleFlags = eng.flags;
+  sd.rankWarnings = actor.items.filter((i) => ["weapon", "armor"].includes(i.type) && i.system.equip === true)
+    .map((i) => ({ name: i.name, ...RE.rankCheck(eng.active, { type: i.type, category: i.system.category, rank: i.system.rank }) }))
+    .filter((r) => !r.ok);
   sd.rulesNotes = eng.notes.map((n) => ({ key: n.key, label: n.label || n.key, source: n.source.name, value: n.rawValue, reason: n.reason }));
 }
 
