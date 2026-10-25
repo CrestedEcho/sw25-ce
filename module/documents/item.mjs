@@ -2,6 +2,7 @@ import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } fro
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { hasPowerObject, planPcCast, rollSpellDamage } from "../rules/spell-power.mjs";
 import { castChatHTML } from "../rules/sb-cast.mjs";
+import { weaponCardHTML } from "../rules/weapon-card.mjs";
 import { isMonsterKnowledge, knowledgeUpdates } from "../rules/mknow.mjs";
 
 /** Monster Knowledge -> flag targets whose Weakness the total meets (GM updates directly; players ask the GM via socket). */
@@ -2752,6 +2753,7 @@ export class SW25Item extends Item {
       };
 
       let chatDescription = item.system.description;
+      if (item.type == "weapon") chatDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(weaponCardHTML(item.name, item.system), { rolls: true });
 
       // action description
       if (item.type == "action") {
@@ -2858,7 +2860,7 @@ export class SW25Item extends Item {
       // when selected target
       let target = null;
       let targetName = null;
-      if (targetTokens) {
+      if (targetTokens?.size) {
         const targetArray = Array.from(targetTokens);
         target = targetArray.map((target) => target.id);
         let targetNames = targetArray.map((target) => target.document.name);
@@ -3001,7 +3003,7 @@ export class SW25Item extends Item {
       // when selected target
       let target = null;
       let targetName = null;
-      if (targetTokens) {
+      if (targetTokens?.size) {
         const targetArray = Array.from(targetTokens);
         target = targetArray.map((target) => target.id);
         let targetNames = targetArray.map((target) => target.document.name);
