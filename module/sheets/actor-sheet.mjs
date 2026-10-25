@@ -1149,7 +1149,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       // when selected target
       let target = null;
       let targetName = null;
-      if (targetTokens) {
+      if (targetTokens?.size) {
         const targetArray = Array.from(targetTokens);
         target = targetArray.map((target) => target.id);
         let targetNames = targetArray.map((target) => target.document.name);
@@ -1378,7 +1378,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // when selected target
     let target = null;
     let targetName = null;
-    if (targetTokens) {
+    if (targetTokens?.size) {
       const targetArray = Array.from(targetTokens);
       target = targetArray.map((target) => target.id);
       let targetNames = targetArray.map((target) => target.document.name);

@@ -1345,7 +1345,7 @@ export async function chatButton(chatMessage, buttonType) {
     buttonType == "buttonmr"
   ) {
     let targetTokenId;
-    if (!chatMessage.flags.sw25.target) {
+    if (!chatMessage.flags.sw25.target?.length) {
       const targetTokens = game.user.targets;
 
       // if no target,show dialog
