@@ -1,0 +1,63 @@
+{
+  "name": "Manual",
+  "_id": "piEJIMIG4ln9SEg6",
+  "pages": [
+    {
+      "sort": 100000,
+      "name": "Manual for Sword World 2.5",
+      "type": "text",
+      "_id": "R02oWgolW3h9qv4r",
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "text": {
+        "format": 2,
+        "content": "<ul>\n<li><a href=\"https://github.com/jeannjeann/sw25-fvtt/blob/main/docs/MANUAL-en.md\">English Manual</a></li>\n</ul>",
+        "markdown": "- [English Manual](https://github.com/jeannjeann/sw25-fvtt/blob/main/docs/MANUAL-en.md)"
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "system": {},
+      "ownership": {
+        "default": -1,
+        "S8kAFHdi2uewWs6k": 3
+      },
+      "flags": {},
+      "_stats": {
+        "systemId": "sw25",
+        "systemVersion": "1.1.0",
+        "coreVersion": "12.343",
+        "createdTime": 1714919542868,
+        "modifiedTime": 1736390190473,
+        "lastModifiedBy": "HH1U2GvvA0PQ7eQ5",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "_key": "!journal.pages!piEJIMIG4ln9SEg6.R02oWgolW3h9qv4r"
+    }
+  ],
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0,
+    "S8kAFHdi2uewWs6k": 3
+  },
+  "flags": {},
+  "_stats": {
+    "systemId": "sw25",
+    "systemVersion": "1.1.0",
+    "coreVersion": "12.343",
+    "createdTime": 1714919504872,
+    "modifiedTime": 1736390190473,
+    "lastModifiedBy": "HH1U2GvvA0PQ7eQ5",
+    "compendiumSource": null,
+    "duplicateSource": null
+  },
+  "_key": "!journal!piEJIMIG4ln9SEg6",
+  "categories": []
+}

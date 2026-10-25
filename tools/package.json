@@ -1,0 +1,16 @@
+{
+  "name": "sw25-ce-dev-tools",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tooling for sw25-ce. Not needed to run the system; nothing here ships in the release zip.",
+  "scripts": {
+    "test": "node --test ../tests/",
+    "check": "node check-syntax.mjs",
+    "packs:unpack": "node packs.mjs unpack",
+    "packs:build": "node packs.mjs build",
+    "compendia:build": "node build-compendia.mjs"
+  },
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^3.0.5"
+  }
+}

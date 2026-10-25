@@ -1,0 +1,66 @@
+{
+  "name": "マニュアル",
+  "pages": [
+    {
+      "sort": 100000,
+      "name": "ソード・ワールド2.5 マニュアル",
+      "type": "text",
+      "_id": "3CUD6vHifZ01Uqxa",
+      "title": {
+        "show": true,
+        "level": 1
+      },
+      "image": {},
+      "text": {
+        "format": 2,
+        "content": "<ul>\n<li><a href=\"https://github.com/jeannjeann/sw25-fvtt/blob/main/docs/MANUAL.md\">日本語マニュアル</a></li>\n</ul>",
+        "markdown": "- [日本語マニュアル](https://github.com/jeannjeann/sw25-fvtt/blob/main/docs/MANUAL.md)"
+      },
+      "video": {
+        "controls": true,
+        "volume": 0.5
+      },
+      "src": null,
+      "system": {},
+      "ownership": {
+        "default": -1,
+        "S8kAFHdi2uewWs6k": 3
+      },
+      "flags": {},
+      "_stats": {
+        "systemId": "sw25",
+        "systemVersion": "1.1.0",
+        "coreVersion": "12.343",
+        "createdTime": 1713263968956,
+        "modifiedTime": 1736390264727,
+        "lastModifiedBy": "HH1U2GvvA0PQ7eQ5",
+        "compendiumSource": null,
+        "duplicateSource": null
+      },
+      "_key": "!journal.pages!kf7e6dre1Bhn8SE9.3CUD6vHifZ01Uqxa"
+    }
+  ],
+  "folder": null,
+  "ownership": {
+    "default": 0,
+    "S8kAFHdi2uewWs6k": 3,
+    "v0kyzXXRe5BVTZYp": 3
+  },
+  "flags": {
+    "core": {}
+  },
+  "_stats": {
+    "systemId": "sw25",
+    "systemVersion": "1.1.0",
+    "coreVersion": "12.343",
+    "createdTime": 1713263965359,
+    "modifiedTime": 1736390264727,
+    "lastModifiedBy": "HH1U2GvvA0PQ7eQ5",
+    "compendiumSource": null,
+    "duplicateSource": null
+  },
+  "_id": "kf7e6dre1Bhn8SE9",
+  "sort": 0,
+  "_key": "!journal!kf7e6dre1Bhn8SE9",
+  "categories": []
+}
