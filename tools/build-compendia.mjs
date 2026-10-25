@@ -55,6 +55,20 @@ export function skillTypeOf(d) {
   if (v.includes("wizard") || v.includes("magic")) return "magicuserskill";
   return "otherskill";
 }
+/** MP cost may be a number or text ("MP50-200", "MP5 + HP5", "MP10 + 5-point min. Mako Stone"). Returns {raw, base, max, extra, flag}. */
+export function parseMp(v) {
+  if (v === null || v === undefined || v === "") return { raw: "", base: null, flag: null };
+  if (typeof v === "number") return { raw: String(v), base: v, flag: null };
+  const raw = String(v).trim(); const m = raw.match(/^MP\s*(\d+)(?:\s*-\s*(\d+))?\s*(.*)$/i);
+  if (!m) return { raw, base: null, flag: "unparsed" };
+  const out = { raw, base: Number(m[1]), flag: null };
+  if (m[2]) { out.max = Number(m[2]); out.flag = "range"; }
+  const rest = m[3].trim();
+  if (rest) { out.extra = rest.replace(/^\+\s*/, ""); const hp = rest.match(/HP\s*(\d+)/i); const mako = rest.match(/(\d+)-point min\. Mako Stone/i);
+    if (hp) out.hpCost = Number(hp[1]); if (mako) out.makoStone = Number(mako[1]); out.flag = out.flag ? out.flag + "+extra" : "extra"; }
+  return out;
+}
+const hasPowerTable = (d) => Array.isArray(d.powerTable) ? d.powerTable.length > 0 : !!(d.power || d.powerTable);
 const desc = (d) => [d.summary, d.description].filter((x) => x && x !== "null").map((t) => `<p>${String(t).replace(/</g, "&lt;")}</p>`).join("");
 
 export function toDoc(cat, d) {
@@ -63,8 +77,13 @@ export function toDoc(cat, d) {
   const sys = { description: desc(d), rules: d.rules ?? [] };
   switch (cat) {
     case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
-    case "feats": return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", autoFeats: d.autoFeats ?? [] } };
-    case "spells": return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, mpcost: d.mpCost ?? "", target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
+    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", autoFeats: d.autoFeats ?? [] } };
+    case "spells": {
+      const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
+      const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
+      Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
+      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
+    }
     case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null } };
     case "gods": {
       const { data, ...f } = base.flags["sw25-ce"];
@@ -145,7 +164,9 @@ async function main() {
     }
   }
   const check = await checkRefs(all);
+  const spellNotes = all.filter((x) => x.cat === "spells").map(({ d }) => { const doc = toDoc("spells", d); const f = doc.flags["sw25-ce"]; return f.warnings ? { slug: d.slug, mp: f.mp.raw, warnings: f.warnings } : null; }).filter(Boolean);
+  check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
   fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, ...check }, null, 2));
-  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys }, null, 2));
+  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });
