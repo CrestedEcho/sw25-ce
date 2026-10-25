@@ -51,6 +51,8 @@ export const KEY_ALIASES = {
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
   "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "spell" },
+  "spell.extraTargets": { target: "spell.extraTargets", kind: "spell" },
+  "spell.mpMultiplier": { target: "spell.mpMultiplier", kind: "spell" },
   "equip.rankAllowed": { target: "equip.rankAllowed", kind: "equip" },
   "attack.noStray": { target: "noStray", kind: "flag" },
 };

@@ -1,5 +1,6 @@
 /**
- * sw25-ce spell cast options dialog (MP cost): influence surcharge checkbox per cast.
+ * sw25-ce spell cast options dialog (MP cost): influence surcharge checkbox per cast and
+ * Metamagic/Targets target count (MP x targets), with a live cost preview.
  * Returns { cost, label } or null when cancelled. Without applicable rules: no dialog.
  */
 import * as SC from "./spell-cast.mjs";
@@ -25,7 +26,7 @@ export async function godRank(slug) {
 /** Context the dialog needs (pure data, separated for clarity). */
 export async function castOptionsFor(actor, item) {
   const eng = actor?.system?._rules;
-  if (!eng || item?.type !== "spell") return { surcharges: [] };
+  if (!eng || item?.type !== "spell") return { surcharges: [], targets: null };
   const skill = item.system?.checkskill;
   const surcharges = [];
   for (const r of SC.surchargeRules(eng.active)) {
@@ -33,23 +34,27 @@ export async function castOptionsFor(actor, item) {
     const rank = String(r.choices.godRank ?? (await godRank(r.choices.god)) ?? "").toLowerCase() || null;
     surcharges.push({ ...r, rank, mp: SC.influenceSurcharge(r, rank) });
   }
-  return { surcharges: surcharges.filter((s) => s.mp > 0 || !s.rank) };
+  return { surcharges: surcharges.filter((s) => s.mp > 0 || !s.rank), targets: SC.targetsRule(eng.active, { target: item.system?.target }) };
 }
 
 export async function spellCostOptions(actor, item, baseCost) {
   const base = Number(baseCost) || 0;
   const name = item?.name ?? "";
   const opt = await castOptionsFor(actor, item);
-  if (!opt.surcharges.length) return { cost: base, label: name };
+  if (!opt.surcharges.length && !opt.targets) return { cost: base, label: name };
   const sur = opt.surcharges[0];
-  const ranks = SC.GOD_RANKS.map((r) => `<option value="${r}" ${r === sur.rank ? "selected" : ""}>${r} (+${SC.influenceSurcharge(sur, r)})</option>`).join("");
+  const tgt = opt.targets;
+  const nTargets = game.user.targets?.size || 1;
+  const ranks = !sur ? "" : SC.GOD_RANKS.map((r) => `<option value="${r}" ${r === sur.rank ? "selected" : ""}>${r} (+${SC.influenceSurcharge(sur, r)})</option>`).join("");
   const content = `<p><b>${esc(name)}</b> — MP ${base}</p>
-    <label><input type="checkbox" name="out"> Outside ${esc(sur.choices.god ?? "the god")}'s area of influence (${esc(sur.source)})</label>
-    ${sur.rank ? `<input type="hidden" name="rank" value="${esc(sur.rank)}">` : `<br><label>Deity rank <select name="rank">${ranks}</select></label>`}
+    ${tgt ? `<label>Targets (${esc(tgt.source)}) <input type="number" name="targets" min="1" value="${nTargets}" style="width:48px"></label><br>` : ""}
+    ${!sur ? "" : `<label><input type="checkbox" name="out"> Outside ${esc(sur.choices.god ?? "the god")}'s area of influence (${esc(sur.source)})</label>
+    ${sur.rank ? `<input type="hidden" name="rank" value="${esc(sur.rank)}">` : `<br><label>Deity rank <select name="rank">${ranks}</select></label>`}`}
     <p class="sw-cost-preview" style="font-weight:bold"></p>`;
   const read = (f) => {
-    const surcharge = f.elements.out?.checked ? SC.influenceSurcharge(sur, f.elements.rank?.value) : 0;
-    return { base, targets: 1, surcharge };
+    const surcharge = sur && f.elements.out?.checked ? SC.influenceSurcharge(sur, f.elements.rank?.value) : 0;
+    const targets = tgt?.multiplier ? Math.max(1, Math.floor(Number(f.elements.targets?.value) || 1)) : 1;
+    return { base, targets, surcharge };
   };
   const res = await foundry.applications.api.DialogV2.prompt({
     window: { title: `${name}: MP cost` }, content,
