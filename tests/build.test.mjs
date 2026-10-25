@@ -36,3 +36,11 @@ test("deity-rank power, spell weapon, mpRule", () => {
   const b = toDoc("spells", load("spells/daemons-blade.json")); assert.equal(b.system.weapon.power, 50); assert.equal(b.system.powerCrit, 10); assert.ok(!b.flags["sw25-ce"].warnings);
   const p = toDoc("spells", load("spells/perfect-cancellation.json")); assert.equal(p.system.mpcost, 33); assert.equal(p.system.mpRule.base, 33);
 });
+import { checkRefs } from "../tools/build-compendia.mjs";
+test("documented-but-unapplied keys are not errors", async () => {
+  const all = ["chain-attack", "dodge", "targeting"].map((f) => ({ cat: "feats", d: load(`feats/${f}.json`) }));
+  const r = await checkRefs(all);
+  assert.deepEqual(r.unmappedKeys, {});
+  for (const k of ["attack.extraAttack", "counter.track", "attack.noStray"]) assert.ok(r.documentedNotApplied[k], k);
+  const f = toDoc("spells", load("spells/fist-of-god.json")); assert.equal(f.system.mpcost, 8); assert.ok(f.system.mpRule.byDeityRank); assert.ok(!f.flags["sw25-ce"].warnings);
+});

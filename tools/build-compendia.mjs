@@ -102,14 +102,22 @@ export function toDoc(cat, d) {
   }
 }
 
+/** Keys documented in the Writer's RULE_KEYS.md: passed through verbatim, not errors, but reported as not applied (engine support needs approval). */
+export function documentedKeys(file = path.join(DATA, "RULE_KEYS.md")) {
+  try { return new Set([...fs.readFileSync(file, "utf8").matchAll(/^\|\s*`([\w.]+)`/gm)].map((m) => m[1])); } catch { return new Set(); }
+}
 const KIND_CAT = { feat: ["feats"], spell: ["spells"], feature: ["feats", "classes"], technique: ["feats"], weapon: ["items"], item: ["items"] };
 /** Check every grant ref / choose option against the built slugs, and every rule key against the engine. */
 export async function checkRefs(all) {
   const { resolveKey } = await import("../module/rules/engine.mjs");
   const slugs = {}; for (const { cat, d } of all) (slugs[cat] ??= new Set()).add(d.slug);
-  const unresolved = []; const unmapped = {};
+  const unresolved = []; const unmapped = {}; const unapplied = {}; const documented = documentedKeys();
   for (const { cat, d } of all) {
-    for (const r of d.rules ?? []) if (r?.key && resolveKey(r.key).unknown) (unmapped[r.key] ??= []).push(d.slug);
+    for (const r of d.rules ?? []) {
+      if (!r?.key) continue; const k = resolveKey(r.key);
+      if (k.unknown || k.kind === "note") ((k.unknown && !documented.has(r.key)) ? (unmapped[r.key] ??= []) : (unapplied[r.key] ??= [])).push(d.slug);
+      if (/@counter:/.test(String(r.value ?? ""))) (unapplied["@counter:<name>"] ??= []).push(d.slug);
+    }
     for (const g of d.autoFeats ?? []) {
       if (g.choose) {
         if (g.choose === "god") for (const o of g.options ?? []) { const id = typeof o === "object" ? o.id ?? o.ref : o; if (!slugs.gods?.has(id)) unresolved.push({ from: d.slug, choose: "god", ref: id }); }
@@ -121,7 +129,7 @@ export async function checkRefs(all) {
       if (!cats.some((c) => slugs[c]?.has(ref))) unresolved.push({ from: d.slug, kind: g.kind, ref });
     }
   }
-  return { unresolved, unmappedKeys: unmapped };
+  return { unresolved, unmappedKeys: unmapped, documentedNotApplied: unapplied };
 }
 /** Inline weapon/item grants (e.g. Grappler Throw: {kind:"weapon", ref, stats}) become sw25-items entries. */
 export function inlineItems(classes) {
@@ -167,6 +175,6 @@ async function main() {
   const spellNotes = all.filter((x) => x.cat === "spells").map(({ d }) => { const doc = toDoc("spells", d); const f = doc.flags["sw25-ce"]; return f.warnings ? { slug: d.slug, mp: f.mp.raw, warnings: f.warnings } : null; }).filter(Boolean);
   check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
   fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, ...check }, null, 2));
-  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
+  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });
