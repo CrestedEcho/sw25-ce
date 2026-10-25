@@ -69,6 +69,13 @@ export function parseMp(v) {
     if (hp) out.hpCost = Number(hp[1]); if (mako) out.makoStone = Number(mako[1]); out.flag = out.flag ? out.flag + "+extra" : "extra"; }
   return out;
 }
+/** Weapon roll fields: power, crit (cvalue), own Accuracy/Extra Damage modifiers, and the book row as pt3..pt12
+ * (the shipped Reference Power Table is blank, so without these every roll read 0). */
+export function weaponSystem(d) {
+  const out = { power: d.power ?? null, cvalue: d.critThreshold ?? 10, hit: Number(d.accuracy) || 0, dmod: Number(d.extraDamage) || 0 };
+  if (Array.isArray(d.powerTable) && d.powerTable.length === 10) d.powerTable.forEach((v, i) => { out[`pt${i + 3}`] = Number(v); });
+  return out;
+}
 const hasPowerTable = (d) => Array.isArray(d.powerTable) ? d.powerTable.length > 0 : !!(d.power || d.powerTable || d.powerByDeityRank || d.weapon?.table);
 const desc = (d) => [d.summary, d.description].filter((x) => x && x !== "null").map((t) => `<p>${String(t).replace(/</g, "&lt;")}</p>`).join("");
 
@@ -85,7 +92,7 @@ export function toDoc(cat, d) {
       Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
       return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { power: d.power, powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     }
-    case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null } };
+    case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}) } };
     case "gods": {
       const { data, ...f } = base.flags["sw25-ce"];
       const html = desc({ description: [d.title, d.domain, d.holySymbol && `Holy symbol: ${d.holySymbol}`, d.alignmentRaceNotes].filter(Boolean).join(". ") })
@@ -267,7 +274,10 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
     const g = d.gear ?? {};
     const gearItem = (x, type, sys) => { const slug = x.slug ?? x.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       items.push(embed(_id, { name: x.name, type, img: "icons/svg/item-bag.svg", flags: { "sw25-ce": { slug, data: x } }, system: { description: "", rules: [], quantity: 1, price: x.price ?? "", ...sys } })); };
-    for (const w of g.weapons ?? []) gearItem(w, "weapon", { type: w.category ?? "", usage: w.stance ?? "", hit: w.accuracy ?? 0, dmod: w.extraDamage ?? 0, range: w.range ?? "", reqstr: w.minStr ?? null, power: w.power ?? null, cr: w.critThreshold ?? null });
+    // PC sheet "accuracy"/"extraDamage" are book TOTALS (class level + Dex/Str bonus); the engine adds those itself
+    // from the weapon's class, so only the catalogue weapon's own modifiers go in hit/dmod.
+    for (const w of g.weapons ?? []) { const cat = w.slug ? ctx.lookup("items", w.slug) : null;
+      gearItem(w, "weapon", { type: w.category ?? "", usage: w.stance ?? "", range: w.range ?? "", reqstr: w.minStr ?? null, ...weaponSystem({ ...(cat ?? {}), ...w, accuracy: cat?.accuracy ?? 0, extraDamage: cat?.extraDamage ?? 0, powerTable: w.powerTable ?? cat?.powerTable }) }); }
     for (const a of g.armor ?? []) gearItem(a, "armor", { type: a.category ?? "", pp: a.defense ?? 0, dodge: a.evasion ?? 0, reqstr: a.minStr ?? null });
     for (const a of g.accessories ?? []) { if (!a.slot) gap(`accessory "${a.name}" has no slot`); gearItem(a, "accessory", { accpart: a.slot ?? "" }); }
     for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); gearItem({ name: m ? m[1] : s }, "item", { quantity: m ? Number(m[2]) : 1 }); }

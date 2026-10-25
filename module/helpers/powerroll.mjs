@@ -5,6 +5,15 @@ import { rpt } from "../sw25.mjs";
 /**
  * Powertable index
  */
+/** Reference-table value; the shipped "Reference Power Table" journal is blank, so warn instead of silently rolling 0. */
+function refPowerValue(power, total) {
+  const v = rpt?.[power]?.[total - 3];
+  if (v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) || (Array.isArray(rpt?.[power]) && rpt[power].every((x) => !x))) {
+    globalThis.ui?.notifications?.warn(`SW2.5: no power table row for Power ${power} (fill the "Reference Power Table" journal or give the item its own table).`);
+    return Number(v) || 0;
+  }
+  return Number(v);
+}
 export const PT = {
   POWER: 0,
   CVALUE: 1,
@@ -114,7 +123,7 @@ export async function powerRoll(formula, powertable) {
   if (powertable[total] == null) {
     power += Number(powertable[PT.POWTABLEMOD] ?? 0);
     if (power > 100) power = 100;
-    ptv = rpt[power][total - 3];
+    ptv = refPowerValue(power, total);
   }
 
   if (total == 2) {
@@ -150,11 +159,11 @@ export async function powerRoll(formula, powertable) {
     if (powup != 0) {
       let uppow = power + powup * rollCount;
       if (uppow > 100) uppow = 100;
-      ptv = rpt[uppow][total - 3];
+      ptv = refPowerValue(uppow, total);
     } else {
       ptv = powertable[total];
       if (powertable[total] == null) {
-        ptv = rpt[power][total - 3];
+        ptv = refPowerValue(power, total);
       }
     }
 
