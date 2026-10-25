@@ -77,7 +77,7 @@ export function toDoc(cat, d) {
   const sys = { description: desc(d), rules: d.rules ?? [] };
   switch (cat) {
     case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
-    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", autoFeats: d.autoFeats ?? [] } };
+    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", nonCombat: d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug), autoFeats: d.autoFeats ?? [] } };
     case "spells": {
       const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
       const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
@@ -106,6 +106,11 @@ export function toDoc(cat, d) {
 export function documentedKeys(file = path.join(DATA, "RULE_KEYS.md")) {
   try { return new Set([...fs.readFileSync(file, "utf8").matchAll(/^\|\s*`([\w.]+)`/gm)].map((m) => m[1])); } catch { return new Set(); }
 }
+/** Non-combat feat slugs from feats/_non-combat.json (underscore files are never entries). */
+export function nonCombatSlugs(file = path.join(DATA, "feats", "_non-combat.json")) {
+  try { const j = JSON.parse(fs.readFileSync(file, "utf8")); return new Set(Array.isArray(j) ? j : j.nonCombat ?? []); } catch { return new Set(); }
+}
+let NON_COMBAT = null;
 const KIND_CAT = { feat: ["feats"], spell: ["spells"], feature: ["feats", "classes"], technique: ["feats"], weapon: ["items"], item: ["items"] };
 /** Check every grant ref / choose option against the built slugs, and every rule key against the engine. */
 export async function checkRefs(all) {

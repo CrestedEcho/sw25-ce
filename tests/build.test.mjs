@@ -44,3 +44,8 @@ test("documented-but-unapplied keys are not errors", async () => {
   for (const k of ["attack.extraAttack", "counter.track", "attack.noStray"]) assert.ok(r.documentedNotApplied[k], k);
   const f = toDoc("spells", load("spells/fist-of-god.json")); assert.equal(f.system.mpcost, 8); assert.ok(f.system.mpRule.byDeityRank); assert.ok(!f.flags["sw25-ce"].warnings);
 });
+test("non-combat feat flag", () => {
+  assert.equal(toDoc("feats", load("feats/dodge.json")).system.nonCombat, false);
+  assert.equal(toDoc("feats", { slug: "toughness", name: "Toughness" }).system.nonCombat, true);
+  assert.equal(toDoc("feats", { slug: "x", name: "X", nonCombat: true }).system.nonCombat, true);
+});
