@@ -1247,6 +1247,12 @@
       "Save": "Save",
       "Cancel": "Cancel",
       "PanHint": "Drag to pan, scroll to zoom."
+    },
+    "EffectDuration": {
+      "Round": "Round",
+      "Rounds": "Rounds",
+      "Turn": "Turn",
+      "Turns": "Turns"
     }
   },
   "TYPES": {
@@ -1405,12 +1411,6 @@
     "Item": "Item",
     "Actor": "Actor",
     "Complete": "Complete"
-  },
-  "COMBAT": {
-    "Round": "Round",
-    "Rounds": "Rounds",
-    "Turn": "Turn",
-    "Turns": "Turns"
   },
   "EFFECT": {
     "ChangeKey": "Attribute Key",
