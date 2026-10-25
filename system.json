@@ -69,6 +69,41 @@
       "label": "Macros",
       "type": "Macro",
       "path": "packs/macro"
+    },
+    {
+      "name": "sw25-classes",
+      "label": "SW2.5 Classes",
+      "type": "Item",
+      "path": "packs/sw25-classes",
+      "system": "sw25-ce"
+    },
+    {
+      "name": "sw25-feats",
+      "label": "SW2.5 Combat Feats",
+      "type": "Item",
+      "path": "packs/sw25-feats",
+      "system": "sw25-ce"
+    },
+    {
+      "name": "sw25-spells",
+      "label": "SW2.5 Spells",
+      "type": "Item",
+      "path": "packs/sw25-spells",
+      "system": "sw25-ce"
+    },
+    {
+      "name": "sw25-items",
+      "label": "SW2.5 Items",
+      "type": "Item",
+      "path": "packs/sw25-items",
+      "system": "sw25-ce"
+    },
+    {
+      "name": "sw25-monsters",
+      "label": "SW2.5 Monsters",
+      "type": "Actor",
+      "path": "packs/sw25-monsters",
+      "system": "sw25-ce"
     }
   ],
   "packFolders": [
