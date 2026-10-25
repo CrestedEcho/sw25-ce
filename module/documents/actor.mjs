@@ -1366,9 +1366,10 @@ export function sw25CollectRules(actor, systemData) {
     abilities: Object.fromEntries(Object.entries(sd.abilities ?? {}).map(([k, a]) => [k, { value: Number(a.value) || 0, mod: Number(a.mod) || 0 }])),
   };
   for (const [k, a] of Object.entries(data.abilities)) { data[k] = a.value; data[`${k}mod`] = a.mod; }
+  data.counters = { ...(actor.flags?.["sw25-ce"]?.counters ?? {}) };
   const { active, notes } = RE.collectRules(sw25RuleSources(actor), { data });
   const ctx = sw25RuleCtx(actor);
-  const eng = { active, notes, ctx, checkMods: RE.checkMods(active, ctx), flags: RE.ruleFlags(active, ctx), report: {} };
+  const eng = { active, notes, ctx, checkMods: RE.checkMods(active, ctx), flags: RE.ruleFlags(active, ctx), counters: RE.counterDefs(active), report: {} };
   Object.defineProperty(sd, "_rules", { value: eng, enumerable: false, configurable: true, writable: true });
   return eng;
 }

@@ -35,6 +35,7 @@ export const ACTOR_TARGETS = {
  *       flag   = boolean passive switch read by roll/chat code (ruleFlags)
  *       equip  = equipment permission (rankAllowed -> rankCheck; warns, never blocks)
  *       spell  = read by the spell cast dialog (spell-cast.mjs)
+ *       counter = named per-character counter (value = name), read as @counter:<name>
  *       note   = recorded and shown, not applied (no sheet support yet)                       */
 export const KEY_ALIASES = {
   "attack.critThreshold": { target: "critMod", kind: "legacy" },
@@ -51,6 +52,7 @@ export const KEY_ALIASES = {
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
   "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "spell" },
+  "counter.track": { target: "counter", kind: "counter" },
   "spell.extraTargets": { target: "spell.extraTargets", kind: "spell" },
   "spell.mpMultiplier": { target: "spell.mpMultiplier", kind: "spell" },
   "equip.rankAllowed": { target: "equip.rankAllowed", kind: "equip" },
@@ -101,7 +103,7 @@ export function evalValue(value, data = {}, selectors = {}) {
   const s = String(value).trim();
   if (s === "") return null;
   if (!/[@a-z]/i.test(s) && !isNaN(Number(s))) return Number(s);
-  const expr = s.replace(/@([a-zA-Z_][\w.]*)/g, (_, p) => {
+  const expr = s.replace(/@counter:([\w.-]+)/g, (_, n) => `(${Number(data?.counters?.[n]) || 0})`).replace(/@([a-zA-Z_][\w.]*)/g, (_, p) => {
     const v = getPath(data, p);
     const n = Number(typeof v === "object" && v ? v.value : v);
     return Number.isFinite(n) ? `(${n})` : "(0)";
@@ -295,6 +297,21 @@ export function weaponExtras(active, weapon, ctx = {}) {
     out[t.split(".")[1]] = { value: c.value, steps: c.steps, situational };
   }
   return out;
+}
+
+/** Counters declared by counter.track rules: [{ name, source, reset, firstMelee }]. */
+export function counterDefs(active = [], all = active) {
+  const defs = [];
+  for (const r of active) {
+    if (r.kind !== "counter") continue;
+    const name = String(r.rawValue ?? r.value ?? "");
+    if (!name || defs.some((d) => d.name === name)) continue;
+    const pred = [].concat(r.predicate ?? []).map(String);
+    // a reader with attack.firstMeleeThisTurn spends the counter on the first melee attack of the turn
+    const firstMelee = all.some((x) => String(x.rawValue ?? "").includes(`@counter:${name}`) && [].concat(x.predicate ?? []).includes("attack.firstMeleeThisTurn"));
+    defs.push({ name, source: r.source?.name, sourceId: r.source?.id, reset: pred.includes("reset:round") ? "round" : null, on: (pred.find((t) => t.startsWith("on:")) ?? "").slice(3) || null, firstMelee });
+  }
+  return defs;
 }
 
 /** Boolean passives (kind flag) whose predicates pass: { noStray: true, ... }. */

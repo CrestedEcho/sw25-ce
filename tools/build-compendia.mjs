@@ -121,7 +121,6 @@ export async function checkRefs(all) {
     for (const r of d.rules ?? []) {
       if (!r?.key) continue; const k = resolveKey(r.key);
       if (k.unknown || k.kind === "note") ((k.unknown && !documented.has(r.key)) ? (unmapped[r.key] ??= []) : (unapplied[r.key] ??= [])).push(d.slug);
-      if (/@counter:/.test(String(r.value ?? ""))) (unapplied["@counter:<name>"] ??= []).push(d.slug);
     }
     for (const g of d.autoFeats ?? []) {
       if (g.choose) {

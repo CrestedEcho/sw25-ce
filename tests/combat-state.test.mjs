@@ -51,3 +51,22 @@ test("attack.noStray is a passive flag; equip.rankAllowed checks rank by categor
   assert.equal(RE.rankCheck(a, { type: "armor", category: "metalarmor", rank: "A" }).ok, true, "category names normalised");
   assert.equal(RE.rankCheck(a, { type: "weapon", category: "metalarmor", rank: "A" }).ok, false, "armor feat does not cover weapons");
 });
+
+test("Dodge: counter.track defs, manual +/- badge state, @counter value, resets", () => {
+  const dg = load("feats/dodge.json");
+  const src = (counters) => RE.collectRules([feat(dg)], { data: { counters } });
+  const { active, notes } = src({ "dodge.evasions": 2 });
+  assert.equal(notes.length, 0, "nothing left unapplied");
+  const defs = RE.counterDefs(active);
+  assert.deepEqual(defs.map((d) => [d.name, d.reset, d.on, d.firstMelee]), [["dodge.evasions", "round", "evasionSuccess", true]]);
+  assert.equal(RE.toLegacy(active).critMod, -2, "crit threshold -1 per counted evasion");
+  assert.equal(RE.toLegacy(src({}).active).critMod, 0);
+  let c = CS.bumpCounter({}, "dodge.evasions", 1);
+  c = CS.bumpCounter(c, "dodge.evasions", 1);
+  assert.equal(c["dodge.evasions"], 2);
+  assert.equal(CS.bumpCounter({}, "dodge.evasions", -1)["dodge.evasions"], 0, "never below 0");
+  assert.equal(CS.resetCounters(c, defs, { reset: "round" })["dodge.evasions"], 0);
+  assert.equal(CS.resetCounters(c, defs, { names: ["dodge.evasions"] })["dodge.evasions"], 0);
+  assert.equal(CS.resetCounters(c, defs, { reset: "turn" })["dodge.evasions"], 2);
+  assert.equal(RE.evalValue("-@counter:dodge.evasions", { counters: { "dodge.evasions": 3 } }), -3);
+});

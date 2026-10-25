@@ -31,3 +31,16 @@ export function toggleDeclare(raw, slugs, on) {
 export function consumeAttack(raw) { const s = declState(raw); return { active: [], lingering: s.lingering }; }
 export function turnStart() { return { active: [], lingering: [] }; }
 export function isDeclared(raw, slugs) { const s = declState(raw); return [].concat(slugs).some((x) => s.active.includes(x)); }
+
+/* Counters (flags.sw25-ce.counters = { name: n }): manual +/- badge, never below 0. */
+export function bumpCounter(counters, name, delta) {
+  const c = { ...(counters ?? {}) };
+  c[name] = Math.max(0, (Number(c[name]) || 0) + (Number(delta) || 0));
+  return c;
+}
+/** Zero the counters with the given reset (e.g. "round") or the given names. */
+export function resetCounters(counters, defs = [], { reset = null, names = null } = {}) {
+  const c = { ...(counters ?? {}) };
+  for (const d of defs) if ((reset && d.reset === reset) || (names && names.includes(d.name))) if (c[d.name]) c[d.name] = 0;
+  return c;
+}

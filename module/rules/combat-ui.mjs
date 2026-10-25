@@ -16,6 +16,12 @@ export async function setDeclare(actor, slugs, on) {
 /** Call after a weapon damage roll: attack-scoped declarations end (risk lingers to next turn). */
 export async function afterWeaponDamage(actor) {
   if (!actor?.isOwner) return;
+  // counters spent by the first melee attack of the turn (Dodge)
+  const w = actor.system?.itemid ? actor.items.get(actor.system.itemid) : null;
+  const spend = (actor.system?._rules?.counters ?? []).filter((d) => d.firstMelee).map((d) => d.name);
+  const cur0 = actor.getFlag(SYS, "counters") ?? {};
+  if (spend.some((n) => cur0[n]) && w && !RANGED.includes(String(w.system.category ?? "").toLowerCase()))
+    await actor.setFlag(SYS, "counters", CS.resetCounters(cur0, actor.system._rules.counters, { names: spend }));
   const cur = CS.declState(actor.getFlag(SYS, "declare"));
   if (!cur.active.length) return;
   await actor.setFlag(SYS, "declare", CS.consumeAttack(cur));
@@ -59,6 +65,24 @@ async function onAttackButton(msg, d, i) {
   if (fn) await fn(msg, d, i);
 }
 
+function counterBadges(actor, root) {
+  const defs = actor.system?._rules?.counters ?? [];
+  const vals = actor.getFlag(SYS, "counters") ?? {};
+  for (const d of defs) {
+    const li = d.sourceId && root.querySelector(`li.item[data-item-id="${d.sourceId}"]`);
+    if (!li || li.querySelector(`.sw-counter[data-name="${d.name}"]`)) continue;
+    const n = Number(vals[d.name]) || 0;
+    const tip = `${d.name}${d.on ? ` (+1 on ${d.on})` : ""}${d.reset ? `; resets each ${d.reset}` : ""}${d.firstMelee ? "; spent by your first melee attack" : ""}`;
+    (li.querySelector(".item-name") ?? li).insertAdjacentHTML("beforeend", `<span class="sw-counter" data-name="${esc(d.name)}" title="${esc(tip)}"
+      style="flex:0 0 auto;margin:0 4px;white-space:nowrap;font-size:0.85em;border:1px solid #888;border-radius:3px;padding:0 3px">
+      <a data-d="-1"><i class="fas fa-minus"></i></a> <b>${n}</b> <a data-d="1"><i class="fas fa-plus"></i></a></span>`);
+    li.querySelectorAll(`.sw-counter[data-name="${d.name}"] a`).forEach((a) => a.addEventListener("click", (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      if (actor.isOwner) actor.setFlag(SYS, "counters", CS.bumpCounter(actor.getFlag(SYS, "counters"), d.name, Number(a.dataset.d)));
+    }));
+  }
+}
+
 function declareChips(actor, root) {
   for (const li of root.querySelectorAll("li.item[data-item-id]")) {
     const item = actor.items.get(li.dataset.itemId);
@@ -81,7 +105,7 @@ export function registerCombatUI() {
     const actor = app.actor;
     if (!actor || actor.type !== "character") return;
     const root = html[0] ?? html;
-    if (root?.querySelectorAll) declareChips(actor, root);
+    if (root?.querySelectorAll) { declareChips(actor, root); counterBadges(actor, root); }
   });
   Hooks.on("renderChatMessageHTML", (msg, el) => renderAttackCard(msg, el));
   // Rank limits warn, never block.
@@ -99,5 +123,12 @@ export function registerCombatUI() {
     if (!("turn" in changes) && !("round" in changes)) return;
     const actor = combat.combatant?.actor;
     if (actor && actor.getFlag(SYS, "declare")) await actor.setFlag(SYS, "declare", CS.turnStart());
+    // reset:round counters clear when a new round starts
+    if ("round" in changes) for (const c of combat.combatants) {
+      const a = c.actor; const defs = a?.system?._rules?.counters ?? [];
+      const cur = a?.getFlag(SYS, "counters");
+      if (!cur || !defs.some((d) => d.reset === "round" && cur[d.name])) continue;
+      await a.setFlag(SYS, "counters", CS.resetCounters(cur, defs, { reset: "round" }));
+    }
   });
 }
