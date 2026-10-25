@@ -13,6 +13,7 @@ import { SW25 } from "../helpers/config.mjs";
 import { Util } from "../helpers/utils.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equipcard.mjs";
+import { afterWeaponDamage } from "../rules/combat-ui.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -1274,7 +1275,11 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     await this._onPowerRollExec(event);
   }
   async _onPowerRollExec(event, targetTokens) {
-    try { return await this._sw25OnPowerRollExec(event, targetTokens); }
+    try {
+      const res = await this._sw25OnPowerRollExec(event, targetTokens);
+      if (event.currentTarget?.dataset?.needweapon !== undefined) await afterWeaponDamage(this.actor);
+      return res;
+    }
     catch (err) { console.error("sw25-ce | power roll failed", err); ui.notifications.error(`SW2.5: damage roll failed: ${err.message}`); }
   }
   async _sw25OnPowerRollExec(event, targetTokens) {

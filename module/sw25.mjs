@@ -4,6 +4,7 @@ import * as RulesEngine from "./rules/engine.mjs";
 import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.mjs";
 import { registerRulesUI } from "./rules/sheet-ui.mjs";
 import { registerStatBlockUI } from "./rules/statblock-ui.mjs";
+import { registerCombatUI } from "./rules/combat-ui.mjs";
 import * as StatBlock from "./rules/statblock.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
@@ -189,6 +190,7 @@ Hooks.once("init", function () {
   registerCe7Hooks();
   registerRulesUI();
   registerStatBlockUI();
+  registerCombatUI();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();

@@ -2,6 +2,7 @@ const SW25_AE_MODES = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4
 import { effectInitPC } from "../sw25.mjs";
 import { PT } from "../helpers/powerroll.mjs";
 import * as RE from "../rules/engine.mjs";
+import * as CS from "../rules/combat-state.mjs";
 import { prepareStatBlock } from "../rules/statblock.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
@@ -1354,7 +1355,8 @@ function sw25RuleSources(actor) {
 function sw25RuleCtx(actor) {
   const armors = actor.items.filter((i) => i.type === "armor" && i.system.equip === true)
     .map((a) => ({ category: a.system.category, reqstr: a.system.reqstr }));
-  return { armors, declared: [] };
+  const decl = CS.declState(actor.flags?.["sw25-ce"]?.declare);
+  return { armors, declared: decl.active, lingering: decl.lingering };
 }
 export function sw25CollectRules(actor, systemData) {
   const sd = systemData;

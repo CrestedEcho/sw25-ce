@@ -126,13 +126,16 @@ const isMetal = (a) => a?.category === "metalarmor";
 const isNonMetal = (a) => a?.category === "nonmetalarmor";
 
 /**
- * Test predicate tokens. ctx = { source:{name, choices}, weapon, armors:[{category,reqstr}], declared:[], checks }.
+ * Test predicate tokens. ctx = { source:{name, choices}, weapon, armors:[{category,reqstr}], declared:[], lingering:[], checks }.
+ * declared:X is met when X is declared (ctx.declared), or for duration:1round rules while X lingers (ctx.lingering).
  * Returns { ok, situational, mods:{roundUp,min,max}, checks, notes }.
  * Unknown tokens never error: they make the rule "situational" (shown, not applied).
  */
 export function testPredicate(pred = [], ctx = {}) {
   const res = { ok: true, situational: false, mods: {}, checks: null, notes: [] };
   const armorTests = [];
+  const preds = [].concat(pred ?? []).map((x) => String(x).trim());
+  const lasting = preds.includes("duration:1round");
   for (const raw of [].concat(pred ?? [])) {
     const t = String(raw).trim();
     if (!t) continue;
@@ -159,8 +162,10 @@ export function testPredicate(pred = [], ctx = {}) {
     else if ((m = t.match(/^choice\.([\w-]+)[:=](.+)$/))) {
       if (String(ctx.source?.choices?.[m[1]] ?? "") !== m[2]) res.ok = false;
     } else if ((m = t.match(/^declared:(.+)$/))) {
-      if (!(ctx.declared ?? []).includes(m[1])) { res.situational = true; res.notes.push(`declared: ${m[1]}`); }
-    } else { res.situational = true; res.notes.push(t); }
+      const on = (ctx.declared ?? []).includes(m[1]) || (lasting && (ctx.lingering ?? []).includes(m[1]));
+      if (!on) { res.situational = true; res.notes.push(`declared: ${m[1]}`); }
+    } else if (t === "duration:1round") { /* handled with declared: (lingering until the actor's next turn) */ }
+    else { res.situational = true; res.notes.push(t); }
   }
   if (armorTests.length) {
     const armors = ctx.armors ?? [];
