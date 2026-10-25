@@ -1120,6 +1120,7 @@
       "Fortitude": "Fortitude",
       "Willpower": "Willpower",
       "Move": "Movement (Limited / Normal / Full Move)",
+      "DamagePCB": "Damage (Power / Crit / Bonus)",
       "Advanced": "Advanced / GM modifiers",
       "Equipped": "Equipped gear",
       "CombatChecks": "Combat checks",

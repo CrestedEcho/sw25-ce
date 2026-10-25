@@ -33,6 +33,7 @@ import { targetRollDialog, targetSelectDialog } from "./helpers/dialogs.mjs";
 import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
 import { registerCe7Settings, registerCe7Hooks, runCe7Migration } from "./ce7/equipcard.mjs";
+import { formatDamage, formatDamageFormula } from "./rules/damage-display.mjs";
 
 // v14 compat: core "rollMode" setting became "messageMode". Returns a legacy roll-mode string.
 globalThis.sw25RollMode = function () {
@@ -314,6 +315,8 @@ Hooks.on("updateCombat", async (combat, changes, options, userId) => {
   });
 }
 
+Handlebars.registerHelper("sw25dmg", (p, c, b) => formatDamage(p, c, b));
+Handlebars.registerHelper("sw25dmgf", (f) => formatDamageFormula(f));
 Handlebars.registerHelper("toLowerCase", function (str) {
   return str.toLowerCase();
 });

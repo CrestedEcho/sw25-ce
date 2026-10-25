@@ -3600,4 +3600,9 @@ input[type=checkbox]:disabled + .checkbox--label:focus {
 .hostile-token input[type="checkbox"]:checked + label {
   color: rgb(255,0,0);
   filter: none;
-}
+}/* sw25-ce: damage chat card header, styled like the sheet's Movement stat */
+.sw25-dmghead{display:flex;flex-direction:column;align-items:center;margin:2px 0 4px;text-align:center}
+.sw25-dmghead .ico{display:inline-block;width:22px;height:22px;background:#7a1f1f;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.sw25-dmghead .v{font-size:16px;font-weight:bold}
+.sw25-dmghead .n{font-size:11px;font-variant:small-caps;opacity:.75}
+.sw25-weaponcard .sw25-dmgval{font-weight:bold}

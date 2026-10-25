@@ -23,7 +23,7 @@ test("physical damage subtracts Defense; weak point only when revealed; magic ig
 });
 test("weapon item card is never empty", () => {
   const h = weaponCardHTML("Quarterstaff", { checkbase: 5, powerbase: 4, power: 14, totalcvalue: 12, description: "" });
-  assert.match(h, /\[\[\/r 2d6\+5/); assert.match(h, /Power 14 @12 \+4/);
+  assert.match(h, /\[\[\/r 2d6\+5/); assert.match(h, /14 \/ 12 \/ \+4/);
 });
 import { isHealSpell, healedHP } from "../module/rules/spell-power.mjs";
 import { damageHTML } from "../module/rules/sb-cast.mjs";
