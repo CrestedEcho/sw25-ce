@@ -19,6 +19,18 @@ const ONLY = arg("only", "") ? new Set(arg("only").split(",")) : null;
 const FEAT_ICONS = path.resolve(arg("icons", path.resolve(ROOT, "../assets/icons/feats")));
 /** Feat icon (original art, kept outside git like portraits): Foundry path if the file exists, else the sword default. */
 export const featImg = (slug, dir = FEAT_ICONS) => (slug && fs.existsSync(path.join(dir, `${slug}.webp`)) ? `assets/icons/feats/${slug}.webp` : "icons/svg/sword.svg");
+/** Icon for any kind: assets/icons/<folder>/<slug>.webp if present, else <folder>/_placeholder.webp (Artist, one per folder),
+ * else the Foundry default, so a missing file never becomes a broken image. Icons stay outside git like portraits. */
+const ICONS_ROOT = path.resolve(arg("icons-root", path.resolve(ROOT, "../assets/icons")));
+export const DEFAULT_IMG = { classes: "icons/svg/book.svg", feats: "icons/svg/sword.svg", spells: "icons/svg/daze.svg", items: "icons/svg/item-bag.svg", monsters: "icons/svg/mystery-man.svg" };
+const ITEM_FOLDER = { weapon: "weapons", armor: "armour", shield: "shields", accessory: "accessories", gear: "accessories", consumable: "consumables", potion: "consumables", herb: "consumables" };
+export const iconFolder = (kind, d = {}) => (kind === "items" ? ITEM_FOLDER[String(d.type ?? "").toLowerCase()] ?? "items" : kind);
+export const iconImg = (kind, d = {}, root = ICONS_ROOT) => {
+  const folder = iconFolder(kind, d); const slug = d.slug;
+  const safe = slug && !String(slug).includes("..") ? String(slug).replace(/\//g, "__") : null;
+  for (const name of [safe, "_placeholder"]) if (name && fs.existsSync(path.join(root, folder, `${name}.webp`))) return `assets/icons/${folder}/${name}.webp`;
+  return DEFAULT_IMG[kind];
+};
 const JSON_ONLY = process.argv.includes("--json-only");
 if (path.resolve(OUT).startsWith(path.join(ROOT, "packs"))) { console.error("refusing to write into live packs/"); process.exit(2); }
 
@@ -118,15 +130,15 @@ export function toDoc(cat, d) {
   const base = { _id, name: d.name, flags: { "sw25-ce": { slug: d.slug, data: d } }, _key: `!${KEYDOC[PACKS[cat].type]}!${_id}` };
   const sys = { description: desc(d), rules: d.rules ?? [] };
   switch (cat) {
-    case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
-    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: featImg(d.slug), system: { ...sys, use: d.use ?? "", nonCombat: d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug), autoFeats: d.autoFeats ?? [] } };
+    case "classes": return { ...base, type: "skill", img: iconImg("classes", d), system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
+    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: iconImg("feats", d), system: { ...sys, use: d.use ?? "", nonCombat: d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug), autoFeats: d.autoFeats ?? [] } };
     case "spells": {
       const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
       const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
       Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
-      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { ...spellPowerFields(d), powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
+      return { ...base, type: "spell", img: iconImg("spells", d), system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { ...spellPowerFields(d), powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     }
-    case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}) } };
+    case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: iconImg("items", d), system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}) } };
     case "gods": {
       const { data, ...f } = base.flags["sw25-ce"];
       const html = desc({ description: [d.title, d.domain, d.holySymbol && `Holy symbol: ${d.holySymbol}`, d.alignmentRaceNotes].filter(Boolean).join(". ") })
@@ -138,7 +150,7 @@ export function toDoc(cat, d) {
     }
     case "monsters": {
       const { rules, ...msys } = sys;
-      return { ...base, type: d.type === "npc" ? "npc" : "monster", img: "icons/svg/mystery-man.svg", system: { ...msys, monlevel: d.level, sb: statBlockFromData({ ...d, description: msys.description }) },
+      return { ...base, type: d.type === "npc" ? "npc" : "monster", img: iconImg("monsters", d), system: { ...msys, monlevel: d.level, sb: statBlockFromData({ ...d, description: msys.description }) },
         prototypeToken: { disposition: { FRIENDLY: 1, NEUTRAL: 0, HOSTILE: -1 }[dispositionFor(statBlockFromData(d), d.type === "npc" ? "npc" : "monster")] }, items: [], effects: [] };
     }
   }
