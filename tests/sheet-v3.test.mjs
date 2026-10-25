@@ -1,4 +1,5 @@
 import test from "node:test"; import assert from "node:assert/strict";
+import { accentFor } from "../module/rules/statblock-sheet-data.mjs";
 import { isNonCombatFeat, nonCombatFeats } from "../module/rules/noncombat.mjs";
 import { prepareStatBlock } from "../module/rules/statblock.mjs";
 import { buildStatBlockContext } from "../module/rules/statblock-sheet-data.mjs";
@@ -39,4 +40,14 @@ test("NPC toggles -> disposition: hostile wins, fellow friendly, else neutral", 
   assert.equal(npcToggleDisposition({ hostile: true, fellow: true }), "HOSTILE");
   assert.equal(npcToggleDisposition({ hostile: false, fellow: true }), "FRIENDLY", "un-hostiled Fellow returns to Friendly");
   assert.equal(DISPOSITION_LABELS[-1], "Hostile"); assert.equal(DISPOSITION_LABELS[0], "Neutral");
+});
+
+import { monsterToggleDisposition, isHostileToggle } from "../module/rules/statblock.mjs";
+test("monster Hostile toggle: default Hostile, OFF -> Neutral; theme stays rust", () => {
+  assert.equal(monsterToggleDisposition({}), "HOSTILE");
+  assert.equal(monsterToggleDisposition({ neutral: true }), "NEUTRAL");
+  assert.equal(isHostileToggle({}, "monster"), true);
+  assert.equal(isHostileToggle({ neutral: true }, "monster"), false);
+  assert.equal(isHostileToggle({}, "npc"), false);
+  assert.equal(accentFor("monster", false), "rust");
 });

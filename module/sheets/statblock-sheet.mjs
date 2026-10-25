@@ -74,6 +74,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     // value the Parts table edits (locked max -> its override), so there is a single source of truth.
     // Person-tab copy of the combat stat block is read-only (disabled fields are not submitted -> no duplicate names).
     root.querySelectorAll(".sb-person-combat input, .sb-person-combat select").forEach((el) => { el.disabled = true; });
+    // Monster Hostile toggle (unnamed input; stored inverted as system.sb.neutral, default Hostile).
+    root.querySelectorAll("[data-sb-toggle=neutral]").forEach((el) => el.addEventListener("change", (ev) => { ev.stopPropagation(); this.actor.update({ "system.sb.neutral": !el.checked }); }));
     root.querySelectorAll("[data-sb-path]").forEach((el) => el.addEventListener("change", (ev) => {
       ev.stopPropagation(); const v = el.value.trim(); const val = v === "" ? null : Number(v);
       if (v !== "" && !Number.isFinite(val)) return this.render(false);

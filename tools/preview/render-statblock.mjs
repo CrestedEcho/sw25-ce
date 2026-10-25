@@ -40,7 +40,7 @@ const wyvern = { level: 8, monsterType: "Mythical", source: "Example only (inven
 const portrait = `file://${root}/assets/portrait.png`;
 for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monster", kobold, null], ["monster_kobold_lore", "Kobold", "monster", kobold, "lore"], ["monster_multipart", "Example Wyvern", "monster", wyvern, null], ["npc_captain", "Captain Marla Voss", "npc", captain, null], ["npc_captain_hostile", "Captain Marla Voss", "npc", { ...captain, hostile: true }, null]]) {
   const view = prepareStatBlock(raw, {}, type);
-  const ctx = { ...buildStatBlockContext({ type, view, raw, isGM: true, img: portrait }), actor: { name }, cssClass: "sw25 sheet actor", editable: true, owner: true, tokenDisposition: raw.hostile ? "Hostile" : "Neutral", tokenDispositionKey: raw.hostile ? "hostile" : "neutral",
+  const ctx = { ...buildStatBlockContext({ type, view, raw, isGM: true, img: portrait }), actor: { name }, cssClass: "sw25 sheet actor", editable: true, owner: true, tokenDisposition: (type !== "npc" ? !raw.neutral : raw.hostile) ? "Hostile" : "Neutral", tokenDispositionKey: (type !== "npc" ? !raw.neutral : raw.hostile) ? "hostile" : "neutral",
     attitudes: { "": "—", friendly: "Friendly", neutral: "Neutral", hostile: "Hostile" }, items: [], notesHTML: raw.notes, secretsHTML: raw.secrets, descriptionHTML: raw.description };
   const first = tab ?? ctx.initialTab;
   let html = sheet(ctx).replace(`data-tab="${first}">`, `data-tab="${first}" class="item active">`).replace(/<a class="item" data-tab="([a-z]+)" class="item active">/, '<a class="item active" data-tab="$1">');

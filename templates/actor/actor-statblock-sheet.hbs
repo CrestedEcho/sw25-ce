@@ -10,10 +10,11 @@
     <div class="sb-sub">{{roleLine}}</div>
     <div class="sb-src">{{sb.source}}</div>
   </div>
-  {{#if isNPC}}<div class="sb-hdr-right"><label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>
+  <div class="sb-hdr-right">{{#if isNPC}}<label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>
   <label class="sb-toggle sb-fellow-toggle{{#if fellowOn}} on{{/if}}" title="Fellow mode: players see the public Fellow card (system.fellow)">Fellow <input type="checkbox" name="system.fellow.enabled" {{checked fellowOn}} {{#unless editable}}disabled{{/unless}}><i></i></label>
   {{#if fellowOn}}<a class="sb-fellow-open" data-action="fellow-card" title="Open Fellow card">Card</a>{{/if}}
-  <span class="sb-token-badge disp-{{tokenDispositionKey}}" title="Prototype token disposition">Token: {{tokenDisposition}}</span></div>{{/if}}
+  {{else}}<label class="sb-toggle{{#if hostileToggle}} on{{/if}}" title="Monster hostile (token Hostile); off = Neutral">Hostile <input type="checkbox" data-sb-toggle="neutral" {{checked hostileToggle}} {{#unless editable}}disabled{{/unless}}><i></i></label>{{/if}}
+  <span class="sb-token-badge disp-{{tokenDispositionKey}}" title="Prototype token disposition">Token: {{tokenDisposition}}</span></div>
 </header>
 <nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
 <section class="sheet-body sb-body">

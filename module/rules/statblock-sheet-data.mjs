@@ -86,6 +86,7 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   return {
     summary, summaryRows: summary ? [summary] : [], vitals, multiPart, showVitalsInCombat,
     type, isNPC: type === "npc", isMonster: type !== "npc", hostile, isGM,
+    hostileToggle: type === "npc" ? hostile : !view.neutral, // monster theme stays rust regardless
     accent: accentFor(type, hostile), roleLine: roleLine(type, view),
     typeIcon: type === "npc" ? null : monsterTypeIcon(view.monsterType), portrait: img,
     tabs: tabs.map((t, n) => ({ key: t, label: t[0].toUpperCase() + t.slice(1), first: n === 0 })), initialTab: tabs[0],

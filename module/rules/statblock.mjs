@@ -15,6 +15,7 @@ export const STAT_DEFAULTS = () => ({
   monsterType: "", intelligence: "", perception: "", disposition: "", soulscars: 0, languages: [], habitat: [],
   // NPC Person tab
   title: "", faction: "", settlement: "", race: "", attitude: "", hostile: false,
+  neutral: false, // monster-only: Hostile toggle OFF (monsters default Hostile)
   classLevels: [], relationships: [], services: [], notes: "", secrets: "",
   overrides: {},
 });
@@ -110,6 +111,10 @@ export function dispositionFor(sb, type) {
 
 /** NPC Hostile / Fellow toggles -> token disposition key (CrestedEcho 2026-10-25):
  * Hostile ON -> Hostile; otherwise Fellow ON -> Friendly; otherwise Neutral. */
+/** Monster Hostile toggle (default ON): OFF -> Neutral. Stored inverted as sb.neutral so existing monsters stay Hostile. */
+export const monsterToggleDisposition = ({ neutral = false } = {}) => (neutral ? "NEUTRAL" : "HOSTILE");
+/** Hostile toggle state for either actor type. */
+export const isHostileToggle = (sb, type) => (type === "npc" ? !!sb?.hostile : !sb?.neutral);
 export const npcToggleDisposition = ({ hostile = false, fellow = false } = {}) => (hostile ? "HOSTILE" : fellow ? "FRIENDLY" : "NEUTRAL");
 export const DISPOSITION_LABELS = { "-2": "Secret", "-1": "Hostile", 0: "Neutral", 1: "Friendly" };
 

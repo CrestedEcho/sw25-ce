@@ -4,7 +4,7 @@
  *   lock/quill per numeric field (system.sb.overrides.<path>.{value,locked}).
  * - Hostile toggle / attitude / disposition -> prototype + placed token disposition.
  */
-import { dispositionFor, npcToggleDisposition } from "./statblock.mjs";
+import { dispositionFor, npcToggleDisposition, monsterToggleDisposition } from "./statblock.mjs";
 
 const SYS = "sw25-ce";
 const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
@@ -51,6 +51,8 @@ function panel(actor, open) {
 export async function syncDisposition(actor, { toggled = false } = {}) {
   let key = dispositionFor(actor.system.sbView ?? actor.system.sb ?? {}, actor.type);
   if (toggled && actor.type === "npc") key = npcToggleDisposition({ hostile: !!actor.system.sb?.hostile, fellow: !!actor.system.fellow?.enabled });
+  else if (actor.type !== "npc" && actor.system.sb?.neutral) key = "NEUTRAL";
+  if (toggled && actor.type !== "npc") key = monsterToggleDisposition({ neutral: !!actor.system.sb?.neutral });
   const d = CONST.TOKEN_DISPOSITIONS[key];
   if (d === undefined) return;
   if (actor.prototypeToken?.disposition !== d) await actor.update({ "prototypeToken.disposition": d }, { sw25Slot: true });
@@ -70,7 +72,7 @@ export function registerStatBlockUI() {
     if (!mine(userId) || !["npc", "monster"].includes(actor.type) || options?.sw25Slot) return;
     const sb = changes.system?.sb ?? {};
     const fellowToggled = foundry.utils.hasProperty(changes, "system.fellow.enabled");
-    if (fellowToggled || ["hostile", "attitude", "disposition"].some((k) => k in sb)) syncDisposition(actor, { toggled: fellowToggled || "hostile" in sb });
+    if (fellowToggled || ["hostile", "neutral", "attitude", "disposition"].some((k) => k in sb)) syncDisposition(actor, { toggled: fellowToggled || "hostile" in sb || "neutral" in sb });
   });
   Hooks.on("renderActorSheet", (app, html) => {
     const actor = app.actor;
