@@ -16,6 +16,9 @@ const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ?
 const DATA = path.resolve(arg("data", path.resolve(ROOT, "../gen/data")));
 const OUT = path.resolve(arg("out", "/tmp/sw25-compendia-build"));
 const ONLY = arg("only", "") ? new Set(arg("only").split(",")) : null;
+const FEAT_ICONS = path.resolve(arg("icons", path.resolve(ROOT, "../assets/icons/feats")));
+/** Feat icon (original art, kept outside git like portraits): Foundry path if the file exists, else the sword default. */
+export const featImg = (slug, dir = FEAT_ICONS) => (slug && fs.existsSync(path.join(dir, `${slug}.webp`)) ? `assets/icons/feats/${slug}.webp` : "icons/svg/sword.svg");
 const JSON_ONLY = process.argv.includes("--json-only");
 if (path.resolve(OUT).startsWith(path.join(ROOT, "packs"))) { console.error("refusing to write into live packs/"); process.exit(2); }
 
@@ -116,7 +119,7 @@ export function toDoc(cat, d) {
   const sys = { description: desc(d), rules: d.rules ?? [] };
   switch (cat) {
     case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
-    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", nonCombat: d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug), autoFeats: d.autoFeats ?? [] } };
+    case "feats": if (d.todo) base.flags["sw25-ce"].todo = d.todo; return { ...base, type: "combatability", img: featImg(d.slug), system: { ...sys, use: d.use ?? "", nonCombat: d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug), autoFeats: d.autoFeats ?? [] } };
     case "spells": {
       const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
       const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
