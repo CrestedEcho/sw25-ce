@@ -81,3 +81,11 @@ test("Chain Attack: extra attack button only for 1H melee wrestling", () => {
   assert.equal(RE.extraAttacks(active, { category: "Sword", usage: "1H" }).length, 0, "other category");
   assert.equal(RE.extraAttacks(active, { category: "Wrestling", usage: "1H#", ranged: true }).length, 0, "ranged");
 });
+
+test("Cover I: defense.coverAlly is a declared, text-only rule", () => {
+  const { active, notes } = RE.collectRules([feat(load("feats/cover-i.json"))], { ctx: { declared: [], lingering: ["cover-i"] } });
+  assert.equal(notes.length, 0);
+  const r = active.find((x) => x.target === "coverAlly");
+  assert.equal(r.kind, "defense");
+  assert.deepEqual(CS.declaredSlugs([r]), ["cover-i"]);
+});

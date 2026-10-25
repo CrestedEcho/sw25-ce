@@ -38,6 +38,7 @@ export function attackCardData(actor, phase, item = null) {
   const ranged = RANGED.includes(String(weapon.category ?? "").toLowerCase());
   const lines = [];
   if (ranged && eng.flags?.noStray) lines.push("Targeting: this attack never strays into a skirmish.");
+  if (phase === "hit") lines.push(...coverLines(actor));
   const buttons = [];
   if (phase === "hit") for (const x of RE.extraAttacks(eng.active, { category: weapon.category, usage: w.system.usage, ranged })) {
     const left = x.maxPerTurn == null ? x.count : Math.min(x.count, x.maxPerTurn - extraUsedThisTurn(actor, x.source));
@@ -63,6 +64,24 @@ function renderAttackCard(msg, el) {
   const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${btns}</div>`;
   (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
   el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
+}
+/** Cover I (defense.coverAlly): text only. Lists other combatants whose cover declaration is still running. */
+function coverLines(attacker) {
+  const out = [];
+  const seen = new Set();
+  for (const c of game.combat?.combatants ?? []) {
+    const a = c.actor;
+    if (!a || a.id === attacker.id || seen.has(a.id)) continue;
+    seen.add(a.id);
+    const st = CS.declState(a.getFlag(SYS, "declare"));
+    const covers = (a.system?._rules?.active ?? []).filter((r) => r.kind === "defense" && r.target === "coverAlly");
+    for (const r of covers) {
+      const slugs = CS.declaredSlugs([r]);
+      if (!slugs.some((x) => st.lingering.includes(x) || st.active.includes(x))) continue;
+      out.push(`${r.source?.name ?? "Cover"}: ${a.name} is covering an ally. If the target is that ally (same area, first time this round), ${a.name} is hit instead: no Evasion check, the attack always lands.`);
+    }
+  }
+  return out;
 }
 export const ATTACK_BUTTONS = {};
 function turnKey() { const c = game.combat; return c ? `${c.id}:${c.round}:${c.turn}` : "none"; }

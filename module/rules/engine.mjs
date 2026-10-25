@@ -37,6 +37,7 @@ export const ACTOR_TARGETS = {
  *       spell  = read by the spell cast dialog (spell-cast.mjs)
  *       counter = named per-character counter (value = name), read as @counter:<name>
  *       attack = chat-card attack options (extra attack button)
+ *       defense = chat-card text only (Cover I)
  *       note   = recorded and shown, not applied (no sheet support yet)                       */
 export const KEY_ALIASES = {
   "attack.critThreshold": { target: "critMod", kind: "legacy" },
@@ -53,6 +54,7 @@ export const KEY_ALIASES = {
   "evasion.bonus": { target: "evasion", kind: "actor" },
   "move.bonus": { target: "move", kind: "actor" },
   "spell.mpSurcharge.outOfInfluence": { target: "spell.mpSurcharge", kind: "spell" },
+  "defense.coverAlly": { target: "coverAlly", kind: "defense" },
   "attack.extraAttack": { target: "extraAttack", kind: "attack" },
   "counter.track": { target: "counter", kind: "counter" },
   "spell.extraTargets": { target: "spell.extraTargets", kind: "spell" },
