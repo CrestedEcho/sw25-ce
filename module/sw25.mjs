@@ -2,6 +2,7 @@
 import { SW25Actor } from "./documents/actor.mjs";
 import * as RulesEngine from "./rules/engine.mjs";
 import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.mjs";
+import { registerRulesUI } from "./rules/sheet-ui.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat } from "./documents/combat.mjs";
@@ -171,6 +172,7 @@ Hooks.once("init", function () {
   // ce.7: Equipment Card / belt settings and data-sync hooks
   registerCe7Settings();
   registerCe7Hooks();
+  registerRulesUI();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();

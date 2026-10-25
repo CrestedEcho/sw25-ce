@@ -95,25 +95,7 @@
       <details class="sw-classrules" style="margin-top:8px">
         <summary><b>{{localize "SW25.Item.Skill.Rules"}}</b></summary>
         <p class="notes">{{localize "SW25.Item.Skill.RulesHint"}}</p>
-        <div class="flexrow grid grid-4col nogapmargin">
-          <label>{{localize "SW25.Item.Skill.CritMod"}}<input type="number" name="system.rules.critMod" value="{{system.rules.critMod}}" data-dtype="Number"/></label>
-          <label>{{localize "SW25.Item.Skill.MinStrMult"}}<input type="number" step="0.5" min="0" name="system.rules.minStrMult" value="{{system.rules.minStrMult}}" data-dtype="Number"/></label>
-          <label class="grid-span-2"><input type="checkbox" name="system.rules.attackOnly" data-dtype="Boolean" {{#if system.rules.attackOnly}}checked{{/if}}/> {{localize "SW25.Item.Skill.AttackOnly"}}</label>
-          <label>{{localize "SW25.Item.Skill.CastPenaltyMetal"}}<input type="number" name="system.rules.castPenalty.metal" value="{{system.rules.castPenalty.metal}}" data-dtype="Number"/></label>
-          <label>{{localize "SW25.Item.Skill.CastPenaltyNonmetal"}}<input type="number" name="system.rules.castPenalty.nonmetal" value="{{system.rules.castPenalty.nonmetal}}" data-dtype="Number"/></label>
-          <label>{{localize "SW25.Item.Skill.CastPenaltyNonmetalStr"}}<input type="number" name="system.rules.castPenalty.nonmetalMinStr" value="{{system.rules.castPenalty.nonmetalMinStr}}" data-dtype="Number"/></label>
-        </div>
-        <h4>{{localize "SW25.Item.Skill.AutoFeats"}}</h4>
-        <ul class="af-list" style="list-style:none;padding:0;margin:0">
-          {{#each system.autoFeats as |f i|}}
-          <li class="flexrow" style="align-items:center;gap:6px">
-            <span style="flex:0 0 60px">Lv <input class="af-level" type="number" min="1" max="20" data-index="{{i}}" value="{{f.level}}" style="width:40px"/></span>
-            <span style="flex:1">{{#if f.name}}{{f.name}}{{else}}{{f.uuid}}{{/if}}</span>
-            <a class="af-remove" data-index="{{i}}" style="flex:0 0 20px"><i class="fas fa-trash"></i></a>
-          </li>
-          {{/each}}
-        </ul>
-        <div class="af-drop" style="border:1px dashed #999;padding:6px;text-align:center;margin-top:4px">{{localize "SW25.Item.Skill.AutoFeatsDrop"}}</div>
+        <div class="sw-rules-editor">{{!-- filled by module/rules/sheet-ui.mjs --}}</div>
       </details>
     </div>
 

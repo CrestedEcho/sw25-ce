@@ -484,37 +484,7 @@ export function registerCe7Hooks() {
     });
   });
 
-  // Class item sheet: auto-feat list editing (drop a feat, set its level, remove)
-  Hooks.on("renderItemSheet", (app, html) => {
-    const item = app.item ?? app.document;
-    if (item?.type !== "skill") return;
-    const root = html[0] ?? html;
-    const box = root.querySelector?.(".sw-classrules");
-    if (!box || !app.isEditable) return;
-    const list = () => foundry.utils.deepClone(Array.isArray(item.system.autoFeats) ? item.system.autoFeats : Object.values(item.system.autoFeats ?? {}));
-    box.querySelectorAll(".af-level").forEach((inp) => inp.addEventListener("change", (ev) => {
-      ev.stopPropagation();
-      const l = list(); l[Number(inp.dataset.index)].level = Number(inp.value) || 1;
-      item.update({ "system.autoFeats": l });
-    }));
-    box.querySelectorAll(".af-remove").forEach((a) => a.addEventListener("click", (ev) => {
-      ev.preventDefault();
-      const l = list(); l.splice(Number(a.dataset.index), 1);
-      item.update({ "system.autoFeats": l });
-    }));
-    const drop = box.querySelector(".af-drop");
-    drop?.addEventListener("dragover", (ev) => ev.preventDefault());
-    drop?.addEventListener("drop", async (ev) => {
-      ev.preventDefault(); ev.stopPropagation();
-      let data; try { data = JSON.parse(ev.dataTransfer.getData("text/plain")); } catch (e) { return; }
-      if (data?.type !== "Item") return;
-      const src = await fromUuid(data.uuid);
-      if (src?.type !== "combatability") return ui.notifications.warn(game.i18n.format("SW25.EquipCard.WrongType", { item: src?.name ?? "?", slot: game.i18n.localize("SW25.Item.Skill.AutoFeats") }));
-      const l = list();
-      if (!l.some((f) => f.uuid === src.uuid)) l.push({ level: 1, uuid: src.uuid, name: src.name });
-      item.update({ "system.autoFeats": l });
-    });
-  });
+  // Class item sheet rules/grants editor moved to module/rules/sheet-ui.mjs (registerRulesUI).
 }
 
 /** Fill empty slots from already-equipped gear and unslotted feats. Non-destructive; returns true if written. */
