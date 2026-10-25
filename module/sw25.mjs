@@ -1,5 +1,7 @@
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
+import * as RulesEngine from "./rules/engine.mjs";
+import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat } from "./documents/combat.mjs";
@@ -77,6 +79,7 @@ Hooks.once("init", function () {
   // Add utility classes to the global game object so that they're more easily
   // accessible in global contexts.
   game.sw25 = {
+    rules: { ...RulesEngine, syncGrants, resyncGrants, setChoice, resolveRef },
     SW25Actor,
     SW25Item,
     SW25ActiveEffect,

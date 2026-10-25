@@ -1,0 +1,19 @@
+{
+  "name": "Resync Class Grants",
+  "type": "script",
+  "_id": "sw25ResyncGrants",
+  "author": null,
+  "img": "icons/svg/regen.svg",
+  "scope": "global",
+  "folder": null,
+  "sort": 0,
+  "command": "// Re-evaluate class grants (autoFeats) for the selected token's actor or your assigned character.\nawait game.sw25.rules.resyncGrants();",
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "systemId": "sw25-ce"
+  },
+  "_key": "!macros!sw25ResyncGrants"
+}

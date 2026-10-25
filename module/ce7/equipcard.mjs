@@ -6,6 +6,7 @@
  * existing Defense / Evasion maths keep working.
  */
 import { sw25MinStrMultFor } from "../documents/actor.mjs";
+import { syncGrants } from "../rules/grants.mjs";
 
 const SYS = "sw25-ce";
 const ICON = (n) => `systems/${SYS}/assets/equipcard/${n}.svg`;
@@ -424,27 +425,9 @@ function guarded(actor, fn) {
   return next;
 }
 
-/** Grant / remove class auto-feats. Inert when the class lists none and none were granted. */
-export async function syncAutoFeats(actor, cls, { removed = false } = {}) {
-  if (!actor || cls?.type !== "skill") return;
-  const list = removed ? [] : (Array.isArray(cls.system.autoFeats) ? cls.system.autoFeats : Object.values(cls.system.autoFeats ?? {}));
-  const lv = Number(cls.system.skilllevel) || 0;
-  const granted = actor.items.filter((i) => i.getFlag(SYS, "autoFrom")?.class === cls.id);
-  if (!list.length && !granted.length) return;
-  const want = list.filter((f) => f?.uuid && Number(f.level) <= lv);
-  const del = granted.filter((g) => !want.some((f) => f.uuid === g.getFlag(SYS, "autoFrom").uuid)).map((g) => g.id);
-  const add = [];
-  for (const f of want) {
-    if (granted.some((g) => g.getFlag(SYS, "autoFrom").uuid === f.uuid)) continue;
-    const src = await fromUuid(f.uuid);
-    if (!src) { console.warn(`sw25-ce | auto-feat not found: ${f.uuid}`); continue; }
-    const obj = src.toObject(); delete obj._id;
-    foundry.utils.setProperty(obj, "system.featSource", "auto");
-    foundry.utils.setProperty(obj, `flags.${SYS}.autoFrom`, { class: cls.id, uuid: f.uuid });
-    add.push(obj);
-  }
-  if (del.length) await actor.deleteEmbeddedDocuments("Item", del, { sw25Slot: true });
-  if (add.length) await actor.createEmbeddedDocuments("Item", add, { sw25Slot: true });
+/** Grant / remove class grants (autoFeats). Delegates to module/rules/grants.mjs; kept for API compatibility. */
+export async function syncAutoFeats(actor, cls, opts = {}) {
+  return syncGrants(actor, cls, opts);
 }
 
 export function registerCe7Hooks() {
@@ -469,7 +452,9 @@ export function registerCe7Hooks() {
     const actor = item.parent;
     if (options?.sw25Slot || !valid(actor, item)) return;
     if (item.type === "skill") {
-      if (foundry.utils.hasProperty(changes, "system.skilllevel") || foundry.utils.hasProperty(changes, "system.autoFeats")) return guarded(actor, () => syncAutoFeats(actor, item));
+      if (foundry.utils.hasProperty(changes, "system.skilllevel") || foundry.utils.hasProperty(changes, "system.autoFeats")
+        || foundry.utils.hasProperty(changes, `flags.${SYS}.choices`) || foundry.utils.hasProperty(changes, `flags.${SYS}.-=choices`)
+        || foundry.utils.hasProperty(changes, `flags.${SYS}.grantOverrides`)) return guarded(actor, () => syncAutoFeats(actor, item));
       return;
     }
     if (!foundry.utils.hasProperty(changes, "system.equip")) return;
