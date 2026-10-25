@@ -34,3 +34,18 @@ export function magicDamageTaken(amount, weakPoint) {
   const a = Math.max(0, Number(amount) || 0);
   return a > 0 ? a + magicWeakBonus(weakPoint) : 0;
 }
+/** True when a spell carries the compendium {rate, table} power object (vs the legacy numeric power + pt3..pt12). */
+export const hasPowerObject = (sys) => !!sys && typeof sys.power === "object" && sys.power !== null && Array.isArray(sys.power.table);
+/** Roll damage with an async 2d6 roller (returns a total). Rerolls on crit; shared by monster and PC casting. */
+export async function rollSpellDamage({ power, crit = 10, magicPower = 0 }, roll2d6) {
+  const c = Math.max(8, Number(crit) || 10); const rolls = [];
+  for (let n = 0; n < 20; n++) { const r = Number(await roll2d6()); rolls.push(r); if (n === 0 && r <= 2) break; if (r < c) break; }
+  return { ...spellDamage({ power, crit: c, magicPower, rolls }), magicPower: Number(magicPower) || 0 };
+}
+/** PC cast plan: meta for castChatHTML + MP deduction from the actor's current MP (prepared mpcost, reductions applied). */
+export function planPcCast(itemName, sys, mpValue) {
+  const mp = Math.max(0, Number(sys.mpcost ?? sys.basempcost) || 0); const before = Number(mpValue) || 0;
+  const meta = { name: itemName, school: sys.typename || sys.type || "", level: sys.level ?? sys.flagsLevel ?? "?", power: sys.power, powerCrit: Number(sys.powerCrit) || 10,
+    resist: sys.resist ?? "", cost: { raw: sys.mpcostText ? String(sys.mpcostText) : "", hp: 0 } };
+  return { meta, mp, magicPower: Number(sys.powerbase) || 0, res: { mpBefore: before, mpAfter: before - mp, hpBefore: 0, hpAfter: 0, mpShort: before < mp, hpShort: false } };
+}

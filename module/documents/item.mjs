@@ -1,5 +1,7 @@
 import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } from "../rules/class-pick.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
+import { hasPowerObject, planPcCast, rollSpellDamage } from "../rules/spell-power.mjs";
+import { castChatHTML } from "../rules/sb-cast.mjs";
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
@@ -2570,6 +2572,8 @@ export class SW25Item extends Item {
    * @private
    */
   async roll() {
+    // Compendium spells carry power as {rate, table}: cast via the shared spell card (MP deduction, damage, apply/half).
+    if (this.type === "spell" && hasPowerObject(this.system) && this.actor) return this.castSpell();
     if (
       this.system.clickitem == "dice" ||
       this.system.clickitem == "dice1" ||
@@ -2676,6 +2680,16 @@ export class SW25Item extends Item {
 
     await this.rollExec();
   }
+  /** PC spell cast: deduct MP, roll Power N + Magic Power (powerbase), post the same card as monster casting. */
+  async castSpell() {
+    const actor = this.actor;
+    const plan = planPcCast(this.name, { ...this.system, level: this.flags?.["sw25-ce"]?.data?.level ?? this.system.level }, actor.system.mp?.value);
+    if (plan.res.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${plan.res.mpBefore}) — cast anyway.`);
+    await actor.update({ "system.mp.value": plan.res.mpAfter });
+    plan.res.damage = await rollSpellDamage({ power: plan.meta.power, crit: plan.meta.powerCrit, magicPower: plan.magicPower }, async () => (await new Roll("2d6").evaluate()).total);
+    return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, plan.meta, { mp: plan.mp, hp: 0 }, plan.res) });
+  }
+
   async rollExec(targetTokens) {
     const item = this;
     const actor = this.actor || null;

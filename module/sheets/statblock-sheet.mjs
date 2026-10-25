@@ -5,7 +5,7 @@
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
-import { spellDamage, magicDamageTaken } from "../rules/spell-power.mjs";
+import { rollSpellDamage, magicDamageTaken } from "../rules/spell-power.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
@@ -165,10 +165,7 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
   if (out.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${out.mpBefore}) — cast anyway.`);
   await actor.update({ "system.sb.parts": out.parts });
   if (meta.power) {
-    const rolls = [];
-    for (let n = 0; n < 20; n++) { const r = await new Roll("2d6").evaluate(); rolls.push(r.total); if (n === 0 && r.total <= 2) break; if (r.total < Math.max(8, meta.powerCrit || 10)) break; }
-    const mpow = skill.magicPower ?? 0;
-    out.damage = { ...spellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: mpow, rolls }), magicPower: mpow };
+    out.damage = await rollSpellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: skill.magicPower ?? 0 }, async () => (await new Roll("2d6").evaluate()).total);
   }
   const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
   return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out) });
