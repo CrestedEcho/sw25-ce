@@ -8,9 +8,11 @@ const SCHOOLS = { truespeech: ["truespeech"], sorcery: ["truespeech"], sorcerer:
   wizardry: ["truespeech", "spiritualism"], wizard: ["truespeech", "spiritualism"], divine: ["divine"], priest: ["divine"], fairy: ["fairy"], magitech: ["magitech"],
   nature: ["nature"], druid: ["nature"], summoning: ["summoning"], demon: ["abyssal"], abyssal: ["abyssal"], abyss: ["abyssal"] };
 
+const magicPowerOf = (p) => (p == null ? null : typeof p === "object" ? (Number.isFinite(Number(p.value)) ? Number(p.value) : Number(p.fixed) - 7) : Number(p));
 /** "Truespeech Magic 5", "Divine Magic (Lumiere) 7", or u.magic = {school, level}. */
 export function parseMagicSkill(u) {
-  if (u?.magic?.school && u.magic.level) { const s = SCHOOLS[String(u.magic.school).toLowerCase()]; if (s) return { schools: s, level: Number(u.magic.level) }; }
+  // magicPower = the damage bonus (value), not the fixed casting check (value + 7).
+  if (u?.magic?.school && u.magic.level) { const s = SCHOOLS[String(u.magic.school).toLowerCase()]; if (s) return { schools: s, level: Number(u.magic.level), ...(u.magic.power != null ? { magicPower: magicPowerOf(u.magic.power) } : {}) }; }
   const m = String(u?.name ?? "").match(/([A-Za-z]+)\s+Magic\b[^0-9]*(\d+)/i);
   if (!m) return null; const s = SCHOOLS[m[1].toLowerCase()]; return s ? { schools: s, level: Number(m[2]) } : null;
 }
@@ -33,6 +35,7 @@ export function spellMeta(doc) {
   const rule = sys.mpRule ?? data.mpRule ?? null;
   const ranks = rule?.byDeityRank ?? null;
   return { id: doc._id ?? doc.id, uuid: doc.uuid ?? null, name: doc.name, school: String(sys.school ?? data.school ?? "").toLowerCase(), level: Number(sys.level ?? data.level ?? 0),
+    power: (typeof sys.power === "object" && sys.power) ? sys.power : (data.power ?? null), powerCrit: Number(sys.powerCrit ?? data.powerCrit) || 10, resist: sys.resist ?? data.resistance ?? "",
     cost, ranks, ritual: rule?.ritualCasting ?? null, needsDialog: cost.open || !!ranks || !!rule?.ritualCasting };
 }
 
@@ -74,5 +77,15 @@ export function castChatHTML(actorName, meta, { mp, hp, rank, ritual, partName }
     + `<div>Cost spent: <b>MP ${mp}</b>${hp ? ` + <b>HP ${hp}</b>` : ""}${rank ? ` <small>(deity rank: ${esc(rank)})</small>` : ""}${ritual ? " <small>(ritual)</small>" : ""}${meta.cost.raw ? ` <small>[listed ${esc(meta.cost.raw)}]</small>` : ""}</div>`
     + `<div>MP ${res.mpBefore} → ${res.mpAfter}${hp ? ` · HP ${res.hpBefore} → ${res.hpAfter}` : ""}</div>`
     + (res.mpShort ? `<div class="fw-fail">⚠ Not enough MP (had ${res.mpBefore}) — GM proceeded.</div>` : "")
-    + (res.hpShort ? `<div class="fw-fail">⚠ HP cost brings it to ${res.hpAfter}.</div>` : "") + `</div>`;
+    + (res.hpShort ? `<div class="fw-fail">⚠ HP cost brings it to ${res.hpAfter}.</div>` : "") + damageHTML(meta, res.damage) + `</div>`;
+}
+
+/** Damage block for the cast card: rolls, Power N + Magic Power, full / half (resisted, rounded up) apply buttons. */
+export function damageHTML(meta, d) {
+  if (!d) return "";
+  if (d.fumble) return `<div class="sw25-spelldmg"><b>Damage</b>: rolled ${d.rolls[0]}: automatic failure, no damage.</div>`;
+  const btn = (amt, label) => `<button type="button" data-sw25-magic-dmg="${amt}">${label} ${amt}</button>`;
+  return `<div class="sw25-spelldmg"><div><b>Damage</b> (Power ${esc(meta.power?.rate ?? "?")}, crit ${meta.powerCrit}): rolls ${d.rolls.join(" → ")}${d.crits ? ` <b>(crit ×${d.crits})</b>` : ""} = table ${d.table} + Magic Power ${d.magicPower} = <b>${d.total}</b></div>`
+    + `<div><small>Magic damage: Defense not applied. A target's "Magic Damage +N" weak point is added on apply.</small></div>`
+    + `<div>${btn(d.total, "Apply to targets")}${/half/i.test(meta.resist ?? "") ? btn(d.half, "Resisted (half)") : ""}</div></div>`;
 }

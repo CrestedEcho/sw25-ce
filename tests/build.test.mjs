@@ -92,6 +92,6 @@ test("test actors: PC embeds, fellow, multi-part mainPart first, castable magic,
     uniqueSkills: [{ name: "Truespeech Magic 3", icon: "major", text: "t" }], magic: [{ school: "truespeech", level: 3, power: { value: 4, fixed: 11 } }] }, ctx);
   assert.deepEqual(m.system.sb.parts.map((p) => [p.name, p.isCore]), [["Head", true], ["Wing", false]]);
   assert.equal(m.prototypeToken.disposition, -1);
-  assert.deepEqual(parseMagicSkill(m.system.sb.uniqueSkills[0]), { schools: ["truespeech"], level: 3 });
+  assert.deepEqual(parseMagicSkill(m.system.sb.uniqueSkills[0]), { schools: ["truespeech"], level: 3, magicPower: 4 });
   assert.equal(m.system.sb.uniqueSkills[0].description, "t");
 });
