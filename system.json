@@ -32,7 +32,8 @@
   "styles": [
     "css/sw25.css",
     "fonts/MingCute/MingCute.css",
-    "css/sw25-sheet-v2.css"
+    "css/sw25-sheet-v2.css",
+    "css/sw25-statblock.css"
   ],
   "languages": [
     {

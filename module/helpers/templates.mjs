@@ -6,6 +6,9 @@
 export const preloadHandlebarsTemplates = async function () {
   return foundry.applications.handlebars.loadTemplates([
     // Actor partials.
+    "systems/sw25-ce/templates/actor/sb/sb-num.hbs",
+    "systems/sw25-ce/templates/actor/sb/sb-pair.hbs",
+    "systems/sw25-ce/templates/actor/sb/sb-combat.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-skills.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-checks.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-checkskills.hbs",

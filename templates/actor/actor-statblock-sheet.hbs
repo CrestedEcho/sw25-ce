@@ -1,0 +1,58 @@
+<form class="{{cssClass}} sb-sheet sb-{{type}} sb-accent-{{accent}}" autocomplete="off">
+<header class="sb-header">
+  {{#if isNPC}}
+  <div class="sb-portrait"><img class="sb-por-img" src="{{portrait}}" data-edit="img" title="{{actor.name}}"><img class="sb-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp"></div>
+  {{else}}
+  <div class="sb-typeicon">{{#if typeIcon}}<img src="{{typeIcon}}" title="{{sb.monsterType}}">{{else}}<img src="{{portrait}}" data-edit="img">{{/if}}</div>
+  {{/if}}
+  <div class="sb-title">
+    <h1><input class="sb-in sb-name" name="name" type="text" value="{{actor.name}}" placeholder="Name"></h1>
+    <div class="sb-sub">{{roleLine}}</div>
+    <div class="sb-src">{{sb.source}}</div>
+  </div>
+  {{#if isNPC}}<label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>{{/if}}
+</header>
+<nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
+<section class="sheet-body sb-body">
+  <div class="tab" data-group="primary" data-tab="combat">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}{{#if isMonster}}{{#if descriptionHTML}}<h3>Description</h3><div class="sb-notes">{{{descriptionHTML}}}</div>{{/if}}{{/if}}</div>
+  {{#if isNPC}}
+  <div class="tab" data-group="primary" data-tab="person">
+    <div class="sb-grid">
+      <div class="f"><label>Race</label><input class="sb-in" type="text" name="system.sb.race" value="{{sb.race}}"></div>
+      <div class="f"><label>Attitude</label><select class="sb-in" name="system.sb.attitude">{{selectOptions attitudes selected=sb.attitude}}</select></div>
+      <div class="f w2"><label>Faction</label><input class="sb-in" type="text" name="system.sb.faction" value="{{sb.faction}}"></div>
+      <div class="f"><label>Title</label><input class="sb-in" type="text" name="system.sb.title" value="{{sb.title}}"></div>
+      <div class="f"><label>Settlement</label><input class="sb-in" type="text" name="system.sb.settlement" value="{{sb.settlement}}"></div>
+      <div class="f"><label>Level</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.level}}</div>
+      <div class="f"><label>Class levels</label><span title="flavour only">{{classLevels}}</span></div>
+      <div class="f w2"><label>Languages</label><input class="sb-in" type="text" name="sbList.languages" value="{{languages}}"></div>
+      <div class="f"><label>Intellect</label><input class="sb-in" type="text" name="system.sb.intelligence" value="{{sb.intelligence}}"></div>
+      <div class="f"><label>Perception</label><input class="sb-in" type="text" name="system.sb.perception" value="{{sb.perception}}"></div>
+    </div>
+    <h3>Notes</h3><div class="sb-notes">{{{notesHTML}}}</div>
+    {{#if isGM}}{{#if secretsHTML}}<div class="sb-secret-line"><b>GM secret:</b> {{{secretsHTML}}}</div>{{/if}}{{/if}}
+    <h3>Relationships {{#if editable}}<a class="sb-add" data-action="add" data-field="relationships"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+    {{#each relationships}}<div class="sb-row"><input class="sb-in" type="text" name="system.sb.relationships.{{i}}.name" value="{{name}}" placeholder="Name"> (<input class="sb-in" type="text" name="system.sb.relationships.{{i}}.relation" value="{{relation}}" placeholder="relation">){{#if @root.editable}}<a class="sb-del" data-action="del" data-field="relationships" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</div>{{else}}<div class="muted">—</div>{{/each}}
+    <h3>Services {{#if editable}}<a class="sb-add" data-action="add" data-field="services"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+    {{#each services}}<div class="sb-row"><input class="sb-in" type="text" name="system.sb.services.{{i}}.name" value="{{name}}" placeholder="Service"> — <input class="sb-in w-xs" type="text" name="system.sb.services.{{i}}.price" value="{{price}}" data-dtype="Number">G, <input class="sb-in" type="text" name="system.sb.services.{{i}}.notes" value="{{notes}}" placeholder="notes">{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="services" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</div>{{else}}<div class="muted">—</div>{{/each}}
+  </div>
+  <div class="tab" data-group="primary" data-tab="inventory">
+    <ol class="sb-items">{{#each items}}<li class="item" data-item-id="{{_id}}"><img src="{{img}}"> <span>{{name}}</span> <small>{{type}}</small>{{#if @root.editable}}<a data-action="item-edit"><i class="fas fa-edit"></i></a> <a data-action="item-del"><i class="fas fa-trash"></i></a>{{/if}}</li>{{else}}<li class="muted">Drag weapons, armour or gear here (display only).</li>{{/each}}</ol>
+  </div>
+  <div class="tab" data-group="primary" data-tab="notes">
+    <h3>Notes</h3>{{editor notesHTML target="system.sb.notes" button=true owner=owner editable=editable}}
+    {{#if isGM}}<h3>GM secrets</h3><section class="secret sb-secret">{{editor secretsHTML target="system.sb.secrets" button=true owner=owner editable=editable}}</section>{{/if}}
+  </div>
+  {{else}}
+  <div class="tab" data-group="primary" data-tab="lore">
+    <div class="sb-grid">
+      <div class="f"><label>Category</label><input class="sb-in" type="text" name="system.sb.monsterType" value="{{sb.monsterType}}"></div>
+      <div class="f"><label>Level</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.level}}</div>
+      <div class="f w2"><label>Source</label><input class="sb-in" type="text" name="system.sb.source" value="{{sb.source}}"></div>
+      <div class="f"><label>Death checks</label><input type="checkbox" name="system.sb.useDeathCheck" {{checked sb.useDeathCheck}}></div>
+    </div>
+  </div>
+  <div class="tab" data-group="primary" data-tab="notes"><h3>Description</h3>{{editor descriptionHTML target="system.sb.description" button=true owner=owner editable=editable}}</div>
+  {{/if}}
+</section>
+</form>

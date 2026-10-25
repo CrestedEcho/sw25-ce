@@ -70,6 +70,7 @@ export function registerStatBlockUI() {
   Hooks.on("renderActorSheet", (app, html) => {
     const actor = app.actor;
     if (!["npc", "monster"].includes(actor?.type)) return;
+    if (app.options?.classes?.includes("sw25-sb")) return; // styled stat-block sheet renders this natively
     const root = html[0] ?? html;
     const body = [...(root.querySelectorAll?.(".sheet-body") ?? [])].find((e) => e.offsetParent !== null) ?? root.querySelector?.(".sheet-body");
     if (!body || root.querySelector(".sw-statblock")) return;

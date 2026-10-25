@@ -1,0 +1,46 @@
+<div class="sb-grid">
+  {{#if isMonster}}
+  <div class="f"><label>Intellect</label><input class="sb-in" type="text" name="system.sb.intelligence" value="{{sb.intelligence}}"></div>
+  <div class="f"><label>Perception</label><input class="sb-in" type="text" name="system.sb.perception" value="{{sb.perception}}"></div>
+  <div class="f"><label>Disposition</label><input class="sb-in" type="text" name="system.sb.disposition" value="{{sb.disposition}}"></div>
+  <div class="f"><label>Soulscars</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.soulscars}}</div>
+  <div class="f w2"><label>Languages</label><input class="sb-in" type="text" name="sbList.languages" value="{{languages}}"></div>
+  <div class="f w2"><label>Habitat</label><input class="sb-in" type="text" name="sbList.habitat" value="{{habitat}}"></div>
+  {{/if}}
+  <div class="f"><label>Reputation / Weakness</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.reputation}} / {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.weakness}}</div>
+  <div class="f w2"><label>Weak point</label><input class="sb-in" type="text" name="system.sb.weakPoint" value="{{sb.weakPoint}}"></div>
+  <div class="f"><label>Initiative</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.initiative}}</div>
+  <div class="f"><label>Movement</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.moveGround}} / {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.moveOther}}</div>
+  <div class="f"><label>Fortitude</label>{{> "systems/sw25-ce/templates/actor/sb/sb-pair.hbs" p=stats.fortitude}}</div>
+  <div class="f"><label>Willpower</label>{{> "systems/sw25-ce/templates/actor/sb/sb-pair.hbs" p=stats.willpower}}</div>
+  <div class="f"><label>Use fixed values</label><input type="checkbox" name="system.sb.useFixed" {{checked sb.useFixed}}></div>
+  {{#if isNPC}}
+  {{#if hostile}}{{#if showIntel}}<div class="f"><label>Intellect</label><span>{{sb.intelligence}}</span></div>{{/if}}{{#if showPerception}}<div class="f"><label>Perception</label><span>{{sb.perception}}</span></div>{{/if}}{{/if}}
+  {{/if}}
+  {{#if showSections}}<div class="f"><label>Sections / Main</label><span>{{sb.partCount}} / {{sb.coreParts}}</span></div>{{/if}}
+</div>
+<h3>Parts {{#if editable}}<a class="sb-add" data-action="add" data-field="parts" title="Add part"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+<table class="sb-table sb-parts"><thead><tr><th>Part / style</th><th>×</th><th>Accuracy</th><th>Damage</th><th>Evasion</th><th>Defense</th><th>HP</th><th>MP</th><th></th></tr></thead><tbody>
+{{#each parts}}<tr class="{{#if dead}}is-dead{{/if}}">
+  <td><input class="sb-in w-name" type="text" name="system.sb.parts.{{i}}.name" value="{{name}}"><a data-action="core" data-index="{{i}}" class="sb-core{{#if isCore}} on{{/if}}" title="Main section">★</a></td>
+  <td><input class="sb-in w-xs" type="text" name="system.sb.parts.{{i}}.count" value="{{count}}" data-dtype="Number"></td>
+  <td>{{> "systems/sw25-ce/templates/actor/sb/sb-pair.hbs" p=accuracy}}</td>
+  <td><input class="sb-in w-dice" type="text" name="system.sb.parts.{{i}}.damage" value="{{damage}}"></td>
+  <td>{{> "systems/sw25-ce/templates/actor/sb/sb-pair.hbs" p=evasion}}</td>
+  <td>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=defense}}</td>
+  <td><input class="sb-in w-xs" type="text" name="system.sb.parts.{{i}}.hpValue" value="{{hpValue}}" data-dtype="Number">/{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=hp}}</td>
+  <td><input class="sb-in w-xs" type="text" name="system.sb.parts.{{i}}.mpValue" value="{{mpValue}}" data-dtype="Number">/{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=mp}}</td>
+  <td>{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="parts" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</td>
+</tr>{{else}}<tr><td colspan="9" class="muted">No parts — add one.</td></tr>{{/each}}
+</tbody></table>
+<h3>Unique skills {{#if editable}}<a class="sb-add" data-action="add" data-field="uniqueSkills"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+{{#each skills}}<div class="sb-skill">
+  <b>{{#each tags}}{{#if icon}}<img class="sb-tag" src="{{icon}}" title="{{label}}">{{else}}<span class="sb-glyph" title="{{label}}">{{glyph}}</span>{{/if}}{{/each}} <input class="sb-in w-name" type="text" name="system.sb.uniqueSkills.{{i}}.name" value="{{name}}"></b>
+  {{#if check}}<small>{{check}}{{#if resist}} · {{resist}}{{/if}}</small>{{/if}}
+  <span class="sb-desc">— {{{description}}}</span>
+  {{#if @root.editable}}<span class="sb-edit-only"><label>tags <input class="sb-in" type="text" name="system.sb.uniqueSkills.{{i}}.tags" value="{{#each tags}}{{key}} {{/each}}" title="passive major minor prep declared"></label><a class="sb-del" data-action="del" data-field="uniqueSkills" data-index="{{i}}"><i class="fas fa-times"></i></a><a data-action="skill-desc" data-index="{{i}}" title="Edit description"><i class="fas fa-edit"></i></a></span>{{/if}}
+</div>{{else}}<div class="sb-skill muted">None</div>{{/each}}
+<h3>Loot <small>(2d · Sword Shards {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.swordShards}})</small> {{#if editable}}<a class="sb-add" data-action="add" data-field="loot"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+<table class="sb-table"><thead><tr><th>Roll</th><th>Item</th><th>Price</th><th>Material card</th><th></th></tr></thead><tbody>
+{{#each loot}}<tr><td><input class="sb-in w-roll" type="text" name="system.sb.loot.{{i}}.roll" value="{{roll}}"></td><td><input class="sb-in" type="text" name="system.sb.loot.{{i}}.item" value="{{item}}"></td><td><input class="sb-in w-xs" type="text" name="system.sb.loot.{{i}}.price" value="{{price}}" data-dtype="Number">G</td><td><input class="sb-in" type="text" name="system.sb.loot.{{i}}.materialCard" value="{{materialCard}}"></td><td>{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="loot" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</td></tr>{{else}}<tr><td colspan="5" class="muted">No loot</td></tr>{{/each}}
+</tbody></table>
