@@ -23,7 +23,25 @@ export const PACKS = {
   spells: { name: "sw25-spells", label: "SW2.5 Spells", type: "Item" },
   items: { name: "sw25-items", label: "SW2.5 Items", type: "Item" },
   monsters: { name: "sw25-monsters", label: "SW2.5 Monsters", type: "Actor" },
+  gods: { name: "sw25-gods", label: "SW2.5 Gods", type: "JournalEntry" },
 };
+const KEYDOC = { Item: "items", Actor: "actors", JournalEntry: "journal" };
+// XP table: Writer exptable wins; else major -> A, minor -> B.
+export const exptableOf = (d) => d.exptable || ({ major: "A", minor: "B" })[String(d.category ?? "").toLowerCase()] || "";
+/** Recursively list Writer JSON files; nested files get slug "<subdir>/<slug>" (matches grant refs like divine-lyphos/peace). */
+export function listData(dir, prefix = "") {
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (e.name.startsWith("_") || e.name.startsWith(".")) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(...listData(p, prefix + e.name + "/"));
+    else if (e.name.endsWith(".json")) {
+      const d = JSON.parse(fs.readFileSync(p, "utf8"));
+      if (d.slug) out.push({ ...d, slug: prefix + d.slug, ...(prefix ? { baseSlug: d.slug } : {}) });
+    }
+  }
+  return out;
+}
 export const idFor = (cat, slug) => {
   const h = crypto.createHash("sha1").update(`sw25-ce:${cat}:${slug}`).digest();
   const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -40,13 +58,22 @@ const desc = (d) => [d.summary, d.description].filter((x) => x && x !== "null").
 
 export function toDoc(cat, d) {
   const _id = idFor(cat, d.slug);
-  const base = { _id, name: d.name, flags: { "sw25-ce": { slug: d.slug, data: d } }, _key: `!${PACKS[cat].type === "Actor" ? "actors" : "items"}!${_id}` };
+  const base = { _id, name: d.name, flags: { "sw25-ce": { slug: d.slug, data: d } }, _key: `!${KEYDOC[PACKS[cat].type]}!${_id}` };
   const sys = { description: desc(d), rules: d.rules ?? [] };
   switch (cat) {
-    case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: d.exptable ?? "", skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
+    case "classes": return { ...base, type: "skill", img: "icons/svg/book.svg", system: { ...sys, skilltype: skillTypeOf(d), exptable: exptableOf(d), skilllevel: 1, autoFeats: d.autoFeats ?? [] } };
     case "feats": return { ...base, type: "combatability", img: "icons/svg/sword.svg", system: { ...sys, use: d.use ?? "", autoFeats: d.autoFeats ?? [] } };
     case "spells": return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, mpcost: d.mpCost ?? "", target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null } };
+    case "gods": {
+      const { data, ...f } = base.flags["sw25-ce"];
+      const html = desc({ description: [d.title, d.domain, d.holySymbol && `Holy symbol: ${d.holySymbol}`, d.alignmentRaceNotes].filter(Boolean).join(". ") })
+        + (d.sayings?.length ? `<ul>${d.sayings.map((x) => `<li>${String(x).replace(/</g, "&lt;")}</li>`).join("")}</ul>` : "")
+        + (d.specialSpells?.length ? `<p>Special spells: ${d.specialSpells.map((x) => `Lv${x.level} ${x.name}`).join(", ")}</p>` : "");
+      const pid = idFor("gods-page", d.slug);
+      return { _id, name: d.name, flags: { "sw25-ce": { slug: d.slug, rank: d.rank, data } }, _key: base._key,
+        pages: [{ _id: pid, name: d.name, type: "text", text: { content: html, format: 1 }, _key: `!journal.pages!${_id}.${pid}` }] };
+    }
     case "monsters": {
       const { rules, ...msys } = sys;
       return { ...base, type: "monster", img: "icons/svg/mystery-man.svg", system: { ...msys, monlevel: d.level }, items: [], effects: [] };
@@ -54,22 +81,56 @@ export function toDoc(cat, d) {
   }
 }
 
+const KIND_CAT = { feat: ["feats"], spell: ["spells"], feature: ["feats", "classes"], technique: ["feats"], weapon: ["items"], item: ["items"] };
+/** Check every grant ref / choose option against the built slugs, and every rule key against the engine. */
+export async function checkRefs(all) {
+  const { resolveKey } = await import("../module/rules/engine.mjs");
+  const slugs = {}; for (const { cat, d } of all) (slugs[cat] ??= new Set()).add(d.slug);
+  const unresolved = []; const unmapped = {};
+  for (const { cat, d } of all) {
+    for (const r of d.rules ?? []) if (r?.key && resolveKey(r.key).unknown) (unmapped[r.key] ??= []).push(d.slug);
+    for (const g of d.autoFeats ?? []) {
+      if (g.choose) {
+        if (g.choose === "god") for (const o of g.options ?? []) { const id = typeof o === "object" ? o.id ?? o.ref : o; if (!slugs.gods?.has(id)) unresolved.push({ from: d.slug, choose: "god", ref: id }); }
+        for (const o of g.options ?? []) if (o && typeof o === "object" && o.ref && !Object.values(slugs).some((s) => s.has(o.ref))) unresolved.push({ from: d.slug, choose: g.choose, ref: o.ref });
+        continue;
+      }
+      const ref = g.ref ?? g.uuid; if (!ref || /^(Compendium|Item)\./.test(ref)) continue;
+      const cats = KIND_CAT[g.kind] ?? Object.keys(slugs);
+      if (!cats.some((c) => slugs[c]?.has(ref))) unresolved.push({ from: d.slug, kind: g.kind, ref });
+    }
+  }
+  return { unresolved, unmappedKeys: unmapped };
+}
+/** Inline weapon/item grants (e.g. Grappler Throw: {kind:"weapon", ref, stats}) become sw25-items entries. */
+export function inlineItems(classes) {
+  const out = [];
+  for (const c of classes) for (const g of c.autoFeats ?? []) {
+    if (!["weapon", "armor", "item"].includes(g.kind) || !g.stats || !g.ref) continue;
+    const { kind, ref, level, level_max, when, stats, ...rest } = g;
+    out.push({ ...rest, slug: ref, name: g.name ?? ref.replace(/(^|-)(\w)/g, (m, a, b) => (a ? " " : "") + b.toUpperCase()), type: kind,
+      minStr: stats.minStr, power: stats.power, powerTable: stats.powerTable, critThreshold: stats.crit, accuracy: stats.accuracy, price: stats.price, stats, grantedBy: c.slug });
+  }
+  return out;
+}
+
 async function main() {
   const report = {};
+  const all = [];
   const srcRoot = path.join(OUT, "src");
   fs.rmSync(OUT, { recursive: true, force: true });
   for (const [cat, p] of Object.entries(PACKS)) {
     const dir = path.join(DATA, cat);
     if (!fs.existsSync(dir)) continue;
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith(".json") && !f.startsWith("_"));
     const out = path.join(srcRoot, p.name); fs.mkdirSync(out, { recursive: true });
     let n = 0;
-    for (const f of files) {
-      const d = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-      if (!d.slug || (ONLY && !ONLY.has(d.slug))) continue;
+    const rows = listData(dir);
+    if (cat === "items") { const seen = new Set(rows.map((r) => r.slug)); for (const x of inlineItems(listData(path.join(DATA, "classes")))) if (!seen.has(x.slug)) { seen.add(x.slug); rows.push(x); } }
+    for (const d of rows) {
+      if (ONLY && !ONLY.has(d.slug)) continue;
       const doc = toDoc(cat, d);
-      fs.writeFileSync(path.join(out, `${d.slug}_${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
-      n++;
+      fs.writeFileSync(path.join(out, `${d.slug.replace(/\//g, "__")}_${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
+      n++; all.push({ cat, d });
     }
     report[p.name] = n;
   }
@@ -81,6 +142,8 @@ async function main() {
       await compilePack(s, path.join(OUT, "packs", p.name), { log: false });
     }
   }
-  console.log(JSON.stringify({ out: OUT, counts: report }, null, 2));
+  const check = await checkRefs(all);
+  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, ...check }, null, 2));
+  console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });

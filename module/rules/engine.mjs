@@ -375,4 +375,7 @@ export const KIND_TYPES = {
   feature: ["otherfeature", "raceability"],
   technique: ["enhancearts", "magicalsong", "ridingtrick", "alchemytech", "phasearea", "tactics", "infusion", "barbarousskill", "essenceweave"],
   language: ["language"],
+  weapon: ["weapon"],
+  armor: ["armor"],
+  item: ["item", "accessory"],
 };

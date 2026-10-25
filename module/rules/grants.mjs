@@ -28,7 +28,18 @@ export async function promptChoice(cls, g) {
   const DV2 = foundry.applications?.api?.DialogV2;
   if (!DV2) return null;
   const esc = (s) => foundry.utils.escapeHTML?.(String(s)) ?? String(s);
-  const opts = g.options.map((o) => (typeof o === "object" ? { id: String(o.id ?? o.ref), label: o.name ?? o.label ?? o.id ?? o.ref } : { id: String(o), label: String(o) }));
+  let opts = g.options.map((o) => (typeof o === "object" ? { id: String(o.id ?? o.ref), label: o.name ?? o.label ?? o.id ?? o.ref } : { id: String(o), label: String(o) }));
+  // optionMinLevels (Dark Hunter, Geomancer): hide options above the current class level
+  const minLv = cls.system.optionMinLevels ?? cls.getFlag(SYS, "data")?.optionMinLevels ?? {};
+  const lv = Number(cls.system.skilllevel) || 0;
+  opts = opts.filter((o) => !(Number(minLv[o.id]) > lv));
+  // gods: show names from the sw25-gods journal pack (flags.sw25-ce.slug)
+  if (g.choose === "god") {
+    const pack = game.packs.get(`${SYS}.sw25-gods`);
+    const idx = pack ? await pack.getIndex({ fields: [`flags.${SYS}.slug`, `flags.${SYS}.rank`] }) : [];
+    const byId = new Map(idx.map((e) => [foundry.utils.getProperty(e, `flags.${SYS}.slug`), e]));
+    opts = opts.map((o) => { const e = byId.get(o.id); return e ? { ...o, label: `${e.name} (${foundry.utils.getProperty(e, `flags.${SYS}.rank`) ?? "?"})` } : o; });
+  }
   const field = opts.length
     ? `<select name="pick">${opts.map((o) => `<option value="${esc(o.id)}">${esc(o.label)}</option>`).join("")}</select>`
     : `<input type="text" name="pick" placeholder="${esc(g.choose)}">`;
