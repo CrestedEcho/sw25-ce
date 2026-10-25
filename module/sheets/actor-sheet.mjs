@@ -15,6 +15,7 @@ import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equipcard.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
+import { spellTypeOf } from "../rules/spell-school.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -439,34 +440,35 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       // Append to spells.
       else if (i.type === "spell") {
         spells.push(i);
-        if (i.system.type === "sorcerer") {
+        const spellType = spellTypeOf(i); // compendium spells carry only flags.school
+        if (spellType === "sorcerer") {
           sorcerer.push(i);
         }
-        if (i.system.type === "conjurer") {
+        if (spellType === "conjurer") {
           conjurer.push(i);
         }
-        if (i.system.type === "wizard") {
+        if (spellType === "wizard") {
           wizard.push(i);
         }
-        if (i.system.type === "priest") {
+        if (spellType === "priest") {
           priest.push(i);
         }
-        if (i.system.type === "magitech") {
+        if (spellType === "magitech") {
           magitech.push(i);
         }
-        if (i.system.type === "fairy") {
+        if (spellType === "fairy") {
           fairy.push(i);
         }
-        if (i.system.type === "druid") {
+        if (spellType === "druid") {
           druid.push(i);
         }
-        if (i.system.type === "daemon") {
+        if (spellType === "daemon") {
           daemon.push(i);
         }
-        if (i.system.type === "abyssal") {
+        if (spellType === "abyssal") {
           abyssal.push(i);
         }        
-        if (i.system.type === "bibliomancer") {
+        if (spellType === "bibliomancer") {
           bibliomancer.push(i);
         }
       }

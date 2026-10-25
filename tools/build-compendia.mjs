@@ -6,6 +6,7 @@
  * Deterministic _id from category+slug; flags.sw25-ce.slug is what grant refs resolve against.
  * The Writer JSON is kept verbatim in flags.sw25-ce.data for later richer mapping.
  */
+import { SCHOOL_TO_TYPE } from "../module/rules/spell-school.mjs";
 import { statBlockFromData, dispositionFor, npcToggleDisposition, parseMovement } from "../module/rules/statblock.mjs";
 import fs from "node:fs"; import path from "node:path"; import crypto from "node:crypto";
 
@@ -82,7 +83,7 @@ export function toDoc(cat, d) {
       const mp = parseMp(d.mpCost); const god = d.slug.match(/^spells?\/?divine-([^/]+)\/|^divine-([^/]+)\//);
       const warn = [mp.flag && `mp:${mp.flag}`, /power table/i.test(d.todo ?? "") && !hasPowerTable(d) && "power-table-empty"].filter(Boolean);
       Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
-      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { power: d.power, powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
+      return { ...base, type: "spell", img: "icons/svg/daze.svg", system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { power: d.power, powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     }
     case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: "icons/svg/item-bag.svg", system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null } };
     case "gods": {
@@ -251,6 +252,18 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
   if (group === "pcs") {
     for (const c of d.classes ?? []) addRef("classes", c.slug, {}) && (items.at(-1).system.skilllevel = c.level);
     for (const f of d.feats ?? []) addRef("feats", f);
+    // Spellcasting classes learn every spell of their school up to class level (SW2.5). Priest: general divine only
+    // (god-specific spells need a deity); Fairy Tamer: element-dependent, not auto-granted.
+    const spellLib = ctx.list?.("spells") ?? [];
+    for (const c of d.classes ?? []) {
+      const k = ctx.lookup("classes", c.slug); if (!k) continue;
+      const schools = (k.classSkills ?? []).filter((x) => x.check === "spellcasting").flatMap((x) => x.limit ?? []);
+      for (const school of schools) {
+        if (school === "fairy") { gap(`${c.slug}: fairy spells not auto-granted (element choice)`); continue; }
+        for (const sp of spellLib.filter((x) => x.school === school && Number(x.level) <= c.level && !toDoc("spells", x).flags["sw25-ce"].god).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)))
+          items.push(embed(_id, toDoc("spells", sp)));
+      }
+    }
     const g = d.gear ?? {};
     const gearItem = (x, type, sys) => { const slug = x.slug ?? x.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       items.push(embed(_id, { name: x.name, type, img: "icons/svg/item-bag.svg", flags: { "sw25-ce": { slug, data: x } }, system: { description: "", rules: [], quantity: 1, price: x.price ?? "", ...sys } })); };
@@ -287,6 +300,9 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
   for (const m of magic) if (!sb.uniqueSkills.some((u) => u.magic?.school === m.school)) gap(`magic ${m.school} has no matching "<School> Magic N" skill`);
   const isNpc = group === "npcs";
   if (isNpc) { sb.hostile = d.hostile === true; }
+  // Monsters: the Lore "Disposition" (e.g. Kobold "Neutral") seeds the Hostile toggle; a test actor can override
+  // the token with "hostile": true/false without changing the book Lore text.
+  else if (typeof d.hostile === "boolean") sb.neutral = !d.hostile;
   const disp = { FRIENDLY: 1, NEUTRAL: 0, HOSTILE: -1 }[isNpc ? npcToggleDisposition({ hostile: sb.hostile }) : (sb.neutral ? "NEUTRAL" : "HOSTILE")];
   return { ...base, type: isNpc ? "npc" : "monster", items, prototypeToken: token(disp), system: { description: d.description ?? "", monlevel: d.level ?? 1, sb } };
 }
@@ -299,7 +315,7 @@ export function buildTestActors(dir, lookup) {
     const gdir = path.join(dir, group); if (!fs.existsSync(gdir)) continue;
     for (const f of fs.readdirSync(gdir).filter((x) => x.endsWith(".json") && !x.startsWith("_")).sort()) {
       const d = JSON.parse(fs.readFileSync(path.join(gdir, f), "utf8"));
-      const doc = testActorDoc(group, d, { lookup, gaps }); doc.folder = fid; docs.push(doc);
+      const doc = testActorDoc(group, d, { lookup, list: lookup.list, gaps }); doc.folder = fid; docs.push(doc);
       (list[fname] ??= []).push(`${doc.name} [${doc.type}${doc.system.fellow?.enabled ? ", fellow" : ""}, token ${({ 1: "Friendly", 0: "Neutral", "-1": "Hostile" })[doc.prototypeToken.disposition]}]`);
       if (d.todo) todos[`${group}/${d.slug}`] = d.todo;
     }
@@ -427,7 +443,8 @@ async function main() {
   if (fs.existsSync(taDir)) {
     const lib = {}; for (const { cat, d } of all) (lib[cat] ??= new Map()).set(d.slug, d);
     for (const cat of ["classes", "feats"]) { const dd = path.join(DATA, cat); if (fs.existsSync(dd)) for (const d of listData(dd)) (lib[cat] ??= new Map()).has(d.slug) || lib[cat].set(d.slug, d); }
-    ta = buildTestActors(taDir, (cat, slug) => lib[cat]?.get(slug));
+    const lookup = (cat, slug) => lib[cat]?.get(slug); lookup.list = (cat) => [...(lib[cat]?.values() ?? [])];
+    ta = buildTestActors(taDir, lookup);
     const out = path.join(srcRoot, TEST_ACTORS.name); fs.mkdirSync(out, { recursive: true });
     for (const doc of ta.docs) fs.writeFileSync(path.join(out, `${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
     report[TEST_ACTORS.name] = ta.docs.filter((x) => !x._key.startsWith("!folders")).length;
