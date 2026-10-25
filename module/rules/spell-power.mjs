@@ -45,6 +45,13 @@ export function damageTaken(amount, { kind = "magic", defense = 0, weakPoint = "
   const a = Math.max(0, (Number(amount) || 0) - (Number(defense) || 0));
   return a > 0 ? a + (revealed ? physicalWeakBonus(weakPoint) : 0) : 0;
 }
+/** Heal spell from its data (summary/description/name), e.g. Cure Wounds "Heal target's wounds with Power 10". */
+export function isHealSpell({ name = "", summary = "", description = "" } = {}) {
+  const t = `${summary} ${String(description).replace(/<[^>]+>/g, " ")}`;
+  return /\b(heal(s|ing)?|recover(s|y)?|restore(s)?)\b[^.]{0,40}\b(wounds?|hp|hit points)\b/i.test(t) || /^\s*heal(s|ing)?\b/i.test(summary) || /\bcure wounds\b/i.test(name);
+}
+/** HP after healing, capped at max (never lowered if already above max). */
+export const healedHP = (before, amount, max) => Math.max(Number(before) || 0, Math.min(Number(max) || 0, (Number(before) || 0) + Math.max(0, Number(amount) || 0)));
 /** True when a spell carries the compendium {rate, table} power object (vs the legacy numeric power + pt3..pt12). */
 export const hasPowerObject = (sys) => !!sys && typeof sys.power === "object" && sys.power !== null && Array.isArray(sys.power.table);
 /** Roll damage with an async 2d6 roller (returns a total). Rerolls on crit; shared by monster and PC casting. */
@@ -57,6 +64,6 @@ export async function rollSpellDamage({ power, crit = 10, magicPower = 0 }, roll
 export function planPcCast(itemName, sys, mpValue) {
   const mp = Math.max(0, Number(sys.mpcost ?? sys.basempcost) || 0); const before = Number(mpValue) || 0;
   const meta = { name: itemName, school: sys.typename || sys.type || "", level: sys.level ?? sys.flagsLevel ?? "?", power: sys.power, powerCrit: Number(sys.powerCrit) || 10,
-    resist: sys.resist ?? "", cost: { raw: sys.mpcostText ? String(sys.mpcostText) : "", hp: 0 } };
+    resist: sys.resist ?? "", heal: isHealSpell({ name: itemName, summary: sys.summary, description: sys.description }), cost: { raw: sys.mpcostText ? String(sys.mpcostText) : "", hp: 0 } };
   return { meta, mp, magicPower: Number(sys.powerbase) || 0, res: { mpBefore: before, mpAfter: before - mp, hpBefore: 0, hpAfter: 0, mpShort: before < mp, hpShort: false } };
 }

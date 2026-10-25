@@ -174,6 +174,9 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
 
 /** Chat buttons on spell cards: apply magic damage to targeted tokens (Defense ignored, "Magic Damage +N" weak point added). */
 Hooks.on("renderChatMessageHTML", (_msg, el) => {
+  el.querySelectorAll?.("[data-sw25-heal]").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.preventDefault(); applyDamageToTargets(Number(b.dataset.sw25Heal) || 0, "heal");
+  }));
   el.querySelectorAll?.("[data-sw25-magic-dmg]").forEach((b) => b.addEventListener("click", (ev) => {
     ev.preventDefault(); applyDamageToTargets(Number(b.dataset.sw25MagicDmg) || 0, "magic");
   }));

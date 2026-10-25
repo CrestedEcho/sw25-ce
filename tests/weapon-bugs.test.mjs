@@ -25,3 +25,16 @@ test("weapon item card is never empty", () => {
   const h = weaponCardHTML("Quarterstaff", { checkbase: 5, powerbase: 4, power: 14, totalcvalue: 12, description: "" });
   assert.match(h, /\[\[\/r 2d6\+5/); assert.match(h, /Power 14 @12 \+4/);
 });
+import { isHealSpell, healedHP } from "../module/rules/spell-power.mjs";
+import { damageHTML } from "../module/rules/sb-cast.mjs";
+import { knowledgeUpdates } from "../module/rules/mknow.mjs";
+test("heal spells: detected from data, Apply healing button, capped at max HP", () => {
+  assert.ok(isHealSpell({ name: "Cure Wounds", summary: "Heal target's wounds with Power 10" }));
+  assert.ok(!isHealSpell({ name: "Energy Bolt", summary: "Deal magic damage with Power 10" }));
+  const h = damageHTML({ heal: true, power: { rate: 10 }, powerCrit: 10, resist: "Negates" }, { rolls: [7], crits: 0, table: 3, magicPower: 4, total: 7, half: 4 });
+  assert.match(h, /data-sw25-heal="7"/); assert.doesNotMatch(h, /sw25-magic-dmg/);
+  assert.equal(healedHP(10, 7, 14), 14); assert.equal(healedHP(5, 7, 14), 12); assert.equal(healedHP(16, 3, 14), 16);
+});
+test("PC wins ties against a fixed value (weakness reveal)", () => {
+  assert.equal(knowledgeUpdates(12, { weakness: 12, reputation: 10 })["system.sb.weaknessRevealed"], true);
+});

@@ -1,3 +1,4 @@
+import { applyDamageToTokenIds } from "./rules/apply-damage.mjs";
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
 import { knowledgeUpdates } from "./rules/mknow.mjs";
@@ -985,6 +986,7 @@ Hooks.once("ready", async function () {
       .sort();
     if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
 
+    if (data.method == "applyDamage") { applyDamageToTokenIds(data.targetTokens, data.amount, ["physical", "magic", "heal"].includes(data.kind) ? data.kind : "magic"); return; }
     if (data.method == "revealWeakness") {
       const a = canvas.tokens.get(data.targetToken)?.actor; if (!a) return;
       const upd = knowledgeUpdates(data.total, a.system?.sb); if (Object.keys(upd).length) a.update(upd);

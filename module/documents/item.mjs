@@ -2694,7 +2694,7 @@ export class SW25Item extends Item {
   /** PC spell cast: deduct MP, roll Power N + Magic Power (powerbase), post the same card as monster casting. */
   async castSpell() {
     const actor = this.actor;
-    const plan = planPcCast(this.name, { ...this.system, level: this.flags?.["sw25-ce"]?.data?.level ?? this.system.level }, actor.system.mp?.value);
+    const plan = planPcCast(this.name, { ...this.system, summary: this.flags?.["sw25-ce"]?.data?.summary ?? "", level: this.flags?.["sw25-ce"]?.data?.level ?? this.system.level }, actor.system.mp?.value);
     if (plan.res.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${plan.res.mpBefore}) — cast anyway.`);
     await actor.update({ "system.mp.value": plan.res.mpAfter });
     plan.res.damage = await rollSpellDamage({ power: plan.meta.power, crit: plan.meta.powerCrit, magicPower: plan.magicPower }, async () => (await new Roll("2d6").evaluate()).total);

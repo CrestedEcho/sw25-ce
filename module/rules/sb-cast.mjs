@@ -1,3 +1,4 @@
+import { isHealSpell } from "./spell-power.mjs";
 /**
  * NPC / monster spellcasting from the stat block (pure, tested).
  * Monsters own no spell items: a unique skill like "Truespeech Magic 5" lists a school + level.
@@ -35,7 +36,7 @@ export function spellMeta(doc) {
   const rule = sys.mpRule ?? data.mpRule ?? null;
   const ranks = rule?.byDeityRank ?? null;
   return { id: doc._id ?? doc.id, uuid: doc.uuid ?? null, name: doc.name, school: String(sys.school ?? data.school ?? "").toLowerCase(), level: Number(sys.level ?? data.level ?? 0),
-    power: (typeof sys.power === "object" && sys.power) ? sys.power : (data.power ?? null), powerCrit: Number(sys.powerCrit ?? data.powerCrit) || 10, resist: sys.resist ?? data.resistance ?? "",
+    power: (typeof sys.power === "object" && sys.power) ? sys.power : (data.power ?? null), powerCrit: Number(sys.powerCrit ?? data.powerCrit) || 10, resist: sys.resist ?? data.resistance ?? "", heal: isHealSpell({ name: doc.name, summary: data.summary ?? sys.summary, description: sys.description }),
     cost, ranks, ritual: rule?.ritualCasting ?? null, needsDialog: cost.open || !!ranks || !!rule?.ritualCasting };
 }
 
@@ -84,6 +85,8 @@ export function castChatHTML(actorName, meta, { mp, hp, rank, ritual, partName }
 export function damageHTML(meta, d) {
   if (!d) return "";
   if (d.fumble) return `<div class="sw25-spelldmg"><b>Damage</b>: rolled ${d.rolls[0]}: automatic failure, no damage.</div>`;
+  if (meta.heal) return `<div class="sw25-spelldmg"><div><b>Healing</b> (Power ${esc(meta.power?.rate ?? "?")}, crit ${meta.powerCrit}): rolls ${d.rolls.join(" → ")}${d.crits ? ` <b>(crit ×${d.crits})</b>` : ""} = table ${d.table} + Magic Power ${d.magicPower} = <b>${d.total}</b></div>`
+    + `<div><small>Healing: capped at max HP.</small></div><div><button type="button" data-sw25-heal="${d.total}">Apply healing ${d.total}</button></div></div>`;
   const btn = (amt, label) => `<button type="button" data-sw25-magic-dmg="${amt}">${label} ${amt}</button>`;
   return `<div class="sw25-spelldmg"><div><b>Damage</b> (Power ${esc(meta.power?.rate ?? "?")}, crit ${meta.powerCrit}): rolls ${d.rolls.join(" → ")}${d.crits ? ` <b>(crit ×${d.crits})</b>` : ""} = table ${d.table} + Magic Power ${d.magicPower} = <b>${d.total}</b></div>`
     + `<div><small>Magic damage: Defense not applied. A target's "Magic Damage +N" weak point is added on apply.</small></div>`
