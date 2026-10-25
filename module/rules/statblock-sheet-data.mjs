@@ -5,6 +5,7 @@
 const SYS = "sw25-ce";
 export const ICON_ROOT = `systems/${SYS}/assets/icons`;
 export const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
+import { parseMagicSkill } from "./sb-cast.mjs";
 export const ARRAY_FIELDS = ["parts", "uniqueSkills", "loot", "classLevels", "relationships", "services"];
 
 /** monsterType (book category, any case/spelling) -> `_type-<slug>` icon slug. */
@@ -59,7 +60,7 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
     dead: p.hp > 0 && Number(p.hpValue) <= 0,
   }));
   const skills = (view.uniqueSkills ?? []).map((u, i) => ({
-    i, name: u.name, part: u.part, description: u.description ?? "",
+    i, name: u.name, part: u.part, description: u.description ?? "", castable: !!parseMagicSkill(u),
     tags: (u.tags ?? []).map((t) => ({ key: t, ...(SKILL_TAGS[t] ?? { glyph: "·", label: t }) })),
     check: u.check ? `${u.check.value}(${u.check.fixed ?? u.check.value + 7})` : "",
     resist: u.resist ? `${u.resist}${u.resistResult ? ` / ${u.resistResult}` : ""}` : "",

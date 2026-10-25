@@ -27,7 +27,7 @@
 </tbody></table>
 <h3>Unique skills {{#if editable}}<a class="sb-add" data-action="add" data-field="uniqueSkills"><i class="fas fa-plus"></i></a>{{/if}}</h3>
 {{#each skills}}<div class="sb-skill">
-  <b>{{#each tags}}{{#if icon}}<img class="sb-tag" src="{{icon}}" title="{{label}}">{{else}}<span class="sb-glyph" title="{{label}}">{{glyph}}</span>{{/if}}{{/each}} <input class="sb-in w-name" type="text" name="system.sb.uniqueSkills.{{i}}.name" value="{{name}}"></b>
+  <b>{{#each tags}}{{#if icon}}<img class="sb-tag" src="{{icon}}" title="{{label}}">{{else}}<span class="sb-glyph" title="{{label}}">{{glyph}}</span>{{/if}}{{/each}} <input class="sb-in w-name" type="text" name="system.sb.uniqueSkills.{{i}}.name" value="{{name}}"></b>{{#if castable}}{{#if @root.editable}} <a class="sb-cast" data-action="sb-cast" data-index="{{i}}" title="Cast a spell (deducts MP from the stat block)"><i class="fas fa-magic"></i> Cast</a>{{/if}}{{/if}}
   {{#if check}}<small>{{check}}{{#if resist}} · {{resist}}{{/if}}</small>{{/if}}
   <span class="sb-desc">— {{{description}}}</span>
   {{#if @root.editable}}<span class="sb-edit-only"><label>tags <input class="sb-in" type="text" name="system.sb.uniqueSkills.{{i}}.tags" value="{{#each tags}}{{key}} {{/each}}" title="passive major minor prep declared"></label><a class="sb-del" data-action="del" data-field="uniqueSkills" data-index="{{i}}"><i class="fas fa-times"></i></a><a data-action="skill-desc" data-index="{{i}}" title="Edit description"><i class="fas fa-edit"></i></a></span>{{/if}}

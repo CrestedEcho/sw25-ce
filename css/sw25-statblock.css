@@ -110,3 +110,5 @@
 .sb-token-badge.disp-hostile { background:var(--sb-rust); } .sb-token-badge.disp-neutral { background:var(--sb-teal); } .sb-token-badge.disp-friendly { background:#3f6b2f; }
 .sb-person-combat .sb-add, .sb-person-combat .sb-del, .sb-person-combat .sb-lock, .sb-person-combat .sb-edit-only { display:none; }
 .sb-person-combat .sb-in:disabled { color:inherit; opacity:1; }
+.sb-cast { margin-left:6px; font-size:11px; color:var(--sb-rust); cursor:pointer; white-space:nowrap; }
+.sw25-sbcast .fw-fail { color:#9a2a1f; }

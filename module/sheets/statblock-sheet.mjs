@@ -4,6 +4,7 @@
  * The legacy sw25 sheet stays selectable via Sheet Configuration.
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
+import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
@@ -110,6 +111,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       const cur = foundry.utils.getProperty(this.actor.system.sbView ?? {}, path);
       return this.actor.update({ [`system.sb.overrides.${path}`]: { value: cur ?? 0, locked: true } });
     }
+    if (a === "sb-cast") return this._sbCast(Number(el.dataset.index));
     if (a === "skill-desc") {
       const i = Number(el.dataset.index); const rows = arr("uniqueSkills");
       const content = `<textarea name="d" rows="8" style="width:100%">${foundry.utils.escapeHTML(rows[i]?.description ?? "")}</textarea>`;
@@ -121,4 +123,46 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (a === "item-del") return item?.delete();
   }
 }
+
+/** NPC/monster casting: pick a spell for "<School> Magic N", confirm cost, deduct current MP/HP of the chosen part, post chat. */
+SW25StatBlockSheet.prototype._sbCast = async function (index) {
+  const actor = this.actor; const esc = foundry.utils.escapeHTML;
+  const raw = actor._source.system?.sb ?? {}; const view = actor.system.sbView ?? {};
+  const skills = Array.isArray(raw.uniqueSkills) ? raw.uniqueSkills : Object.values(raw.uniqueSkills ?? {});
+  const skill = parseMagicSkill(skills[index]); if (!skill) return;
+  // Spells: sw25-spells compendium + embedded spell items (fallback / custom).
+  const docs = [];
+  const pack = game.packs.get("sw25-ce.sw25-spells");
+  if (pack) docs.push(...(await pack.getDocuments()).map((d) => Object.assign(d.toObject(), { uuid: d.uuid })));
+  docs.push(...actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid })));
+  const spells = spellsForSkill(skill, docs);
+  if (!spells.length) return ui.notifications.warn(`No ${skill.schools.join("/")} spells up to Lv${skill.level} found.`);
+  const opts = spells.map((s, n) => `<option value="${n}">Lv${s.level} · ${esc(s.name)} (${esc(s.cost.raw || `MP${s.cost.base ?? "?"}`)})</option>`).join("");
+  const pick = await foundry.applications.api.DialogV2.prompt({ window: { title: `${skills[index].name}: cast` },
+    content: `<label>Spell <select name="s" size="12" style="width:100%">${opts}</select></label>`,
+    ok: { label: "Next", callback: (_e, b) => b.form.elements.s.value } }).catch(() => null);
+  if (pick == null || pick === "") return;
+  const meta = spells[Number(pick)];
+  const viewParts = view.parts ?? []; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
+  const core = Math.max(0, viewParts.findIndex((p) => p.isCore));
+  let mp = defaultCost(meta), hp = meta.cost.hp, rank = null, partIndex = core;
+  if (meta.needsDialog || viewParts.length > 1) {
+    const ranks = meta.ranks ? Object.keys(meta.ranks) : [];
+    const content = `<p><b>${esc(meta.name)}</b> — listed cost: ${esc(meta.cost.raw || `MP${meta.cost.base}`)}</p>`
+      + (ranks.length ? `<label>Deity rank <select name="rank">${ranks.map((r) => `<option value="${esc(r)}">${esc(r)} (MP${meta.ranks[r]})</option>`).join("")}</select></label><br>` : "")
+      + (meta.ritual ? `<p class="notes"><i>Ritual casting:</i> ${esc(String(meta.ritual))}</p>` : "")
+      + `<label>MP <input type="number" name="mp" value="${mp}" min="0"></label> <label>HP <input type="number" name="hp" value="${hp}" min="0"></label>`
+      + (viewParts.length > 1 ? `<br><label>Paid by <select name="part">${viewParts.map((p, n) => `<option value="${n}" ${n === core ? "selected" : ""}>${esc(p.name)}${p.isCore ? " ★" : ""} (MP ${p.mpValue ?? p.mp ?? 0})</option>`).join("")}</select></label>` : "");
+    const res = await foundry.applications.api.DialogV2.prompt({ window: { title: "Spell cost" }, content,
+      render: (_e, dlg) => { const f = dlg.element.querySelector("form"); f?.elements.rank?.addEventListener("change", (ev) => { f.elements.mp.value = defaultCost(meta, ev.target.value); }); if (f?.elements.rank) f.elements.mp.value = defaultCost(meta, f.elements.rank.value); },
+      ok: { label: "Cast", callback: (_e, b) => { const f = b.form.elements; return { mp: Number(f.mp.value) || 0, hp: Number(f.hp.value) || 0, rank: f.rank?.value ?? null, part: f.part ? Number(f.part.value) : core }; } } }).catch(() => null);
+    if (!res) return; ({ mp, hp, rank } = res); partIndex = res.part;
+  }
+  const out = applySbCost(rawParts, viewParts, { mp, hp, partIndex });
+  if (out.index < 0) return ui.notifications.warn("This stat block has no parts to pay MP from.");
+  if (out.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${out.mpBefore}) — cast anyway.`);
+  await actor.update({ "system.sb.parts": out.parts });
+  const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out) });
+};
 export { ARRAY_FIELDS };
