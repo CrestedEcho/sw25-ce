@@ -1,3 +1,4 @@
+import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } from "../rules/class-pick.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
@@ -342,6 +343,16 @@ export class SW25Item extends Item {
 
     // Calculate Base Number
     let levelmod = 0;
+    // sw25-ce: the auto-created Initiative / Monster Knowledge checks ship with an empty
+    // class/ability (upstream expects manual setup) and so rolled a flat 2d6+0. Default them
+    // to the book rule: best eligible class level + ability bonus.
+    let checkskill = systemData.checkskill;
+    let checkabi = systemData.checkabi;
+    if (!checkskill && !checkabi) {
+      const d = defaultCheckFor(itemData.name, { init: effectInitPC, mknow: effectMKnowPC });
+      if (d) ({ checkskill, checkabi } = d);
+    }
+    const eligible = checkClassList(checkskill);
     if (!Array.isArray(systemData.skilllist)) {
       systemData.skilllist = [];
     }
@@ -350,7 +361,7 @@ export class SW25Item extends Item {
       if (!systemData.skilllist.includes(item)) {
         systemData.skilllist.push(item);
       }
-      if (systemData.checkskill == "adv") {
+      if (checkskill == "adv") {
         if (
           item.system.skilltype == "fighterskill" ||
           item.system.skilltype == "magicuserskill" ||
@@ -360,12 +371,14 @@ export class SW25Item extends Item {
             levelmod = item.system.skilllevel;
         }
       }
-      if (systemData.checkskill == item.name) {
+      if (checkskill == item.name) {
         levelmod = Number(item.system.skilllevel);
+      } else if (eligible && classMatches(item, eligible)) {
+        levelmod = Math.max(levelmod, Number(item.system.skilllevel) || 0);
       }
     });
     let abimod = 0;
-    if (systemData.checkabi == "dex")
+    if (checkabi == "dex")
       abimod = Math.floor(
         (actorData.abilities.dex.racevalue +
           actorData.abilities.dex.valuebase +
@@ -375,7 +388,7 @@ export class SW25Item extends Item {
           6 +
           Number(actorData.abilities.dex.efmodify)
       );
-    if (systemData.checkabi == "agi")
+    if (checkabi == "agi")
       abimod = Math.floor(
         (actorData.abilities.dex.racevalue +
           actorData.abilities.agi.valuebase +
@@ -385,7 +398,7 @@ export class SW25Item extends Item {
           6 +
           Number(actorData.abilities.agi.efmodify)
       );
-    if (systemData.checkabi == "str")
+    if (checkabi == "str")
       abimod = Math.floor(
         (actorData.abilities.str.racevalue +
           actorData.abilities.str.valuebase +
@@ -395,7 +408,7 @@ export class SW25Item extends Item {
           6 +
           Number(actorData.abilities.str.efmodify)
       );
-    if (systemData.checkabi == "vit")
+    if (checkabi == "vit")
       abimod = Math.floor(
         (actorData.abilities.str.racevalue +
           actorData.abilities.vit.valuebase +
@@ -405,7 +418,7 @@ export class SW25Item extends Item {
           6 +
           Number(actorData.abilities.vit.efmodify)
       );
-    if (systemData.checkabi == "int")
+    if (checkabi == "int")
       abimod = Math.floor(
         (actorData.abilities.int.racevalue +
           actorData.abilities.int.valuebase +
@@ -415,7 +428,7 @@ export class SW25Item extends Item {
           6 +
           Number(actorData.abilities.int.efmodify)
       );
-    if (systemData.checkabi == "mnd")
+    if (checkabi == "mnd")
       abimod = Math.floor(
         (actorData.abilities.int.racevalue +
           actorData.abilities.mnd.valuebase +
@@ -641,6 +654,15 @@ export class SW25Item extends Item {
     const isSkillItem = ["spell", "magicalsong", "alchemytech"].includes(
       this.type
     );
+    // sw25-ce: a PC weapon with no class chosen derived no Accuracy. Default (in memory, not saved) to the
+    // actor's best fighter class + Dex for accuracy and + Str for damage, as the book does.
+    if (this.type === "weapon" && itemData.actor?.type === "character") {
+      const cls = (!systemData.checkskill || !systemData.powerskill) && defaultWeaponClass(actoritemData, this);
+      if (cls) {
+        if (!systemData.checkskill) { systemData.checkskill = cls.name; if (!systemData.checkabi) systemData.checkabi = "dex"; }
+        if (!systemData.powerskill) { systemData.powerskill = cls.name; if (!systemData.powerabi) systemData.powerabi = "str"; }
+      }
+    }
     let checklevelmod = 0;
     let checklevelmod1 = 0;
     let checklevelmod2 = 0;
