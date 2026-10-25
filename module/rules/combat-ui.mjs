@@ -38,14 +38,15 @@ export function attackCardData(actor, phase, item = null) {
   const ranged = RANGED.includes(String(weapon.category ?? "").toLowerCase());
   const lines = [];
   if (ranged && eng.flags?.noStray) lines.push("Targeting: this attack never strays into a skirmish.");
-  if (phase === "hit") lines.push(...coverLines(actor));
+  const links = [];
+  if (phase === "hit") { const cl = coverLines(actor); lines.push(...cl); if (cl.length) { const u = rulesEntryUuid("cover"); if (u) links.push({ uuid: u, label: "Rules: Cover" }); } }
   const buttons = [];
   if (phase === "hit") for (const x of RE.extraAttacks(eng.active, { category: weapon.category, usage: w.system.usage, ranged })) {
     const left = x.maxPerTurn == null ? x.count : Math.min(x.count, x.maxPerTurn - extraUsedThisTurn(actor, x.source));
     for (let k = 0; k < left; k++) buttons.push({ label: `${x.source}: extra attack`, action: "extraAttack", used: false,
       source: x.source, sameTarget: x.sameTarget, noAccuracyPenalty: x.noAccuracyPenalty, maxPerTurn: x.maxPerTurn });
   }
-  const data = { phase, actorId: actor.id, itemId: w.id, lines, buttons };
+  const data = { phase, actorId: actor.id, itemId: w.id, lines, buttons, links };
   return data;
 }
 /** Store attack-card extras on a message (rendered by renderChatMessageHTML). */
@@ -61,11 +62,18 @@ function renderAttackCard(msg, el) {
   if (!d || el.querySelector(".sw-attack-extras")) return;
   const lines = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join("");
   const btns = (d.buttons ?? []).map((b, i) => `<button type="button" class="sw-attack-btn" data-i="${i}" ${b.used ? "disabled" : ""}>${esc(b.label)}${b.used ? " (used)" : ""}</button>`).join("");
-  const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${btns}</div>`;
+  const links = (d.links ?? []).map((l) => `<div><a class="content-link" draggable="true" data-link data-uuid="${esc(l.uuid)}" data-type="JournalEntry"><i class="fas fa-book-open"></i> ${esc(l.label)}</a></div>`).join("");
+  const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${links}${btns}</div>`;
   (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
   el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
 }
 /** Cover I (defense.coverAlly): text only. Lists other combatants whose cover declaration is still running. */
+/** UUID of a rules-bible entry by slug, if a sw25-rules pack (system or world) is loaded and indexed. */
+function rulesEntryUuid(slug) {
+  const pack = game.packs?.find((p) => p.metadata?.name === "sw25-rules" && p.documentName === "JournalEntry");
+  const e = pack?.index?.find((x) => x.flags?.["sw25-ce"]?.slug === slug || x.name?.toLowerCase() === slug);
+  return e ? (e.uuid ?? `Compendium.${pack.collection}.JournalEntry.${e._id}`) : null;
+}
 function coverLines(attacker) {
   const out = [];
   const seen = new Set();

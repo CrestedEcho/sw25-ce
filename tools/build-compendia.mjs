@@ -307,6 +307,98 @@ export function buildTestActors(dir, lookup) {
   return { docs: [...folders, ...docs], gaps, todos, list };
 }
 
+// ---------- Private rules bible (sw25-rules): Markdown from gen/data/rules, never committed ----------
+export const RULES_PACK = { name: "sw25-rules", label: "SW2.5 Rules Bible (private)", type: "JournalEntry", system: "sw25-ce" };
+const OBSERVER = 2;
+/** Split "---\nkey: value\n---\nbody" front matter (flat key: value lines). */
+export function frontMatter(text) {
+  const m = String(text).replace(/^\uFEFF/, "").match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!m) return { meta: {}, body: String(text) };
+  const meta = {};
+  for (const line of m[1].split(/\r?\n/)) { const k = line.match(/^([\w-]+)\s*:\s*(.*)$/); if (k) meta[k[1]] = k[2].replace(/^["']|["']$/g, "").trim(); }
+  return { meta, body: m[2] };
+}
+const escH = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/** Inline Markdown: **bold**, *italic*, `code`, [text](url), [[slug]] / [[slug|label]] -> @UUID links. */
+export function mdInline(s, link = () => null) {
+  return escH(s)
+    .replace(/\[\[([\w\/-]+)(?:\|([^\]]+))?\]\]/g, (all, slug, label) => link(slug, label) ?? `<em>${label ?? slug}</em>`)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2">$1</a>');
+}
+/** Small Markdown -> HTML: #-###### headings, paragraphs, -/* and 1. lists, > quotes, | tables |, --- rules. */
+export function mdToHtml(md, link) {
+  const out = []; const lines = String(md).split(/\r?\n/); let i = 0;
+  const inl = (t) => mdInline(t, link);
+  while (i < lines.length) {
+    const l = lines[i];
+    if (!l.trim()) { i++; continue; }
+    let m;
+    if ((m = l.match(/^(#{1,6})\s+(.*)$/))) { out.push(`<h${m[1].length}>${inl(m[2])}</h${m[1].length}>`); i++; continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(l)) { out.push("<hr>"); i++; continue; }
+    if (/^\s*[-*]\s+/.test(l) || /^\s*\d+[.)]\s+/.test(l)) {
+      const ol = /^\s*\d/.test(l); const items = [];
+      while (i < lines.length && (ol ? /^\s*\d+[.)]\s+/ : /^\s*[-*]\s+/).test(lines[i])) items.push(lines[i++].replace(/^\s*(?:[-*]|\d+[.)])\s+/, ""));
+      out.push(`<${ol ? "ol" : "ul"}>${items.map((t) => `<li>${inl(t)}</li>`).join("")}</${ol ? "ol" : "ul"}>`); continue;
+    }
+    if (/^\s*>/.test(l)) { const q = []; while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*>\s?/, "")); out.push(`<blockquote>${mdToHtml(q.join("\n"), link)}</blockquote>`); continue; }
+    if (/^\s*\|/.test(l)) {
+      const rows = []; while (i < lines.length && /^\s*\|/.test(lines[i])) rows.push(lines[i++]);
+      const cells = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const sep = rows[1] && /^[\s|:-]+$/.test(rows[1]);
+      const head = sep ? `<thead><tr>${cells(rows[0]).map((c) => `<th>${inl(c)}</th>`).join("")}</tr></thead>` : "";
+      const body = rows.slice(sep ? 2 : 0).map((r) => `<tr>${cells(r).map((c) => `<td>${inl(c)}</td>`).join("")}</tr>`).join("");
+      out.push(`<table>${head}<tbody>${body}</tbody></table>`); continue;
+    }
+    const para = []; while (i < lines.length && lines[i].trim() && !/^(#{1,6}\s|\s*[-*]\s|\s*\d+[.)]\s|\s*>|\s*\|)/.test(lines[i])) para.push(lines[i++].trim());
+    if (!para.length) { out.push(`<p>${inl(lines[i++].trim())}</p>`); continue; }
+    out.push(`<p>${inl(para.join(" "))}</p>`);
+  }
+  return out.join("\n");
+}
+const chapterName = (dir) => dir.replace(/^\d+[-_ ]*/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+/**
+ * Build the rules-bible docs from <dir>/<chapter>/<NN-entry>.md (+ optional <chapter>/_chapter.md with title:).
+ * Slug = file name without the NN- prefix (front matter slug: overrides); [[slug]] links resolve across chapters.
+ * Returns { docs, list, broken }.
+ */
+export function buildRules(dir, { packId = `${RULES_PACK.system}.${RULES_PACK.name}` } = {}) {
+  const chapters = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory() && !e.name.startsWith("_") && !e.name.startsWith(".")).map((e) => e.name).sort();
+  const folders = []; const entries = []; const broken = [];
+  chapters.forEach((ch, ci) => {
+    const cdir = path.join(dir, ch);
+    const cmeta = fs.existsSync(path.join(cdir, "_chapter.md")) ? frontMatter(fs.readFileSync(path.join(cdir, "_chapter.md"), "utf8")).meta : {};
+    const fid = idFor("folder:rules", ch);
+    folders.push({ _id: fid, name: cmeta.title || chapterName(ch), type: "JournalEntry", folder: null, sorting: "m", sort: (ci + 1) * 1000, color: null, description: "", flags: { "sw25-ce": { chapter: ch } }, _key: `!folders!${fid}` });
+    fs.readdirSync(cdir).filter((f) => f.endsWith(".md") && !f.startsWith("_")).sort().forEach((f, ei) => {
+      const { meta, body } = frontMatter(fs.readFileSync(path.join(cdir, f), "utf8"));
+      const slug = meta.slug || f.replace(/\.md$/, "").replace(/^\d+[-_]/, "");
+      entries.push({ ch, f, slug, meta, body, fid, sort: (ei + 1) * 1000 });
+    });
+  });
+  const bySlug = new Map(); for (const e of entries) { e._id = idFor("rules", e.slug); if (bySlug.has(e.slug)) broken.push(`${e.ch}/${e.f}: duplicate slug ${e.slug}`); bySlug.set(e.slug, e); }
+  const docs = entries.map((e) => {
+    const title = e.meta.title || chapterName(e.slug);
+    const link = (slug, label) => { const t = bySlug.get(slug); if (!t) { broken.push(`${e.ch}/${e.f}: [[${slug}]]`); return null; } return `@UUID[Compendium.${packId}.JournalEntry.${t._id}]{${label ?? (t.meta.title || chapterName(t.slug))}}`; };
+    // "## Page: Name" splits an entry into several pages; otherwise one page
+    const parts = e.body.split(/^##\s+Page:\s*(.+)$/m);
+    const pagesSrc = [{ name: title, md: parts[0] }]; for (let k = 1; k < parts.length; k += 2) pagesSrc.push({ name: parts[k].trim(), md: parts[k + 1] ?? "" });
+    const pagesUse = pagesSrc.filter((p, k) => k > 0 || p.md.trim() || pagesSrc.length === 1);
+    const src = e.meta.source ? `<p class="sw-rule-source"><em>Source: ${escH(e.meta.source)}${e.meta.page ? `, p. ${escH(e.meta.page)}` : ""}</em></p>\n` : "";
+    const pages = pagesUse.map((p, k) => {
+      const pid = idFor(`rules-page:${e.slug}`, String(k));
+      return { _id: pid, name: p.name, type: "text", title: { show: true, level: 1 }, text: { format: 1, content: (k === 0 ? src : "") + mdToHtml(p.md, link) },
+        sort: (k + 1) * 1000, ownership: { default: -1 }, flags: {}, _key: `!journal.pages!${e._id}.${pid}` };
+    });
+    return { _id: e._id, name: title, folder: e.fid, sort: e.sort, pages, categories: [], ownership: { default: OBSERVER },
+      flags: { "sw25-ce": { slug: e.slug, chapter: e.ch, source: e.meta.source ?? null, page: e.meta.page ?? null } }, _key: `!journal!${e._id}` };
+  });
+  const list = {}; for (const e of entries) (list[e.ch] ??= []).push(e.slug);
+  return { docs: [...folders, ...docs], list, broken };
+}
+
 async function main() {
   const report = {}; const trees = {}; const gaps = [];
   const all = [];
@@ -340,9 +432,17 @@ async function main() {
     for (const doc of ta.docs) fs.writeFileSync(path.join(out, `${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
     report[TEST_ACTORS.name] = ta.docs.filter((x) => !x._key.startsWith("!folders")).length;
   }
+  // private rules bible (gen/data/rules) -> sw25-rules
+  const rulesDir = path.join(DATA, "rules"); let rb = null;
+  if (fs.existsSync(rulesDir)) {
+    rb = buildRules(rulesDir, { packId: arg("rules-pack-id", `${RULES_PACK.system}.${RULES_PACK.name}`) });
+    const out = path.join(srcRoot, RULES_PACK.name); fs.mkdirSync(out, { recursive: true });
+    for (const doc of rb.docs) fs.writeFileSync(path.join(out, `${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
+    report[RULES_PACK.name] = rb.docs.filter((x) => !x._key.startsWith("!folders")).length;
+  }
   if (!JSON_ONLY) {
     const { compilePack } = await import("@foundryvtt/foundryvtt-cli");
-    for (const p of [...Object.values(PACKS), TEST_ACTORS]) {
+    for (const p of [...Object.values(PACKS), TEST_ACTORS, RULES_PACK]) {
       const s = path.join(srcRoot, p.name);
       if (!fs.existsSync(s) || !fs.readdirSync(s).length) continue;
       await compilePack(s, path.join(OUT, "packs", p.name), { log: false });
@@ -352,7 +452,7 @@ async function main() {
   const spellNotes = all.filter((x) => x.cat === "spells").map(({ d }) => { const doc = toDoc("spells", d); const f = doc.flags["sw25-ce"]; return f.warnings ? { slug: d.slug, mp: f.mp.raw, warnings: f.warnings } : null; }).filter(Boolean);
   check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
   fs.writeFileSync(path.join(OUT, "folders.txt"), Object.entries(trees).map(([k, v]) => `== ${k}\n${v}`).join("\n\n") + "\n");
-  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...(ta ? { testActors: { list: ta.list, gaps: ta.gaps, todos: ta.todos } } : {}), ...check }, null, 2));
+  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...(ta ? { testActors: { list: ta.list, gaps: ta.gaps, todos: ta.todos } } : {}), ...(rb ? { rules: { list: rb.list, broken: rb.broken } } : {}), ...check }, null, 2));
   console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });
