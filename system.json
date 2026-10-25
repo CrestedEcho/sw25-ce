@@ -104,6 +104,13 @@
       "type": "Actor",
       "path": "packs/sw25-monsters",
       "system": "sw25-ce"
+    },
+    {
+      "name": "sw25-gods",
+      "label": "SW2.5 Gods",
+      "type": "JournalEntry",
+      "path": "packs/sw25-gods",
+      "system": "sw25-ce"
     }
   ],
   "packFolders": [
