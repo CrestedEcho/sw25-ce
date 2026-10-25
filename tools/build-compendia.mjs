@@ -298,6 +298,16 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
   if (d.movementFly) sb.movement = { ...parseMovement(d.movementSpeed), other: d.movementFly, otherMode: "Fly" };
   if (d.linkedForm) base.flags["sw25-ce"].linkedForm = d.linkedForm;
   for (const m of magic) if (!sb.uniqueSkills.some((u) => u.magic?.school === m.school)) gap(`magic ${m.school} has no matching "<School> Magic N" skill`);
+  // Casters: the book's specific spell list (d.spells: slugs) if given, else every non-god spell of the school up to
+  // the "<School> Magic N" level (fairy skipped: element-dependent). The cast button still also offers the compendium.
+  const lib = ctx.list?.("spells") ?? [];
+  if (Array.isArray(d.spells) && d.spells.length) for (const sl of d.spells) addRef("spells", typeof sl === "string" ? sl : sl.slug);
+  else for (const m of magic) {
+    const school = String(m.school ?? "").toLowerCase(); const lv = Number(m.level) || 0;
+    if (school === "fairy") { gap(`${d.slug}: fairy spells not auto-granted (element choice)`); continue; }
+    for (const sp of lib.filter((x) => x.school === school && Number(x.level) <= lv && !toDoc("spells", x).flags["sw25-ce"].god).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name)))
+      items.push(embed(_id, toDoc("spells", sp)));
+  }
   const isNpc = group === "npcs";
   if (isNpc) { sb.hostile = d.hostile === true; }
   // Monsters: the Lore "Disposition" (e.g. Kobold "Neutral") seeds the Hostile toggle; a test actor can override
