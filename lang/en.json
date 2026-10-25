@@ -294,7 +294,7 @@
       "Resistinput": "Resist Name",
       "Power": "Power ",
       "Cvalue": "Crit",
-      "Noc": "No Crit",
+      "Noc": "Recalc w/o Crit",
       "HalfpowC": "Half(C)",
       "Powertable": "Power Table ",
       "Particularmod": "Modifications",
