@@ -148,8 +148,88 @@ export function inlineItems(classes) {
   return out;
 }
 
+// ---------- Compendium folders ----------
+const cap = (s) => String(s ?? "").replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/ Ice$/, "/Ice");
+const lvl = (n) => (Number.isFinite(Number(n)) && n !== null && n !== "" ? [`Level ${Number(n)}`, Number(n)] : ["Level ?", 999]);
+const SCHOOL_ORDER = ["truespeech", "spiritualism", "divine", "magitech", "fairy", "nature", "summoning", "abyssal"];
+const SCHOOL_LABEL = { truespeech: "Truespeech Magic", spiritualism: "Spiritualism Magic", divine: "Divine Magic", magitech: "Magitech", fairy: "Fairy Magic", nature: "Nature Magic", summoning: "Summoning Magic", abyssal: "Abyssal Magic" };
+const ELEMENT_ORDER = ["basic", "earth", "water-ice", "fire", "wind", "light", "dark", "special"];
+const SLOT_ORDER = ["head", "face", "ears", "neck", "back", "right hand", "left hand", "waist", "feet", "other"];
+const SLOT_ALIAS = { boots: "feet", foot: "feet", shoes: "feet", ear: "ears", hand: "other", "right-hand": "right hand", "left-hand": "left hand", righthand: "right hand", lefthand: "left hand" };
+const RANK_ORDER = ["B", "A", "S", "SS"];
+const rankSeg = (r) => { const R = String(r ?? "").toUpperCase(); return RANK_ORDER.includes(R) ? [`Rank ${R}`, RANK_ORDER.indexOf(R)] : ["Unranked", 99]; };
+const idx = (arr, v, fb = 50) => { const i = arr.indexOf(v); return i < 0 ? fb : i; };
+/** Folder path for one entry: array of [name, sortKey]. Empty array = root. */
+export function folderPathFor(cat, d) {
+  switch (cat) {
+    case "spells": {
+      const school = String(d.school ?? "").toLowerCase(); const top = [SCHOOL_LABEL[school] ?? (cap(school) || "Unsorted"), idx(SCHOOL_ORDER, school)];
+      if (school === "divine") {
+        const god = d.slug.match(/(?:^|\/)divine-([^/]+)\//)?.[1];
+        if (god) return [top, [`Special: ${cap(god)}`, 100 + god.charCodeAt(0)]]; // 1 spell per level: flat, sorted by level
+        return [top, ["Common", 0], lvl(d.level)];
+      }
+      if (school === "fairy") { const e = String(d.element ?? "").toLowerCase(); return [top, e ? [cap(e), idx(ELEMENT_ORDER, e)] : ["General", 90]]; } // 1 spell per level per element: flat, sorted by level
+      return [top, lvl(d.level)];
+    }
+    case "items": {
+      const t = String(d.type ?? "").toLowerCase();
+      if (t === "weapon") return [["Weapons", 0], [cap(d.category) || "Uncategorized", 0], rankSeg(d.rank)];
+      if (t === "armor") return [["Armor", 1], [cap(d.category) || "Uncategorized", 0], rankSeg(d.rank)];
+      if (t === "shield") return [["Shields", 2], rankSeg(d.rank)];
+      if (t === "accessory" || t === "gear" || d.slot) {
+        const raw = String(d.slot ?? d.equipSlot ?? "").toLowerCase().trim(); const s = SLOT_ALIAS[raw] ?? raw;
+        const slot = SLOT_ORDER.includes(s) ? s : "other";
+        const cls = d.classRestriction ?? d.classes ?? d.restrictedTo;
+        const clsName = Array.isArray(cls) ? (cls.length ? cls.map(cap).join(", ") : "") : cap(cls ?? "");
+        return [["Gear", 3], [slot === "feet" ? "Feet (Boots)" : cap(slot), idx(SLOT_ORDER, slot)], clsName ? [clsName, 1] : ["Any Class", 0], rankSeg(d.rank)];
+      }
+      if (t === "consumable" || t === "potion" || t === "herb") return [["Consumables", 4], [cap(d.category) || "General", 0]];
+      return [["Other Items", 9], [cap(d.category || t) || "General", 0]];
+    }
+    case "classes": {
+      const st = skillTypeOf(d); const [n, k] = st === "fighterskill" ? ["Warrior Classes", 0] : st === "magicuserskill" ? ["Wizard Classes", 1] : ["Other Classes", 2];
+      const tier = String(d.category ?? "").toLowerCase(); return [[n, k], tier === "major" ? ["Major (Table A)", 0] : tier === "minor" ? ["Minor (Table B)", 1] : [cap(tier) || "Unsorted", 2]];
+    }
+    case "gods": { const r = String(d.rank ?? "").toLowerCase(); return [[cap(r) ? `${cap(r)} Gods` : "Unsorted", idx(["ancient", "major", "minor"], r)]]; }
+    case "monsters": return [[cap(d.monsterType || (d.type === "npc" ? "NPC" : "")) || "Uncategorized", 0], lvl(d.level)];
+    case "feats": { const nc = d.nonCombat === true || (NON_COMBAT ??= nonCombatSlugs()).has(d.slug); return [nc ? ["Non-combat Feats", 1] : ["Combat Feats", 0]]; }
+  }
+  return [];
+}
+/** Build Folder docs for a pack and set doc.folder on every entry. Sibling order: sortKey then name; sorting "m" (manual) so sort is honoured. */
+export function buildFolders(cat, entries) {
+  const type = PACKS[cat].type; const nodes = new Map();
+  for (const { doc, d } of entries) {
+    let parent = null; let key = "";
+    for (const [name, sk] of folderPathFor(cat, d)) {
+      key += "/" + name;
+      if (!nodes.has(key)) nodes.set(key, { _id: idFor(`folder:${cat}`, key), name, type, folder: parent, sorting: "a", sort: 0, sk, color: null, description: "", flags: { "sw25-ce": { path: key } }, count: 0 });
+      parent = nodes.get(key)._id; nodes.get(key).count++;
+    }
+    doc.folder = parent; doc.sort = 0;
+  }
+  // spells: entries sort by level then name (manual sort), so flat element/god folders read Lv1..Lv15
+  if (cat === "spells") { const names = [...new Set(entries.map((e) => e.doc.name))].sort((a, b) => a.localeCompare(b));
+    for (const { doc, d } of entries) doc.sort = (Number(d.level) || 0) * 10000 + names.indexOf(doc.name); }
+  const all = [...nodes.values()]; const byParent = {};
+  for (const f of all) (byParent[f.folder ?? ""] ??= []).push(f);
+  for (const sibs of Object.values(byParent)) sibs.sort((a, b) => a.sk - b.sk || a.name.localeCompare(b.name)).forEach((f, i) => { f.sort = (i + 1) * 100000; });
+  // folders containing level subfolders sort manually (Level 2 < Level 10); entries inside leaves alphabetical
+  for (const f of all) if (byParent[f._id] || cat === "spells") f.sorting = "m";
+  return all.map(({ sk, count, ...f }) => ({ ...f, _key: `!folders!${f._id}` }));
+}
+/** Text tree with counts, for the report. */
+export function folderTree(folders, entries) {
+  const kids = {}; for (const f of folders) (kids[f.folder ?? ""] ??= []).push(f);
+  const direct = {}; for (const { doc } of entries) direct[doc.folder ?? ""] = (direct[doc.folder ?? ""] ?? 0) + 1;
+  const total = (id) => (direct[id] ?? 0) + (kids[id] ?? []).reduce((s, f) => s + total(f._id), 0);
+  const lines = []; const walk = (id, ind) => { for (const f of (kids[id] ?? []).sort((a, b) => a.sort - b.sort)) { lines.push(`${ind}${f.name} (${total(f._id)})`); walk(f._id, ind + "  "); } };
+  walk("", ""); if (direct[""]) lines.push(`(root) ${direct[""]}`); return lines.join("\n");
+}
+
 async function main() {
-  const report = {};
+  const report = {}; const trees = {}; const gaps = [];
   const all = [];
   const srcRoot = path.join(OUT, "src");
   fs.rmSync(OUT, { recursive: true, force: true });
@@ -160,13 +240,16 @@ async function main() {
     let n = 0;
     const rows = listData(dir);
     if (cat === "items") { const seen = new Set(rows.map((r) => r.slug)); for (const x of inlineItems(listData(path.join(DATA, "classes")))) if (!seen.has(x.slug)) { seen.add(x.slug); rows.push(x); } }
+    const entries = [];
     for (const d of rows) {
       if (ONLY && !ONLY.has(d.slug)) continue;
-      const doc = toDoc(cat, d);
-      fs.writeFileSync(path.join(out, `${d.slug.replace(/\//g, "__")}_${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
-      n++; all.push({ cat, d });
+      entries.push({ doc: toDoc(cat, d), d }); n++; all.push({ cat, d });
     }
-    report[p.name] = n;
+    const folders = buildFolders(cat, entries);
+    for (const f of folders) fs.writeFileSync(path.join(out, `_folder_${f._id}.json`), JSON.stringify(f, null, 2) + "\n");
+    for (const { doc, d } of entries) fs.writeFileSync(path.join(out, `${d.slug.replace(/\//g, "__")}_${doc._id}.json`), JSON.stringify(doc, null, 2) + "\n");
+    report[p.name] = n; (report.folders ??= {})[p.name] = folders.length; (trees[p.name] = folderTree(folders, entries));
+    gaps.push(...entries.filter(({ d }) => cat === "items").flatMap(({ d }) => [!d.rank && `${d.slug}: no rank`, ["accessory", "gear"].includes(d.type) && !d.slot && `${d.slug}: no slot`].filter(Boolean)));
   }
   if (!JSON_ONLY) {
     const { compilePack } = await import("@foundryvtt/foundryvtt-cli");
@@ -179,7 +262,8 @@ async function main() {
   const check = await checkRefs(all);
   const spellNotes = all.filter((x) => x.cat === "spells").map(({ d }) => { const doc = toDoc("spells", d); const f = doc.flags["sw25-ce"]; return f.warnings ? { slug: d.slug, mp: f.mp.raw, warnings: f.warnings } : null; }).filter(Boolean);
   check.spellWarnings = spellNotes; check.featTodos = all.filter((x) => x.cat === "feats" && x.d.todo).map(({ d }) => ({ slug: d.slug, todo: d.todo }));
-  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, ...check }, null, 2));
+  fs.writeFileSync(path.join(OUT, "folders.txt"), Object.entries(trees).map(([k, v]) => `== ${k}\n${v}`).join("\n\n") + "\n");
+  fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify({ counts: report, itemGaps: gaps, ...check }, null, 2));
   console.log(JSON.stringify({ out: OUT, counts: report, unresolved: check.unresolved, unmappedKeys: check.unmappedKeys, documentedNotApplied: check.documentedNotApplied, spellWarnings: check.spellWarnings, featTodos: check.featTodos }, null, 2));
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) main().catch((e) => { console.error(e); process.exit(1); });

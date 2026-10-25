@@ -49,3 +49,25 @@ test("non-combat feat flag", () => {
   assert.equal(toDoc("feats", { slug: "toughness", name: "Toughness" }).system.nonCombat, true);
   assert.equal(toDoc("feats", { slug: "x", name: "X", nonCombat: true }).system.nonCombat, true);
 });
+import { folderPathFor, buildFolders } from "../tools/build-compendia.mjs";
+test("compendium folder paths", () => {
+  const names = (c, d) => folderPathFor(c, d).map((x) => x[0]);
+  assert.deepEqual(names("spells", { slug: "x", school: "truespeech", level: 10 }), ["Truespeech Magic", "Level 10"]);
+  assert.deepEqual(names("spells", { slug: "divine-lyphos/peace", school: "divine", level: 2 }), ["Divine Magic", "Special: Lyphos"]);
+  assert.deepEqual(names("spells", { slug: "banish", school: "divine", level: 4 }), ["Divine Magic", "Common", "Level 4"]);
+  assert.deepEqual(names("spells", { slug: "f", school: "fairy", element: "water-ice", level: 1 }), ["Fairy Magic", "Water/Ice"]);
+  assert.deepEqual(names("items", { slug: "b", type: "accessory", slot: "boots", rank: "A" }), ["Gear", "Feet (Boots)", "Any Class", "Rank A"]);
+  assert.deepEqual(names("items", { slug: "b", type: "accessory", slot: "head", classRestriction: ["fencer"] }), ["Gear", "Head", "Fencer", "Unranked"]);
+  assert.deepEqual(names("items", { slug: "s", type: "weapon", category: "sword", rank: "B" }), ["Weapons", "Sword", "Rank B"]);
+  assert.deepEqual(names("gods", { slug: "g", rank: "ancient" }), ["Ancient Gods"]);
+  assert.deepEqual(names("feats", { slug: "x", nonCombat: true }), ["Non-combat Feats"]);
+});
+test("buildFolders: every entry foldered, Level 2 sorts before Level 10", () => {
+  const entries = [10, 2, 1].map((l) => ({ doc: { name: `S${l}` }, d: { slug: `s${l}`, school: "nature", level: l } }));
+  const f = buildFolders("spells", entries);
+  assert.ok(entries.every((e) => f.some((x) => x._id === e.doc.folder)));
+  const lv = f.filter((x) => x.name.startsWith("Level")).sort((a, b) => a.sort - b.sort).map((x) => x.name);
+  assert.deepEqual(lv, ["Level 1", "Level 2", "Level 10"]);
+  assert.ok(f.every((x) => x.type === "Item" && x._key === `!folders!${x._id}`));
+  assert.equal(f.find((x) => x.name === "Nature Magic").folder, null);
+});
