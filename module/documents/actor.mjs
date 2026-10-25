@@ -4,6 +4,7 @@ import { PT } from "../helpers/powerroll.mjs";
 import * as RE from "../rules/engine.mjs";
 import * as CS from "../rules/combat-state.mjs";
 import { prepareStatBlock } from "../rules/statblock.mjs";
+import { bestClass, EVASION_CLASSES } from "../rules/class-pick.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -171,6 +172,11 @@ export class SW25Actor extends Actor {
     //Calculate Battle Data (reset first so a missing/unselected weapon doesn't show stale values)
     for (const k of ["itemname","itemhitformula","itemhitbase","itempowerformula","itempower","itemcvalue","itempowerbase"])
       systemData[k] = null;
+    // sw25-ce: no weapon picked for the Accuracy tile -> first equipped weapon (else the only weapon), in memory only.
+    if (!systemData.hitweapon) {
+      const ws = this.items.filter((i) => i.type == "weapon");
+      systemData.hitweapon = (ws.find((i) => i.system.equip) ?? (ws.length === 1 ? ws[0] : null))?.name ?? "";
+    }
     this.items.forEach((item) => {
       if (item.type == "weapon") {
         if (item.name == systemData.hitweapon) {
@@ -230,9 +236,11 @@ export class SW25Actor extends Actor {
       item.system.dedicated === true &&
       item.system.category === "shield"
     );
+    // sw25-ce: no Evasion class chosen -> best fighter class (Fighter/Grappler/Fencer/Battle Dancer), in memory only.
+    const dodgeskill = systemData.dodgeskill || bestClass(this.items, EVASION_CLASSES)?.name || "";
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.dodgeskill) {
+        if (dodgeskill && item.name == dodgeskill) {
           const dodgeAgimod = Math.floor(
             (systemData.abilities.dex.racevalue +
               systemData.abilities.agi.valuebase +
@@ -710,7 +718,8 @@ export class SW25Actor extends Actor {
     if (totalmpmod > 0) systemData.totalmpmod = "+" + totalmpmod;
 
     // Set initiative formula
-    systemData.initiativeFormula = "0";
+    // SW2.5 NPCs/monsters don't roll initiative: use the stat block's fixed value.
+    systemData.initiativeFormula = String(Number(systemData.sb?.initiative || systemData.preemptive) || 0);
 
     // Polyglot support
     if (systemData.language) {
@@ -1034,7 +1043,8 @@ export class SW25Actor extends Actor {
     systemData.modParams = modParams;
 
     // Set initiative formula
-    systemData.initiativeFormula = String(systemData.preemptive);
+    // Fixed value (no dice): stat-block initiative, legacy "preemptive" as fallback.
+    systemData.initiativeFormula = String(Number(systemData.sb?.initiative || systemData.preemptive) || 0);
 
     // Polyglot support
     if (systemData.language) {
