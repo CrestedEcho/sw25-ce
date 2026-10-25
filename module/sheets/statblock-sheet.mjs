@@ -180,7 +180,7 @@ Hooks.on("renderChatMessageHTML", (_msg, el) => {
     const lines = [];
     for (const a of targets) {
       const weak = a.system?.sb?.weakPoint ?? "";
-      const dmg = magicDamageTaken(amount, weak);
+      const dmg = magicDamageTaken(amount, weak, a.system?.sb?.weaknessRevealed === true);
       if (a.type === "character") {
         const before = Number(a.system.hp?.value) || 0; await a.update({ "system.hp.value": before - dmg });
         lines.push(`${foundry.utils.escapeHTML(a.name)}: ${dmg} → HP ${before - dmg}`);

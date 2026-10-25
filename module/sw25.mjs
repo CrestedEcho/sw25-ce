@@ -1,5 +1,6 @@
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
+import { knowledgeUpdates } from "./rules/mknow.mjs";
 import * as RulesEngine from "./rules/engine.mjs";
 import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.mjs";
 import { registerRulesUI } from "./rules/sheet-ui.mjs";
@@ -984,6 +985,11 @@ Hooks.once("ready", async function () {
       .sort();
     if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
 
+    if (data.method == "revealWeakness") {
+      const a = canvas.tokens.get(data.targetToken)?.actor; if (!a) return;
+      const upd = knowledgeUpdates(data.total, a.system?.sb); if (Object.keys(upd).length) a.update(upd);
+      return;
+    }
     // Apply roll
     if (data.method == "applyRoll") {
       const targetToken = canvas.tokens.get(data.targetToken);

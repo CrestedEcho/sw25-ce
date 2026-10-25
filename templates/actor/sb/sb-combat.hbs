@@ -1,6 +1,7 @@
 <div class="sb-grid">
   <div class="f"><label>Reputation / Weakness</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.reputation}} / {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.weakness}}</div>
   <div class="f w2"><label>Weak point</label><input class="sb-in" type="text" name="system.sb.weakPoint" value="{{sb.weakPoint}}"></div>
+  <div class="f"><label title="GM: set automatically when a PC Monster Knowledge check meets the Weakness number">Weakness revealed</label><input type="checkbox" name="system.sb.weaknessRevealed" data-dtype="Boolean" {{#if sb.weaknessRevealed}}checked{{/if}}> <small>{{#if sb.reputationReached}}(reputation reached){{/if}}</small></div>
   <div class="f"><label>Initiative</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.initiative}}</div>
   <div class="f"><label>Movement</label>{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.moveGround}} / {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.moveOther}}</div>
   <div class="f"><label>Fortitude</label>{{> "systems/sw25-ce/templates/actor/sb/sb-pair.hbs" p=stats.fortitude}}</div>

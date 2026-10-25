@@ -473,7 +473,7 @@
         "reputation": 0,
         "weakness": 0,
         "weakPoint": "",
-        "weakPointData": null,
+        "weakPointData": null, "weaknessRevealed": false, "reputationReached": false,
         "initiative": 0,
         "movement": {
           "ground": null,
@@ -672,7 +672,7 @@
         "reputation": 0,
         "weakness": 0,
         "weakPoint": "",
-        "weakPointData": null,
+        "weakPointData": null, "weaknessRevealed": false, "reputationReached": false,
         "initiative": 0,
         "movement": {
           "ground": null,

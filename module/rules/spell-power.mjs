@@ -29,10 +29,10 @@ export function magicWeakBonus(weakPoint) {
   const m = String(weakPoint ?? "").match(/^\s*magic(?:al)?\s+damage\s*\+\s*(\d+)/i);
   return m ? Number(m[1]) : 0;
 }
-/** Damage actually taken: Defense ignored for magic; +weak-point bonus once. */
-export function magicDamageTaken(amount, weakPoint) {
+/** Damage actually taken: Defense ignored for magic; +weak-point bonus only when revealed (Monster Knowledge >= Weakness). */
+export function magicDamageTaken(amount, weakPoint, revealed = true) {
   const a = Math.max(0, Number(amount) || 0);
-  return a > 0 ? a + magicWeakBonus(weakPoint) : 0;
+  return a > 0 ? a + (revealed ? magicWeakBonus(weakPoint) : 0) : 0;
 }
 /** True when a spell carries the compendium {rate, table} power object (vs the legacy numeric power + pt3..pt12). */
 export const hasPowerObject = (sys) => !!sys && typeof sys.power === "object" && sys.power !== null && Array.isArray(sys.power.table);

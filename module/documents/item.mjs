@@ -2,6 +2,16 @@ import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } fro
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { hasPowerObject, planPcCast, rollSpellDamage } from "../rules/spell-power.mjs";
 import { castChatHTML } from "../rules/sb-cast.mjs";
+import { isMonsterKnowledge, knowledgeUpdates } from "../rules/mknow.mjs";
+
+/** Monster Knowledge -> flag targets whose Weakness the total meets (GM updates directly; players ask the GM via socket). */
+export function revealWeakness(targets, total) {
+  for (const t of targets ?? []) {
+    const a = t.actor; if (!a || a.type === "character") continue;
+    const upd = knowledgeUpdates(total, a.system?.sb); if (!Object.keys(upd).length) continue;
+    if (game.user.isGM) a.update(upd); else game.socket.emit("system.sw25", { method: "revealWeakness", targetToken: t.id, total });
+  }
+}
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
@@ -2909,6 +2919,7 @@ export class SW25Item extends Item {
         chatMessageId = chatMessage.id;
       });
 
+      if (this.type === "check" && isMonsterKnowledge(this.name) && this.actor?.type === "character") revealWeakness(game.user.targets, chatTotal);
       return { roll, chatMessageId };
     }
 
