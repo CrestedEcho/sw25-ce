@@ -17,11 +17,11 @@ export function monsterTypeIcon(t) {
 
 /** Unique-skill tag glyphs (CR I p393); icon where the Artist set has one. */
 export const SKILL_TAGS = {
-  passive: { glyph: "◯", label: "Passive", icon: `${ICON_ROOT}/feats/_type-passive.webp` },
-  major: { glyph: "►", label: "Major action" },
-  minor: { glyph: "⏩", label: "Minor action" },
-  prep: { glyph: "△", label: "Preparation" },
-  declared: { glyph: "🗨", label: "Declared", icon: `${ICON_ROOT}/feats/_type-declared.webp` },
+  passive: { glyph: "◯", label: "Passive", icon: `${ICON_ROOT}/ui/tag-passive.webp` },
+  major: { glyph: "►", label: "Major action", icon: `${ICON_ROOT}/ui/tag-major.webp` },
+  minor: { glyph: "⏩", label: "Minor action", icon: `${ICON_ROOT}/ui/tag-minor.webp` },
+  prep: { glyph: "△", label: "Preparation", icon: `${ICON_ROOT}/ui/tag-prep.webp` },
+  declared: { glyph: "🗨", label: "Declared", icon: `${ICON_ROOT}/ui/tag-declared.webp` },
 };
 
 const list = (v) => (Array.isArray(v) ? v.filter((x) => x !== "" && x != null).join(", ") : String(v ?? ""));

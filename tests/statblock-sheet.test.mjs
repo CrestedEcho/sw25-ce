@@ -32,8 +32,8 @@ test("context: quill on locked part defense, fixed values, class levels, tag gly
   assert.equal(p.accuracy.value.edit, 8); assert.equal(p.accuracy.fixed, 15);
   assert.equal(c.stats.fortitude.fixed, 14);
   assert.equal(c.classLevels, "Fighter 5, Ranger 2");
-  assert.ok(c.skills[0].tags[0].icon.endsWith("_type-declared.webp"));
-  assert.equal(c.skills[1].tags[1].glyph, "►");
+  assert.ok(c.skills[0].tags[0].icon.endsWith("ui/tag-declared.webp"));
+  assert.ok(c.skills[1].tags[1].icon.endsWith("ui/tag-major.webp")); assert.equal(c.skills[1].tags[1].glyph, "►");
   assert.equal(c.tabs[0].key, "person"); assert.equal(c.accent, "teal");
   const h = buildStatBlockContext({ type: "npc", view: prepareStatBlock({ ...captain, hostile: true }, {}, "npc"), raw: captain });
   assert.equal(h.tabs[0].key, "combat"); assert.equal(h.accent, "rust"); assert.equal(h.hostile, true);

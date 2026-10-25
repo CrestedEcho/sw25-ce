@@ -25,7 +25,7 @@ const captain = { title: "Guard Captain", settlement: "Harvesgard", faction: "Ha
   notes: "<p>Stern but fair.</p>", secrets: "Takes bribes from the smugglers' guild.", intelligence: "Average", perception: "Five senses",
   level: 6, reputation: 12, weakness: 16, weakPoint: "Accuracy +1", initiative: 14, movement: { ground: 13 }, fortitude: { value: 7 }, willpower: { value: 6 },
   parts: [{ name: "Longsword", accuracy: { value: 8 }, damage: "2d+8", evasion: { value: 7 }, defense: 6, hp: 42, mp: 12, isCore: true }],
-  uniqueSkills: [{ name: "Power Strike", tags: ["declared"], description: "+damage, −evasion this round." }, { name: "Shield Training", tags: ["passive"], description: "Defense already included." }],
+  uniqueSkills: [{ name: "Power Strike", tags: ["declared"], description: "+damage, −evasion this round." }, { name: "Shield Training", tags: ["passive"], description: "Defense already included." }, { name: "Rally (preview: all tags)", tags: ["major", "minor", "prep"], description: "Preview-only row showing the remaining tag icons." }],
   loot: [{ roll: "Always", item: "Captain's Badge", price: 100 }, { roll: "2-7", item: "Purse (50G)", price: 50 }, { roll: "8+", item: "Fine Longsword", price: 440 }],
   overrides: { parts: { 0: { defense: { value: 7, locked: true } } } } };
 const portrait = `file://${root}/assets/portrait.png`;
