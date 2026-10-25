@@ -3,6 +3,7 @@
  * Data: system.sb.* (derived view system.sbView); overrides system.sb.overrides.<path>.{value,locked} with quill.
  * The legacy sw25 sheet stays selectable via Sheet Configuration.
  */
+import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
 const T = "systems/sw25-ce/templates/actor";
@@ -28,13 +29,22 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const TE = foundry.applications.ux.TextEditor.implementation;
     const enrich = (h) => TE.enrichHTML(h ?? "", { secrets: this.actor.isOwner, relativeTo: this.actor });
     Object.assign(base, ctx, {
-      attitudes: ATTITUDES, editable: this.isEditable, owner: this.actor.isOwner,
+      fellowOn: !!this.actor.system.fellow?.enabled, attitudes: ATTITUDES, editable: this.isEditable, owner: this.actor.isOwner,
       items: this.actor.items.contents.map((i) => ({ _id: i.id, name: i.name, img: i.img, type: i.type })),
       notesHTML: await enrich(raw.notes), secretsHTML: game.user.isGM ? await enrich(raw.secrets) : "",
       descriptionHTML: await enrich(raw.description || view.description),
     });
     for (const s of base.skills) s.description = await enrich(s.description);
     return base;
+  }
+
+  /** Fellow-mode NPC: players get the public Fellow card; the stat block stays GM-only. */
+  render(force, options) {
+    if (this.actor.type === "npc" && this.actor.system.fellow?.enabled && !game.user.isGM) {
+      this._fellowCard ??= new SW25FellowSheet(this.actor);
+      return this._fellowCard.render(force, options);
+    }
+    return super.render(force, options);
   }
 
   /** Hostile NPC -> Combat tab is first and the default. */
@@ -65,6 +75,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     ev.preventDefault();
     const a = el.dataset.action; const raw = this.actor._source.system?.sb ?? {};
     const arr = (f) => structuredClone(Array.isArray(raw[f]) ? raw[f] : Object.values(raw[f] ?? {}));
+    if (a === "fellow-card") { this._fellowCard ??= new SW25FellowSheet(this.actor); return this._fellowCard.render(true); }
     if (a === "add") { const f = el.dataset.field; return this.actor.update({ [`system.sb.${f}`]: [...arr(f), NEW_ROWS[f]()] }); }
     if (a === "del") {
       const f = el.dataset.field; const i = Number(el.dataset.index); const rows = arr(f); rows.splice(i, 1);

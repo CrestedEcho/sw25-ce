@@ -11,6 +11,7 @@ import { SW25Combat } from "./documents/combat.mjs";
 // Import sheet classes.
 import { SW25ActorSheet } from "./sheets/actor-sheet.mjs";
 import { SW25StatBlockSheet } from "./sheets/statblock-sheet.mjs";
+import { SW25FellowSheet } from "./sheets/fellow-sheet.mjs";
 import { SW25ItemSheet } from "./sheets/item-sheet.mjs";
 import { SW25ActiveEffectConfigV2 } from "./sheets/active-effect-config-V2.mjs";
 let SW25ActiveEffectConfig;
@@ -123,6 +124,11 @@ Hooks.once("init", function () {
     types: ["npc", "monster"],
     makeDefault: true,
     label: "SW 2.5 CE Stat Block",
+  });
+  Actors.registerSheet("sw25-ce", SW25FellowSheet, {
+    types: ["npc"],
+    makeDefault: false,
+    label: "SW 2.5 CE Fellow Card",
   });
   Items.registerSheet("sw25-ce", SW25ItemSheet, {
     makeDefault: true,

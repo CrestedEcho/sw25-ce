@@ -3,12 +3,14 @@
 import fs from "node:fs"; import path from "node:path"; import { createRequire } from "node:module";
 import { prepareStatBlock } from "../../module/rules/statblock.mjs";
 import { buildStatBlockContext } from "../../module/rules/statblock-sheet-data.mjs";
+import { buildFellowContext, resolveFellowRoll } from "../../module/rules/fellow.mjs";
 const require = createRequire(import.meta.url); const Handlebars = require("handlebars");
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../.."); const out = process.argv[2] ?? "/tmp/sb-preview";
 fs.mkdirSync(out, { recursive: true });
 const fix = (s) => s.replaceAll("systems/sw25-ce/", `file://${root}/`).replaceAll("../assets/", `file://${root}/assets/`);
 const T = (p) => fix(fs.readFileSync(path.join(root, "templates/actor", p), "utf8"));
 for (const p of ["sb-num", "sb-pair", "sb-combat"]) Handlebars.registerPartial(`file://${root}/templates/actor/sb/${p}.hbs`, T(`sb/${p}.hbs`));
+Handlebars.registerHelper("eq", (a, b) => a === b);
 Handlebars.registerHelper("checked", (v) => (v ? "checked" : ""));
 Handlebars.registerHelper("selectOptions", (o, { hash }) => new Handlebars.SafeString(Object.entries(o).map(([k, v]) => `<option value="${k}" ${k === hash.selected ? "selected" : ""}>${v}</option>`).join("")));
 Handlebars.registerHelper("editor", (h) => new Handlebars.SafeString(`<div class="editor">${h ?? ""}</div>`));
@@ -40,6 +42,23 @@ for (const [file, name, type, raw, tab] of [["monster_kobold", "Kobold", "monste
 body{margin:0;width:760px;height:900px} .sw25-sb.window-content{height:884px} .sb-body .tab{display:none} .sb-body .tab[data-tab="${first}"]{display:block}
 .fas{font-style:normal}.fa-plus:before{content:"+"}.fa-times:before{content:"×"}.fa-edit:before{content:"✎"}.fa-trash:before{content:"🗑"}.fa-feather:before{content:"✒"}</style></head>
 <body><div class="sw25-sb window-content">${html}</div></body></html>`;
+  fs.writeFileSync(path.join(out, `${file}.html`), html);
+}
+// Fellow card (player view + GM view), Rin Halvard example from the Artist mockup.
+const rin = { enabled: true, race: "Human", gender: "Female", age: 19, level: 3, classes: "Fencer 3, Scout 2, Sage 1",
+  languages: [{ name: "Trade Common", speak: true, read: true }, { name: "Harvesgard Dialect", speak: true, read: false }],
+  intro: "I'm Rin. I can scout and I can fight a little. Don't expect miracles, but I won't run.", wantsExp: true, wantsReward: false, mp: { value: 9, max: 12 },
+  rows: [{ action: "Scout Observation Check", kind: "check", dialogue: "Hold on — something's off here.", value: 11, effect: "Finds traps / hidden doors", mp: 0 },
+    { action: "Rapier thrust", kind: "attack", dialogue: "Take this!", value: 10, effect: "Power 10 / C10 +4", mp: 0 },
+    { action: "Power Strike", kind: "attack", dialogue: "Here goes everything!", value: 11, effect: "Power 10 / C10 +8, Eva −2", mp: 0 },
+    { action: "Field Aid (Sage)", kind: "other", dialogue: "Stay still, let me look.", value: 9, effect: "Ally heals Power 10 +3", mp: 3 }],
+  consumables: [{ name: "Healing Potion", qty: 2, from: "Aldo" }, { name: "Torch", qty: 1, from: "Mira" }] };
+const card = Handlebars.compile(T("actor-fellow-card.hbs"));
+for (const [file, isGM] of [["fellow_card_player", false], ["fellow_card_gm", true]]) {
+  const ctx = { ...buildFellowContext({ name: "Rin Halvard", img: portrait, fellow: rin, lastRoll: resolveFellowRoll(rin, 3, 1), wanted: 1, isGM }), actor: { name: "Rin Halvard" }, editable: isGM, canRoll: true, cssClass: "sw25 sheet actor" };
+  const html = `<html><head><meta charset="utf-8"><style>${css}
+body{margin:0;width:600px;height:900px} .window-content{height:884px}</style></head>
+<body><div class="sw25-sb sw25-fellow"><div class="window-content">${fix(card(ctx))}</div></div></body></html>`;
   fs.writeFileSync(path.join(out, `${file}.html`), html);
 }
 console.log(`wrote previews to ${out}`);

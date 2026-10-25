@@ -1,0 +1,41 @@
+<form class="{{cssClass}} sb-sheet fw-card" autocomplete="off">
+<span class="fw-badge">Fellow</span>{{#if f.owner}}<span class="fw-ex">by {{f.owner}}</span>{{/if}}
+<header class="fw-header">
+  <div class="fw-portrait"><img class="fw-por-img" src="{{img}}" {{#if isGM}}data-edit="img"{{/if}}><img class="fw-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp"></div>
+  <div class="fw-title"><h1>{{name}}</h1>
+    {{#if isGM}}<div class="fw-sub fw-subedit"><input class="sb-in" name="system.fellow.race" value="{{f.race}}" placeholder="Race"> · <input class="sb-in" name="system.fellow.gender" value="{{f.gender}}" placeholder="Gender"> · <input class="sb-in w-xs" name="system.fellow.age" value="{{f.age}}" placeholder="Age"> · Adventurer Lv <input class="sb-in w-xs" name="system.fellow.level" value="{{f.level}}" data-dtype="Number"></div>
+    {{else}}<div class="fw-sub">{{subLine}}</div>{{/if}}
+  </div>
+</header>
+<section class="fw-body">
+  <div class="fw-grid">
+    <div class="f w3"><label>Classes</label>{{#if isGM}}<input class="sb-in" name="system.fellow.classes" value="{{f.classes}}" placeholder="Fencer 3, Scout 2">{{else}}<span>{{f.classes}}</span>{{/if}}</div>
+    <div class="f w3"><label>Languages</label>{{#if isGM}}{{#each f.languages}}<span class="fw-lang"><input class="sb-in" name="fwLang.{{@index}}.name" value="{{name}}"><label><input type="checkbox" name="fwLang.{{@index}}.speak" {{checked speak}}>Speak</label><label><input type="checkbox" name="fwLang.{{@index}}.read" {{checked read}}>Read</label><a data-action="fw-del" data-field="languages" data-index="{{@index}}"><i class="fas fa-times"></i></a></span>{{/each}}<a class="sb-add" data-action="fw-add" data-field="languages"><i class="fas fa-plus"></i></a>{{else}}<span>{{languagesText}}</span>{{/if}}</div>
+    <div class="f"><label>Wants EXP</label><input type="checkbox" name="system.fellow.wantsExp" {{checked f.wantsExp}} {{#unless isGM}}disabled{{/unless}}></div>
+    <div class="f"><label>Wants rewards</label><input type="checkbox" name="system.fellow.wantsReward" {{checked f.wantsReward}} {{#unless isGM}}disabled{{/unless}}></div>
+    <div class="f"><label>Published by</label>{{#if isGM}}<input class="sb-in" name="system.fellow.owner" value="{{f.owner}}">{{else}}<span>{{f.owner}}</span>{{/if}}</div>
+  </div>
+  <h3>Self-introduction</h3>{{#if isGM}}<textarea class="sb-in fw-intro" name="system.fellow.intro" rows="2">{{f.intro}}</textarea>{{else}}<p>{{f.intro}}</p>{{/if}}
+  <h3>MP</h3>
+  <div class="fw-mp"><b><input class="sb-in w-xs" name="system.fellow.mp.value" value="{{f.mp.value}}" data-dtype="Number" {{#unless editable}}disabled{{/unless}}> / {{#if isGM}}<input class="sb-in w-xs" name="system.fellow.mp.max" value="{{f.mp.max}}" data-dtype="Number">{{else}}{{f.mp.max}}{{/if}}</b><div class="fw-mpbar"><div style="width:{{mpPct}}%"></div></div></div>
+  <h3>Fellow action table <span>{{#if canRoll}}<a class="fw-btn" data-action="fw-roll">Roll 1d</a> <a class="fw-btn o" data-action="fw-cancel" {{#unless lastRoll}}disabled{{/unless}}>Cancel</a>{{/if}}</span></h3>
+  <div class="fw-res">{{#if lastRoll}}Rolled <b>{{lastRoll.die}}</b> → row {{lastRoll.row.range}} · {{#if lastRoll.success}}Value {{lastRoll.row.value}} · choose targets now{{else}}{{#if lastRoll.failure}}<b class="fw-failtxt">Failure</b> (not the wanted action){{else}}<b class="fw-failtxt">Cancelled</b> (not enough MP){{/if}}{{/if}}{{else}}Pick the action the party wants (◎), then roll.{{/if}}</div>
+  <table class="fw-table"><colgroup><col style="width:34px"><col style="width:58px"><col><col style="width:46px"><col style="width:32%"><col style="width:34px"></colgroup><thead><tr><th>Want</th><th>1d <small>(Result)</small></th><th>Action / Dialogue</th><th>Value</th><th>Effect</th><th>MP</th></tr></thead><tbody>
+  {{#each rows}}<tr class="{{#if hit}}hit{{/if}}{{#if wanted}} wanted{{/if}}">
+    <td><a class="fw-want{{#if wanted}} on{{/if}}" data-action="fw-want" data-index="{{i}}" title="The party wants this action">{{#if wanted}}◉{{else}}○{{/if}}</a></td>
+    <td class="fw-range"><b>{{range}}</b> <small>({{result}})</small></td>
+    {{#if @root.isGM}}
+    <td><input class="sb-in fw-act" name="system.fellow.rows.{{i}}.action" value="{{action}}" placeholder="Action"><select class="sb-in fw-kind" name="system.fellow.rows.{{i}}.kind"><option value="attack" {{#unless (eq kind "check")}}selected{{/unless}}>attack</option><option value="check" {{#if (eq kind "check")}}selected{{/if}}>check</option><option value="other" {{#if (eq kind "other")}}selected{{/if}}>other</option></select><input class="sb-in fw-dl" name="system.fellow.rows.{{i}}.dialogue" value="{{dialogue}}" placeholder="Dialogue"></td>
+    <td class="v"><input class="sb-in w-xs" name="system.fellow.rows.{{i}}.value" value="{{value}}"></td>
+    <td><input class="sb-in" name="system.fellow.rows.{{i}}.effect" value="{{effect}}"></td>
+    <td><input class="sb-in w-xs" name="system.fellow.rows.{{i}}.mp" value="{{mp}}" data-dtype="Number"></td>
+    {{else}}
+    <td><div class="fw-act"><b>{{action}}</b>{{#if (eq kind "check")}} <small>(check)</small>{{/if}}</div>{{#if dialogue}}<div class="fw-dl">“{{dialogue}}”</div>{{/if}}</td>
+    <td class="v">{{value}}</td><td>{{effect}}</td><td class="v">{{mpText}}</td>
+    {{/if}}
+  </tr>{{/each}}
+  </tbody></table>
+  <h3>Handed-over consumables {{#if editable}}<a class="sb-add" data-action="fw-add" data-field="consumables"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+  <ul class="fw-cons">{{#each f.consumables}}<li>{{#if @root.editable}}<input class="sb-in" name="fwCons.{{@index}}.name" value="{{name}}" placeholder="Item"> ×<input class="sb-in w-xs" name="fwCons.{{@index}}.qty" value="{{qty}}" data-dtype="Number"> (from <input class="sb-in" name="fwCons.{{@index}}.from" value="{{from}}" placeholder="PC">)<a data-action="fw-del" data-field="consumables" data-index="{{@index}}"><i class="fas fa-times"></i></a>{{else}}{{name}} ×{{qty}}{{#if from}} (from {{from}}){{/if}}{{/if}}</li>{{else}}<li class="muted">None</li>{{/each}}</ul>
+</section>
+</form>

@@ -56,3 +56,42 @@
 .sb-items { list-style:none; padding:0; } .sb-items li { display:flex; gap:6px; align-items:center; padding:2px 0; border-bottom:1px solid #3a251222; }
 .sb-items img { width:24px; height:24px; border:none; } .sb-items span { flex:1; }
 .sb-sheet .editor { min-height:120px; }
+/* ---- Fellow mode toggle on the NPC stat block + Fellow card (CR I pp.193-205) ---- */
+.sb-sheet .sb-fellow-toggle.on i { background:var(--sb-teal); }
+.sb-fellow-open { align-self:flex-start; font-size:12px; color:var(--sb-teal); text-decoration:underline; }
+.sw25-fellow .window-content { padding:8px; background:url(../assets/textures/leather.webp) #2b1d12; }
+.fw-card { --fw:#2f6b6b; --acc:#2f6b6b; position:relative; height:100%; display:flex; flex-direction:column; font:13px/1.35 Georgia,"Signika",serif; color:#3a2512;
+  background:url(../assets/textures/parchment.webp) #efe1c1; border:2px solid var(--fw); border-radius:6px; overflow:hidden; }
+.fw-badge { position:absolute; right:12px; top:10px; background:var(--fw); color:#f3e6c8; font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:9px; }
+.fw-ex { position:absolute; right:12px; top:34px; font-size:10px; opacity:.6; }
+.fw-header { display:flex; gap:12px; align-items:center; padding:10px 14px; border-bottom:3px solid var(--fw); flex:0 0 auto; }
+.fw-portrait { position:relative; width:96px; height:96px; flex:none; }
+.fw-portrait .fw-por-img { position:absolute; left:10px; top:10px; width:76px; height:76px; border-radius:50%; object-fit:cover; border:none; }
+.fw-portrait .fw-por-frame { position:absolute; inset:0; width:96px; height:96px; border:none; pointer-events:none; }
+.fw-card h1 { margin:0; border:none; font-size:24px; }
+.fw-sub { color:var(--fw); font-style:italic; } .fw-subedit .sb-in { width:auto; field-sizing:content; min-width:3ch; }
+.fw-body { padding:4px 14px 10px; overflow-y:auto; flex:1; }
+.fw-card h3 { color:var(--fw); border-bottom:1px solid color-mix(in srgb,var(--fw) 40%,transparent); margin:10px 0 4px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; display:flex; justify-content:space-between; align-items:end; }
+.fw-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px 10px; margin-top:6px; } .fw-grid .w3 { grid-column:span 3; }
+.fw-grid .f > label { display:block; font-size:10px; text-transform:uppercase; opacity:.65; } .fw-grid .f > span { font-weight:bold; }
+.fw-lang { display:inline-flex; gap:3px; align-items:center; margin-right:8px; } .fw-lang .sb-in { width:auto; field-sizing:content; min-width:6ch; font-weight:bold; } .fw-lang label { font-size:10px; }
+.fw-intro { width:100%; resize:vertical; }
+.fw-mp { display:flex; align-items:center; gap:10px; } .fw-mp b { white-space:nowrap; }
+.fw-mpbar { flex:1; height:14px; border:1.5px solid var(--fw); border-radius:3px; overflow:hidden; background:rgba(0,0,0,.04); } .fw-mpbar div { height:100%; background:var(--fw); }
+.fw-btn { font:bold 12px Georgia,serif; background:var(--fw); color:#f3e6c8; border-radius:4px; padding:3px 10px; text-transform:none; letter-spacing:0; cursor:pointer; }
+.fw-btn.o { background:none; color:var(--fw); border:1px solid var(--fw); } .fw-btn[disabled] { opacity:.4; pointer-events:none; }
+.fw-res { font-size:12px; margin:4px 0; } .fw-failtxt { color:#7a1f1f; }
+.fw-table { width:100%; border-collapse:collapse; background:none; border:none; margin:0; }
+.fw-table th { text-align:left; font-size:10px; text-transform:uppercase; border-bottom:1px solid #3a251255; background:none; color:inherit; }
+.fw-table td { padding:4px; border-bottom:1px solid #3a251222; vertical-align:top; } .fw-table tr:nth-child(even) { background:none; }
+.fw-table td.v { font-weight:bold; text-align:center; } .fw-range { white-space:nowrap; font-size:15px; }
+.fw-table tr.hit td { background:color-mix(in srgb,var(--fw) 14%,transparent); } .fw-table tr.hit td:first-child { box-shadow:inset 3px 0 var(--fw); }
+.fw-table tr.wanted .fw-want { color:var(--fw); } .fw-want { font-size:15px; cursor:pointer; }
+.fw-act { font-size:15px; } .fw-dl { font-style:italic; font-size:12px; opacity:.75; } .fw-card .fw-kind { width:auto; font-size:10px; }
+.fw-cons { margin:2px 0; padding-left:18px; } .fw-cons .sb-in { width:auto; field-sizing:content; min-width:4ch; }
+.sw25-fellow-chat header { margin-bottom:3px; } .sw25-fellow-chat .fw-dialogue { font-style:italic; }
+.sw25-fellow-chat .fw-line { display:flex; gap:8px; } .sw25-fellow-chat .fw-fail { color:#7a1f1f; font-weight:bold; }
+.sw25-fellow-chat.is-fail { opacity:.85; } .sw25-fellow-chat .fw-hint { font-size:11px; opacity:.7; }
+.fw-table { table-layout:fixed; } .fw-table input, .fw-table select { width:100%; box-sizing:border-box; min-width:0; }
+.fw-table td.v input, .fw-table td:last-child input { text-align:center; }
+.fw-mp input { width:5ch !important; flex:none; text-align:center; }

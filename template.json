@@ -518,6 +518,25 @@
         "notes": "",
         "secrets": "",
         "overrides": {}
+      },
+      "fellow": {
+        "enabled": false,
+        "race": "",
+        "gender": "",
+        "age": "",
+        "level": 1,
+        "classes": "",
+        "languages": [],
+        "intro": "",
+        "wantsExp": true,
+        "wantsReward": true,
+        "owner": "",
+        "mp": {
+          "value": 0,
+          "max": 0
+        },
+        "rows": [],
+        "consumables": []
       }
     },
     "monster": {
