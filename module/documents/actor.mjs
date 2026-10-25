@@ -1,6 +1,7 @@
 const SW25_AE_MODES = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4, OVERRIDE: 5 };
 import { effectInitPC } from "../sw25.mjs";
 import { PT } from "../helpers/powerroll.mjs";
+import * as RE from "../rules/engine.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -113,6 +114,10 @@ export class SW25Actor extends Actor {
         Number(systemData.efallscmod) + 
         Number(systemData.efallacmod);
     }
+
+    // Rule engine: collect class/item rules, then apply ability targets (base -> AE -> rules -> misc -> override)
+    sw25CollectRules(this, systemData);
+    sw25ApplyAbilityTargets(systemData);
 
     //Calculate HP & MP & Move
     systemData.hp.max =
@@ -558,6 +563,9 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.langlist = languages.join(", ");
+
+    // Rule engine: final phase for derived values (weapon extras, HP/MP/evasion/defense/accuracy/magic power)
+    sw25ApplyFinalTargets(this, systemData);
 
     // Sheet refresh
   }
@@ -1314,28 +1322,85 @@ export class SW25Actor extends Actor {
 /* ("skill") items: system.rules / system.autoFeats. Empty = no effect. */
 /* ------------------------------------------------------------------ */
 export function sw25AggregateClassRules(actor) {
-  const out = { critMod: 0, minStrMult: 1, castPenalty: {}, classes: [] };
+  // ce.8: built by the rule engine from system.rules (array or legacy ce.7 object form).
+  const eng = actor.system?._rules ?? sw25CollectRules(actor, actor.system);
+  return { ...RE.toLegacy(eng.active), notes: eng.notes, checkMods: eng.checkMods };
+}
+
+/* ---------------- rule engine glue (pure logic lives in module/rules/engine.mjs) ---------------- */
+function sw25RuleSources(actor) {
+  const adv = Number(actor.system?.attributes?.advlevel?.value) || 0;
+  const out = [];
   for (const item of actor.items) {
-    if (item.type !== "skill") continue;
-    const r = item.system.rules;
-    if (!r || !(Number(item.system.skilllevel) > 0)) continue;
-    const entry = {
-      name: item.name,
-      critMod: Number(r.critMod) || 0,
-      minStrMult: Number(r.minStrMult) > 0 ? Number(r.minStrMult) : 1,
-      attackOnly: r.attackOnly !== false,
-      castPenalty: {
-        metal: Number(r.castPenalty?.metal) || 0,
-        nonmetal: Number(r.castPenalty?.nonmetal) || 0,
-        nonmetalMinStr: Number(r.castPenalty?.nonmetalMinStr) || 0,
-      },
-    };
-    if (!entry.critMod && entry.minStrMult === 1 && !entry.castPenalty.metal && !entry.castPenalty.nonmetal) continue;
-    out.classes.push(entry);
-    if (!entry.attackOnly) { out.critMod += entry.critMod; out.minStrMult *= entry.minStrMult; }
-    out.castPenalty[item.name] = entry.castPenalty;
+    const raw = item.system?.rules;
+    if (!raw) continue;
+    const isClass = item.type === "skill";
+    const level = isClass ? Number(item.system.skilllevel) || 0 : adv || 1;
+    if (isClass && !(level > 0)) continue;
+    if (["weapon", "armor", "accessory"].includes(item.type) && item.system.equip !== true) continue;
+    const choices = item.flags?.["sw25-ce"]?.choices ?? {};
+    out.push({ id: item.id, name: item.name, type: item.type, level, rules: raw, choices, selectors: { ...choices } });
   }
   return out;
+}
+function sw25RuleCtx(actor) {
+  const armors = actor.items.filter((i) => i.type === "armor" && i.system.equip === true)
+    .map((a) => ({ category: a.system.category, reqstr: a.system.reqstr }));
+  return { armors, declared: [] };
+}
+export function sw25CollectRules(actor, systemData) {
+  const sd = systemData;
+  const data = {
+    advlevel: Number(sd.attributes?.advlevel?.value) || 0,
+    mglevel: Number(sd.attributes?.mglevel?.value) || 0,
+    abilities: Object.fromEntries(Object.entries(sd.abilities ?? {}).map(([k, a]) => [k, { value: Number(a.value) || 0, mod: Number(a.mod) || 0 }])),
+  };
+  for (const [k, a] of Object.entries(data.abilities)) { data[k] = a.value; data[`${k}mod`] = a.mod; }
+  const { active, notes } = RE.collectRules(sw25RuleSources(actor), { data });
+  const ctx = sw25RuleCtx(actor);
+  const eng = { active, notes, ctx, checkMods: RE.checkMods(active, ctx), report: {} };
+  Object.defineProperty(sd, "_rules", { value: eng, enumerable: false, configurable: true, writable: true });
+  return eng;
+}
+function sw25ApplyAbilityTargets(sd) {
+  const eng = sd._rules;
+  if (!eng) return;
+  const targets = RE.ABILITIES.map((a) => `ability.${a}`);
+  const before = Object.fromEntries(RE.ABILITIES.map((a) => [a, Number(sd.abilities?.[a]?.mod) || 0]));
+  const rep = RE.applyActorTargets(sd, eng.active, sd.overrides, eng.ctx, targets);
+  for (const t of Object.keys(rep)) {
+    const k = t.split(".")[1];
+    const ab = sd.abilities[k];
+    ab.mod = Math.floor(ab.value / 6) + Number(ab.efmodify || 0);
+    ab.advbase = Number(ab.advbase) + (ab.mod - before[k]);
+  }
+  Object.assign(eng.report, rep);
+}
+function sw25ApplyFinalTargets(actor, sd) {
+  const eng = sd._rules;
+  if (!eng) return;
+  // weapon extras for the selected attack weapon (extras only; sheet already adds class level)
+  if (sd.itemid) {
+    const w = actor.items.get(sd.itemid);
+    if (w) {
+      const ex = RE.weaponExtras(eng.active, { checkskill: w.system.checkskill, category: w.system.category }, eng.ctx);
+      if (ex.extraDamage.value) sd.itempowerbase = Number(sd.itempowerbase || 0) + ex.extraDamage.value;
+      if (ex.accuracy.value && sd.itemhitbase != null) sd.itemhitbase = Number(sd.itemhitbase) + ex.accuracy.value;
+      eng.report.weapon = ex;
+    }
+  }
+  const powers = Object.fromEntries(RE.SCHOOLS.map((s) => [s, Number(sd.attributes?.[`${s}power`]) || 0]));
+  const targets = Object.keys(RE.ACTOR_TARGETS).filter((t) => !t.startsWith("ability."));
+  const rep = RE.applyActorTargets(sd, eng.active, sd.overrides, eng.ctx, targets);
+  for (const s of RE.SCHOOLS) {
+    const d = (Number(sd.attributes?.[`${s}power`]) || 0) - powers[s];
+    if (d && sd.attributes[`${s}cast`] != null) sd.attributes[`${s}cast`] = Number(sd.attributes[`${s}cast`]) + d;
+  }
+  if (rep["hp.max"] && Number(sd.hp.value) > sd.hp.max) sd.hp.value = sd.hp.max;
+  if (rep["mp.max"] && Number(sd.mp.value) > sd.mp.max) sd.mp.value = sd.mp.max;
+  Object.assign(eng.report, rep);
+  sd.rulesReport = eng.report;
+  sd.rulesNotes = eng.notes.map((n) => ({ key: n.key, label: n.label || n.key, source: n.source.name, value: n.rawValue, reason: n.reason }));
 }
 
 function sw25RuleApplies(entry, item) {

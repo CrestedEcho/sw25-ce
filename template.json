@@ -318,6 +318,118 @@
       },
       "belt": {
         "slots": []
+      },
+      "overrides": {
+        "hp_max": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "mp_max": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "evasion": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "defense": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "move": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "accuracy": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_dex": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_agi": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_str": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_vit": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_int": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "ability_mnd": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_sc": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_cn": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_wz": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_pr": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_mt": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_fr": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_dr": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_dm": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_ab": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        },
+        "magic_power_bm": {
+          "mod": 0,
+          "value": null,
+          "locked": false
+        }
       }
     },
     "npc": {
@@ -516,7 +628,8 @@
     "templates": {
       "base": {
         "description": "",
-        "clickitem": "all"
+        "clickitem": "all",
+        "rules": []
       },
       "item": {
         "quantity": 1,
@@ -844,16 +957,7 @@
         "mnd": ""
       },
       "efallskmod": 0,
-      "rules": {
-        "critMod": 0,
-        "minStrMult": 1,
-        "attackOnly": true,
-        "castPenalty": {
-          "metal": 0,
-          "nonmetal": 0,
-          "nonmetalMinStr": 10
-        }
-      },
+      "rules": [],
       "autoFeats": []
     },
     "raceability": {
