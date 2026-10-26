@@ -30,3 +30,22 @@ test("auto-fill only uses unlocked slots and respects manual/existing layouts", 
   assert.deepEqual(autoFeatPlan([f("a", "slot"), f("b")], 5), []);
   assert.equal(autoFeatPlan([f("a"), f("b"), f("c")], 3).length, 2);
 });
+
+import { featCardHtml } from "../module/ce7/feat-logic.mjs";
+import fs from "node:fs";
+test("feat chat card: name, icon, effect, requirements when present", () => {
+  const h = featCardHtml({ name: "Targeting", img: "x.webp", system: { description: "<p>No penalty</p>", cond: "Sorcerer 1" } });
+  assert.match(h, /Targeting/); assert.match(h, /x\.webp/); assert.match(h, /No penalty/); assert.match(h, /Requirements:<\/b> Sorcerer 1/);
+  assert.doesNotMatch(featCardHtml({ name: "A", system: { description: "d", cond: "-" } }), /Requirements/);
+  assert.match(featCardHtml({ name: "<b>", system: {} }), /&lt;b&gt;/);
+});
+test("feat panel: names are show-in-chat, X/assign separate, tooltip text", () => {
+  const t = fs.readFileSync(new URL("../templates/actor/parts/actor-ce7-feats.hbs", import.meta.url), "utf8");
+  assert.equal((t.match(/ce7-feat-show/g) ?? []).length, 3);
+  assert.doesNotMatch(t, /item-edit/);
+  const en = JSON.parse(fs.readFileSync(new URL("../lang/en.json", import.meta.url), "utf8"));
+  assert.match(JSON.stringify(en), /Click to show in chat · drag to move · × to take out/);
+  const js = fs.readFileSync(new URL("../module/ce7/equipcard.mjs", import.meta.url), "utf8");
+  assert.match(js, /closest\("\.ce7-feat-clear, \.ce7-feat-assign"\)\) return/);
+  assert.match(js, /ev\.shiftKey\) return it\.sheet\.render\(true\)/);
+});

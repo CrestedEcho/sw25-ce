@@ -55,3 +55,15 @@ export function autoFeatPlan(feats, adv, manual = false) {
   return list.filter((f) => !f.system?.featSource).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
     .slice(0, free.length).map((f, i) => ({ _id: f.id ?? f._id, "system.featSource": "slot", "system.featLevel": free[i], "system.equip": true }));
 }
+
+const escHtml = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/** Chat card HTML for "show feat in chat": name, icon, effect text, and requirements when present. */
+export function featCardHtml(item, reqLabel = "Requirements") {
+  const s = item?.system ?? {};
+  const req = [s.cond, s.requirements, s.requirement, s.prereq].map((x) => String(x ?? "").trim()).find((x) => x && x !== "-") ?? "";
+  const effect = String(s.description ?? "").trim() || escHtml(s.overview ?? "");
+  return `<div class="sw25 item-card sw25-feat-card"><header class="card-header flexrow" style="align-items:center;gap:6px">`
+    + `<img src="${escHtml(item?.img)}" width="36" height="36" style="flex:0 0 36px;border:0"/><h3 class="item-name" style="margin:0">${escHtml(item?.name)}</h3></header>`
+    + (req ? `<p class="sw25-feat-req"><b>${escHtml(reqLabel)}:</b> ${escHtml(req)}</p>` : "")
+    + (effect ? `<div class="card-content">${effect}</div>` : "") + `</div>`;
+}

@@ -31,7 +31,7 @@ const LEFT = ["head", "face", "ear", "neck", "back"];
 const RIGHT = ["armor", "shield", "rhand", "lhand", "waist"];
 const BOTTOM = ["mainHand", "offHand", "feet"];
 const AUTO_ORDER = ["mainHand", "offHand", "armor", "shield", ...LEFT, "rhand", "lhand", "waist", "feet"];
-import { FEAT_LEVELS, unlockedSlots, activatePlan, featPickList, slotPatch, clearPatch, ownedBy, autoFeatPlan } from "./feat-logic.mjs";
+import { FEAT_LEVELS, unlockedSlots, activatePlan, featPickList, slotPatch, clearPatch, ownedBy, autoFeatPlan, featCardHtml } from "./feat-logic.mjs";
 
 const isPC = (actor) => actor?.type === "character" && !actor.system?.toFellow;
 export const is2H = (item) => item?.type === "weapon" && /2H/.test(String(item.system?.usage ?? ""));
@@ -406,6 +406,17 @@ export function bindCe7Listeners(sheet, html) {
   // The X sits inside a draggable slot: never let it start a drag (some browsers then swallow the click).
   on(".ce7-feat-clear", "mousedown", (ev) => ev.stopPropagation());
   root.querySelectorAll(".ce7-feat-clear").forEach((a) => a.setAttribute("draggable", "false"));
+  // Feats: click a filled slot / feat name = show in chat; Shift-click = open the feat sheet.
+  const showFeat = (ev) => {
+    if (ev.target.closest(".ce7-feat-clear, .ce7-feat-assign")) return;
+    ev.preventDefault(); ev.stopPropagation();
+    const it = actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId);
+    if (!it) return;
+    if (ev.shiftKey) return it.sheet.render(true);
+    return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: featCardHtml(it, game.i18n.localize("SW25.V2.Feats.Requirements")) });
+  };
+  on(".ce7-feat-slot.filled", "click", showFeat);
+  root.querySelectorAll(".ce7-feat-list .ce7-feat-show").forEach((el) => el.addEventListener("click", showFeat));
   // Feats: click an EMPTY UNLOCKED slot = pick a feat (locked slots only show their tooltip)
   on(".ce7-feat-slot:not(.filled):not(.locked)", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
