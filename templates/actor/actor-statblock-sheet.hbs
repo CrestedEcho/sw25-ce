@@ -1,10 +1,6 @@
 <form class="{{cssClass}} sb-sheet sb-{{type}} sb-accent-{{accent}}" autocomplete="off">
 <header class="sb-header">
-  {{#if isNPC}}
-  <div class="sb-portrait"><img class="sb-por-img" src="{{portrait}}" data-edit="img" title="{{actor.name}}"><img class="sb-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp"></div>
-  {{else}}
-  <div class="sb-typeicon">{{#if typeIcon}}<img src="{{typeIcon}}" title="{{sb.monsterType}}">{{else}}<img src="{{portrait}}" data-edit="img">{{/if}}</div>
-  {{/if}}
+  <div class="sb-portrait"><img class="sb-por-img" src="{{portrait}}" data-edit="img" title="{{actor.name}}"><img class="sb-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp">{{#unless isNPC}}{{#if typeIcon}}<img class="sb-type-badge" src="{{typeIcon}}" title="{{sb.monsterType}}">{{/if}}{{/unless}}</div>
   <div class="sb-title">
     <h1><input class="sb-in sb-name" name="name" type="text" value="{{actor.name}}" placeholder="Name"></h1>
     <div class="sb-sub">{{roleLine}}</div>

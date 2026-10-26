@@ -8,6 +8,7 @@
 .sb-typeicon img { width:96px; height:96px; border:none; object-fit:contain; }
 .sb-portrait { position:relative; width:120px; height:120px; flex:0 0 120px; }
 .sb-portrait .sb-por-img { position:absolute; left:12px; top:12px; width:96px; height:96px; border-radius:50%; object-fit:cover; border:none; cursor:pointer; }
+.sb-portrait .sb-type-badge { position:absolute; right:-4px; bottom:-4px; width:40px; height:40px; border:none; object-fit:contain; pointer-events:none; }
 .sb-portrait .sb-por-frame { position:absolute; inset:0; width:120px; height:120px; border:none; pointer-events:none; }
 .sb-title { flex:1; }
 .sb-sheet h1 { margin:0; border:none; font-size:30px; }
