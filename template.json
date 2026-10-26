@@ -468,6 +468,7 @@
           }
         }
       },
+      "belt": { "slots": [] },
       "sb": {
         "level": null,
         "reputation": 0,
@@ -667,6 +668,7 @@
       "limited": false,
       "isgm": false,
       "udname": "",
+      "belt": { "slots": [] },
       "sb": {
         "level": null,
         "reputation": 0,

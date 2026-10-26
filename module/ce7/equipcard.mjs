@@ -174,14 +174,35 @@ export function prepareCe7Context(sheet, context) {
   };
 
   // Consumables belt
+  context.ce7belt = beltContext(actor, mini);
+}
+
+/** Consumables belt view (PC sheet and NPC / monster stat-block sheet share it). */
+export function beltContext(actor, mini = (it) => (it ? { id: it.id, name: it.name, img: it.img } : null)) {
   const n = Math.clamp?.(Number(game.settings.get(SYS, "beltSlots")) || 6, 4, 10) ?? 6;
+  const sys = actor.system;
   const belt = Array.isArray(sys.belt?.slots) ? sys.belt.slots : Object.values(sys.belt?.slots ?? {});
-  context.ce7belt = Array.from({ length: n }, (_, index) => {
+  return Array.from({ length: n }, (_, index) => {
     const it = actor.items.get(belt[index]);
     if (!it) return { index, item: null };
     const u = usesOf(it);
     return { index, item: { ...mini(it), left: u.value, max: u.max, ticks: Array.from({ length: Math.min(u.max, 20) }, (_, i) => ({ filled: i < u.value })) } };
   });
+}
+
+/** Put a dropped consumable (type "item") into a belt slot; copies it onto the actor first if needed. */
+export async function dropOnBelt(actor, target, data) {
+  const src = await Item.implementation.fromDropData(data);
+  if (!src) return true;
+  if (src.type !== "item") { ui.notifications.warn(game.i18n.format("SW25.EquipCard.WrongType", { item: src.name, slot: game.i18n.localize("SW25.V2.Belt.Title") })); return true; }
+  let it = src;
+  if (src.parent !== actor) { const obj = src.toObject(); delete obj._id; it = (await actor.createEmbeddedDocuments("Item", [obj], { sw25Slot: true }))[0]; }
+  const idx = Number(target.dataset.index);
+  const belt = [...(Array.isArray(actor.system.belt?.slots) ? actor.system.belt.slots : Object.values(actor.system.belt?.slots ?? {}))];
+  for (let i = 0; i < belt.length; i++) if (belt[i] === it.id) belt[i] = "";
+  while (belt.length <= idx) belt.push("");
+  belt[idx] = it.id;
+  return actor.update({ "system.belt.slots": belt });
 }
 
 function usesOf(it) {
@@ -225,16 +246,7 @@ export async function handleCe7Drop(sheet, event, data) {
       if (!slotAccepts("other", src)) return warnType(game.i18n.localize("SW25.EquipCard.Other")), true;
       return equipToSlot(actor, "other", await own());
     }
-    case "belt": {
-      if (src.type !== "item") return warnType(game.i18n.localize("SW25.V2.Belt.Title")), true;
-      const it = await own();
-      const idx = Number(target.dataset.index);
-      const belt = [...(Array.isArray(actor.system.belt?.slots) ? actor.system.belt.slots : Object.values(actor.system.belt?.slots ?? {}))];
-      for (let i = 0; i < belt.length; i++) if (belt[i] === it.id) belt[i] = "";
-      while (belt.length <= idx) belt.push("");
-      belt[idx] = it.id;
-      return actor.update({ "system.belt.slots": belt });
-    }
+    case "belt": return dropOnBelt(actor, target, data);
     case "feat": case "auto": {
       if (src.type !== "combatability") return warnType(game.i18n.localize("SW25.V2.Feats.Title")), true;
       if (kind === "feat") {
@@ -288,6 +300,13 @@ export function bindCe7Listeners(sheet, html) {
     actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.featSource": "", "system.featLevel": 0 });
   });
   // Belt
+  bindBeltListeners(sheet, root);
+}
+
+/** Belt clicks: × clears the slot, a tick uses one (shift-click restores). Shared with the stat-block sheet. */
+export function bindBeltListeners(sheet, root) {
+  const actor = sheet.actor;
+  const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn));
   on(".ce7-belt-clear", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     const idx = Number(ev.currentTarget.closest("[data-index]").dataset.index);
