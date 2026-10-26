@@ -8,7 +8,8 @@ const spell = (sys = {}, name = "Energy Bolt") => ({ id: "s1", name, img: "i.png
 test("statusOf: data-driven, empty id = no status", () => {
   assert.equal(C.statusOf({}), null);
   assert.equal(C.statusOf({ status: { id: "" } }), null);
-  assert.deepEqual(C.statusOf({ status: { id: "poison", rounds: 3 } }), { id: "poison", label: "Poison", rounds: 3, review: false, note: "" });
+  const st = C.statusOf({ status: { id: "stun", rounds: 3 } });
+  assert.equal(st.id, "stun"); assert.equal(st.label, "Stun"); assert.equal(st.rounds, 3); assert.equal(st.review, false);
 });
 
 test("spellInfo: range field wins over rangeshape; plain duration", () => {
@@ -67,4 +68,36 @@ test("castWindowHTML: Spend MP ticked by default, disabled with no MP; stones li
   assert.match(h, /name="spendMP" checked/); assert.match(h, /value="a"/); assert.match(h, /Cast Energy Bolt/);
   const g = C.castWindowHTML({ info, base: 5, mp: 0, mpMax: 0, stones: st });
   assert.match(g, /name="spendMP" disabled/); assert.match(g, /value="a" checked/);
+});
+
+test("roundsFromTime: rounds, minutes x6, seconds, instant", () => {
+  assert.equal(C.roundsFromTime("Instant/3 minutes (18 rounds)"), 18);
+  assert.equal(C.roundsFromTime("10 seconds (1 round)"), 1);
+  assert.equal(C.roundsFromTime("1 minute"), 6);
+  assert.equal(C.roundsFromTime("30 seconds"), 3);
+  assert.equal(C.roundsFromTime("Instant"), 0);
+});
+
+test("statusOf: custom label-only effect with stat changes; rounds from time when unset", () => {
+  const st = C.statusOf({ time: "10 seconds (1 round)", status: { label: "Blood Mist", review: true, changes: [{ key: "accuracy", value: -2 }, { key: "evasion", value: -2 }, { key: "x", value: 0 }] } });
+  assert.equal(st.id, ""); assert.equal(st.rounds, 1); assert.equal(st.changes.length, 2); assert.equal(st.review, true);
+  assert.equal(C.changesText(st.changes), "Accuracy -2, Evasion -2");
+});
+
+test("effectData: custom label, mapped ADD changes, duration, review flag, no status id", () => {
+  const e = C.effectData({ id: "", label: "Venom", rounds: 18, review: true, description: "Choose Dexterity or Agility -6", changes: [{ key: "damage", value: 5 }] }, { spell: "X" });
+  assert.equal(e.name, "Venom"); assert.deepEqual(e.statuses, []);
+  assert.deepEqual(e.changes, [{ key: "system.attributes.efdmod", mode: 2, value: "5", priority: 20 }]);
+  assert.deepEqual(e.duration, { rounds: 18 }); assert.equal(e.flags["sw25-ce"].spellEffect.review, true);
+  assert.match(e.description, /Choose Dexterity or Agility -6/);
+  assert.deepEqual(C.effectData({ id: "stun", label: "Stun", rounds: 0, changes: [] }).statuses, ["stun"]);
+});
+
+test("cast card: unreviewed hint, buff wording, effect JSON on the button, damage-type tags", () => {
+  const info = C.spellInfo(spell({ tags: ["poison"], tagsReview: true, status: { label: "Poisonous Attacker", buff: true, rounds: 1, review: true, changes: [{ key: "damage", value: 5 }] } }));
+  const { html } = C.castCardHTML(info, {});
+  assert.match(html, /Apply Buff: Poisonous Attacker/); assert.match(html, /sw25-sc-unrev">unreviewed/);
+  assert.match(html, /data-sw25-effect="\{&quot;id&quot;/); assert.match(html, />poison</);
+  const plain = C.castCardHTML(C.spellInfo(spell({ status: { id: "stun", rounds: 1 } })), {}).html;
+  assert.doesNotMatch(plain, /unreviewed/); assert.match(plain, /Apply Effect: Stun/);
 });

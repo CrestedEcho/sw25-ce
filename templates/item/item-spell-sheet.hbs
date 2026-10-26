@@ -205,8 +205,13 @@
             <input type="text" name="system.status.id" value="{{system.status.id}}" placeholder="id" data-dtype="String" style="width:6em"{{#unless system.isEdit}} disabled{{/unless}}/>
             <input type="text" name="system.status.label" value="{{system.status.label}}" placeholder="Label" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/>
             <input type="text" name="system.status.rounds" value="{{system.status.rounds}}" data-tooltip="Rounds (0 = no set length)" data-dtype="Number" style="width:3em"{{#unless system.isEdit}} disabled{{/unless}}/>
-            <label data-tooltip="Guessed from the description - please check"><input type="checkbox" name="system.status.review" {{#if system.status.review}}checked{{/if}} data-dtype="Boolean"{{#unless system.isEdit}} disabled{{/unless}}/> check</label>
+            <label data-tooltip="Needs review: guessed from the description - untick once checked"><input type="checkbox" name="system.status.review" {{#if system.status.review}}checked{{/if}} data-dtype="Boolean"{{#unless system.isEdit}} disabled{{/unless}}/> needs review</label>
+            <label data-tooltip="Buff: helps the target (an ally), e.g. extra damage"><input type="checkbox" name="system.status.buff" {{#if system.status.buff}}checked{{/if}} data-dtype="Boolean"{{#unless system.isEdit}} disabled{{/unless}}/> buff</label>
           </span>
+        </div>
+        <div class="grid-span-5 property" data-tooltip="What the effect does, in plain words (shown on the effect). Stat changes come from the spell data.">
+          <label class="property--label" for="{{item._id}}system.status.description">Effect text</label>
+          <input class="property--value" id="{{item._id}}system.status.description" type="text" name="system.status.description" value="{{system.status.description}}" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/>
         </div>
         <div class="grid-span-5 property">
           <label class="property--label" for="{{item._id}}system.time">{{localize "SW25.Time"}}</label>

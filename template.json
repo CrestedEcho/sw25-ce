@@ -931,8 +931,13 @@
         "label": "",
         "rounds": 0,
         "review": false,
-        "note": ""
-      }
+        "note": "",
+        "description": "",
+        "buff": false,
+        "changes": []
+      },
+      "tags": [],
+      "tagsReview": false
     },
     "enhancearts": {
       "templates": [

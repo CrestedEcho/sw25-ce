@@ -3713,3 +3713,5 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 .sw25-sc-mp { font-size:12px; margin-top:4px; border-top:1px dashed rgba(0,0,0,.2); padding-top:3px; }
 .sw25-sc-short { color:#a22; font-weight:bold; font-size:12px; }
 .sw25-sc-desc { font-size:12px; margin-top:4px; }
+.sw25-sc-btn.status.buff { background:#2f6f8a; }
+.sw25-sc-unrev { font-size:9px; font-weight:normal; background:#f2d06b; color:#5a4200; border-radius:6px; padding:0 4px; margin-left:4px; }

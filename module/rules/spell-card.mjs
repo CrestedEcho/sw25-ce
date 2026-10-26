@@ -8,12 +8,50 @@ import { mpLine, shortLine } from "./spell-pay.mjs";
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const txt = (v) => (v == null || v === 0 || v === "0" ? "" : String(v).trim());
 
-/** Status effect carried by the spell (system.status), or null. Data-driven: nothing is hardcoded per spell. */
+/** Friendly stat keys for spell effects -> ActiveEffect change keys (mode ADD). Unknown keys pass through as-is. */
+export const EFFECT_KEYS = {
+  accuracy: "system.attributes.efhitmod", evasion: "system.attributes.efdodgemod", damage: "system.attributes.efdmod",
+  defense: "system.attributes.efppmod", move: "system.attributes.move.efmovemod",
+  dex: "system.abilities.dex.efvaluemodify", agi: "system.abilities.agi.efvaluemodify", str: "system.abilities.str.efvaluemodify",
+  vit: "system.abilities.vit.efvaluemodify", int: "system.abilities.int.efvaluemodify", mnd: "system.abilities.mnd.efvaluemodify",
+};
+const STAT_WORDS = { accuracy: "Accuracy", evasion: "Evasion", damage: "Damage", defense: "Defense", move: "Movement", dex: "Dexterity", agi: "Agility", str: "Strength", vit: "Vitality", int: "Intelligence", mnd: "Spirit" };
+const sign = (n) => (n > 0 ? `+${n}` : `${n}`);
+
+/** Rounds from a spell time text: "(18 rounds)", "3 minutes" (x6), "10 seconds" (/10), "1 round". 0 when unknown/instant. */
+export function roundsFromTime(time) {
+  const t = String(time ?? "");
+  let m = t.match(/(\d+)\s*rounds?/i); if (m) return Number(m[1]);
+  m = t.match(/(\d+)\s*minutes?/i); if (m) return Number(m[1]) * 6;
+  m = t.match(/(\d+)\s*seconds?/i); if (m) return Math.max(1, Math.round(Number(m[1]) / 10));
+  return 0;
+}
+
+/** Effect carried by the spell (system.status), or null. Data-driven: nothing is hardcoded per spell.
+ * { id (Foundry status id, optional), label, rounds, review, note, description, buff, changes:[{key, value}] } */
 export function statusOf(sys = {}) {
   const s = sys?.status;
-  if (!s || typeof s !== "object" || !String(s.id ?? "").trim()) return null;
-  const id = String(s.id).trim();
-  return { id, label: txt(s.label) || id.charAt(0).toUpperCase() + id.slice(1), rounds: Math.max(0, Math.floor(Number(s.rounds) || 0)), review: !!s.review, note: txt(s.note) };
+  if (!s || typeof s !== "object") return null;
+  const id = String(s.id ?? "").trim(); const label = txt(s.label);
+  const changes = (Array.isArray(s.changes) ? s.changes : []).map((c) => ({ key: String(c?.key ?? "").trim(), value: Number(c?.value) || 0 })).filter((c) => c.key && c.value);
+  if (!id && !label && !changes.length) return null;
+  return { id, label: label || (id ? id.charAt(0).toUpperCase() + id.slice(1) : "Effect"), rounds: Math.max(0, Math.floor(Number(s.rounds) || 0)) || roundsFromTime(sys.time),
+    review: !!s.review, note: txt(s.note), description: txt(s.description), buff: !!s.buff, changes };
+}
+/** "Accuracy -2, Evasion -2" */
+export function changesText(changes = []) {
+  return changes.map((c) => `${STAT_WORDS[c.key] ?? c.key} ${sign(c.value)}`).join(", ");
+}
+/** ActiveEffect create data for a spell effect (pure). img = status icon or fallback. */
+export function effectData(st, { img = "icons/svg/aura.svg", origin = null, spell = "" } = {}) {
+  const changes = (st.changes ?? []).map((c) => ({ key: EFFECT_KEYS[c.key] ?? c.key, mode: 2, value: String(c.value), priority: 20 }));
+  const desc = [st.description, changesText(st.changes)].filter(Boolean).map(esc).join("<br>");
+  return { name: st.label, img, statuses: st.id ? [st.id] : [], changes, description: desc ? `<p>${desc}</p>` : "",
+    duration: st.rounds ? { rounds: st.rounds } : {}, ...(origin ? { origin } : {}), flags: { "sw25-ce": { spellEffect: { spell, buff: !!st.buff, review: !!st.review } } } };
+}
+/** Damage-type tags (poison, curse...) are labels, not statuses. */
+export function tagsOf(sys = {}) {
+  return (Array.isArray(sys?.tags) ? sys.tags : []).map((t) => txt(t)).filter(Boolean);
 }
 
 /** Plain-word spell facts used by the list row, description card and cast card. */
@@ -28,7 +66,7 @@ export function spellInfo(item = {}) {
     resist: txt(sys.resistname) || txt(sys.resist), element: txt(sys.propname) || txt(sys.element),
     description: sys.description ?? "", damage: hasPowerObject(sys),
     heal: isHealSpell({ name: item.name, summary: data.summary ?? sys.summary, description: sys.description }),
-    status: statusOf(sys),
+    status: statusOf(sys), tags: tagsOf(sys), tagsReview: !!sys.tagsReview,
   };
 }
 /** Short line under the name in the list: "Truespeech · Lv1 · resist: Half". */
@@ -44,7 +82,7 @@ function headerHTML(info, sub) {
   return `<header class="sw25-sc-head">${info.img ? `<img src="${esc(info.img)}" width="36" height="36">` : ""}<div><b class="sw25-sc-name">${esc(info.name)}</b>${sub ? `<div class="sw25-sc-sub">${esc(sub)}</div>` : ""}</div></header>`;
 }
 function tagsHTML(info) {
-  const t = [["Target", info.target], ["Range", info.range], ["Duration", info.duration], ["Resist", info.resist]].filter(([, v]) => v && v !== "—");
+  const t = [["Target", info.target], ["Range", info.range], ["Duration", info.duration], ["Resist", info.resist], ...(info.tags ?? []).map((g) => [`Type${info.tagsReview ? " (unreviewed guess)" : ""}`, g])].filter(([, v]) => v && v !== "—");
   return t.length ? `<div class="sw25-sc-tags">${t.map(([k, v]) => `<span class="sw25-sc-tag" data-tooltip="${esc(k)}">${esc(v)}</span>`).join("")}</div>` : "";
 }
 
@@ -79,7 +117,10 @@ function rollRow(label, formula, total, note) {
 }
 export function statusButtonHTML(st) {
   if (!st) return "";
-  return `<button type="button" class="sw25-sc-btn status" data-sw25-status="${esc(st.id)}" data-label="${esc(st.label)}" data-rounds="${st.rounds}" data-tooltip="Adds the ${esc(st.label)} status to the tokens on the Applies to line${st.rounds ? ` for ${st.rounds} rounds` : ""}. Skip it for targets that resisted.">Apply Effect: ${esc(st.label)}</button>`;
+  const what = [st.description, changesText(st.changes)].filter(Boolean).join(" · ");
+  const verb = st.buff ? "Apply Buff" : "Apply Effect";
+  const tip = `${st.buff ? "Adds this buff to" : "Adds this effect to"} the tokens on the Applies to line${st.rounds ? ` for ${st.rounds} rounds` : ""}.${what ? ` ${what}.` : ""}${st.buff ? "" : " Skip it for targets that resisted."}${st.review ? " Unreviewed: guessed from the spell text, check before use." : ""}`;
+  return `<button type="button" class="sw25-sc-btn status${st.buff ? " buff" : ""}" data-sw25-status="${esc(st.id)}" data-sw25-effect="${esc(JSON.stringify(st))}" data-label="${esc(st.label)}" data-rounds="${st.rounds}" data-tooltip="${esc(tip)}">${verb}: ${esc(st.label)}${st.rounds ? ` (${st.rounds} rd)` : ""}${st.review ? ` <span class="sw25-sc-unrev">unreviewed</span>` : ""}</button>`;
 }
 
 /** Cast window body. ctx = { info, base, mp, mpMax, targets:{source,multiplier}|null, sur:{label,mp}|null, stones:makoInfo[], limit, nTargets }. */
