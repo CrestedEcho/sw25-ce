@@ -3,8 +3,8 @@
     {{#each ce7belt as |b|}}
     <div class="ce7-belt-slot {{#if b.item}}filled{{/if}}" data-sw-drop="belt" data-index="{{b.index}}" {{#if b.item}}data-item-id="{{b.item.id}}"{{/if}}>
       {{#if b.item}}
-        <img class="eqc-item-open" src="{{b.item.img}}" alt=""/>
-        <div class="nm eqc-item-open" data-tooltip="{{b.item.name}}">{{b.item.name}}</div>
+        <img class="ce7-belt-use" data-tooltip="{{localize 'SW25.V2.Belt.Use'}}" src="{{b.item.img}}" alt=""/>
+        <div class="nm ce7-belt-use" data-tooltip="{{b.item.name}}">{{b.item.name}}</div>
         <div class="ticks" data-tooltip="{{localize 'SW25.V2.Belt.Hint'}}">{{#each b.item.ticks as |t|}}<a class="ce7-tick {{#if t.filled}}on{{/if}}"></a>{{/each}}{{#unless b.item.max}}<a class="ce7-tick"></a>{{/unless}}</div>
         <span class="cnt">{{b.item.left}}{{#if b.item.max}}/{{b.item.max}}{{/if}}</span>
         <a class="ce7-belt-clear">&times;</a>

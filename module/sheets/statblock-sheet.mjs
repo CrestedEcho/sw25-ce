@@ -9,7 +9,8 @@ import { rollSpellDamage } from "../rules/spell-power.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { fixedToDice, parseSbDamage, applyVital, lootFor, castIsWhisper, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
-import { beltContext, bindBeltListeners, dropOnBelt } from "../ce7/equipcard.mjs";
+import { beltContext, bindBeltListeners, dropOnBelt, beltFlags } from "../ce7/equipcard.mjs";
+import { usesOf } from "../ce7/belt-logic.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
 const T = "systems/sw25-ce/templates/actor";
@@ -47,7 +48,11 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     this._sbEdit ??= false;
     base.editMode = this.isEditable && this._sbEdit; base.playMode = !base.editMode;
     // Inventory: weapons roll, everything else is shown to chat; consumable belt (shared with the PC sheet).
-    for (const it of base.items) it.rollable = it.type === "weapon";
+    const onBelt = beltFlags(this.actor);
+    for (const it of base.items) {
+      it.rollable = it.type === "weapon";
+      if (it.type === "item") { const d = this.actor.items.get(it._id); it.consumable = true; it.onBelt = onBelt.has(it._id); it.left = usesOf(d).value; }
+    }
     base.ce7belt = beltContext(this.actor);
     // Spellcasting: each castable skill lists its spells with a Cast button (and GM-only toggle when there is no Power).
     const gmMap = this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {};

@@ -1,3 +1,4 @@
+import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray } from "./belt-logic.mjs";
 /**
  * sw25-ce 3.0.0-ce.7 — Equipment Card, Combat-tab Feats / Consumables Belt,
  * portrait framing, class-rule framework hooks and the one-time ce.7 migration.
@@ -175,11 +176,13 @@ export function prepareCe7Context(sheet, context) {
 
   // Consumables belt
   context.ce7belt = beltContext(actor, mini);
+  const on = beltFlags(actor);
+  for (const g of context.gear ?? []) g.onBelt = on.has(g._id);
 }
 
 /** Consumables belt view (PC sheet and NPC / monster stat-block sheet share it). */
 export function beltContext(actor, mini = (it) => (it ? { id: it.id, name: it.name, img: it.img } : null)) {
-  const n = Math.clamp?.(Number(game.settings.get(SYS, "beltSlots")) || 6, 4, 10) ?? 6;
+  const n = beltN();
   const sys = actor.system;
   const belt = Array.isArray(sys.belt?.slots) ? sys.belt.slots : Object.values(sys.belt?.slots ?? {});
   return Array.from({ length: n }, (_, index) => {
@@ -205,12 +208,41 @@ export async function dropOnBelt(actor, target, data) {
   return actor.update({ "system.belt.slots": belt });
 }
 
-function usesOf(it) {
-  const um = Number(it.system?.uses?.max) || 0;
-  if (um > 0) return { mode: "uses", value: Math.min(Number(it.system.uses.value) || 0, um), max: um };
-  const q = Math.max(0, Number(it.system?.quantity) || 0);
-  const qmax = Number(it.system?.qmax) || 0;
-  return { mode: "qty", value: q, max: Math.max(q, qmax) };
+const beltN = () => Math.clamp?.(Number(game.settings.get(SYS, "beltSlots")) || 6, 4, 10) ?? 6;
+
+/** Inventory belt checkbox: tick adds to the first free slot, untick removes. Full belt -> notification. */
+export async function toggleBelt(actor, itemId, on) {
+  const r = toggleBeltSlot(actor.system.belt?.slots, itemId, on, beltN());
+  if (r.full) { ui.notifications.warn(game.i18n.localize("SW25.V2.Belt.Full")); return false; }
+  if (r.changed) await actor.update({ "system.belt.slots": r.slots });
+  return r.changed;
+}
+
+/** Use one consumable (belt slot or inventory Use): post the item card (rolling its formula via the item's own
+ *  roll code when it has one), then consume one use. Last use deletes the item and clears its belt slot. */
+export async function useConsumable(actor, it) {
+  if (!it) return;
+  const plan = consumePlan(it);
+  if (!plan.ok) return ui.notifications.warn(game.i18n.format("SW25.V2.Belt.Empty", { item: it.name }));
+  const esc = foundry.utils.escapeHTML;
+  const name = it.name, img = it.img;
+  if (hasFormula(it)) await it.rollExec();
+  else {
+    const desc = await foundry.applications.ux.TextEditor.implementation.enrichHTML(it.system?.description ?? "", { relativeTo: it });
+    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="sw25-sbshow"><header><img src="${esc(img)}" width="32" height="32" style="vertical-align:middle;border:0"> <b>${esc(name)}</b></header>${desc}</div>` });
+  }
+  if (plan.delete) {
+    const r = toggleBeltSlot(actor.system.belt?.slots, it.id, false, beltN());
+    if (r.changed) await actor.update({ "system.belt.slots": r.slots });
+    await it.delete();
+  } else await it.update(plan.update);
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<div class="sw25-belt-use"><img src="${esc(img)}" width="28" height="28" style="vertical-align:middle;border:0"/> ${game.i18n.format("SW25.V2.Belt.Used", { actor: esc(actor.name), item: esc(name), left: plan.left })}</div>` });
+}
+
+/** Inventory/belt view flags for consumables: onBelt + left. */
+export function beltFlags(actor) {
+  return new Set(slotsArray(actor.system.belt?.slots).filter(Boolean));
 }
 
 /* ------------------------------------------------------------------ */
@@ -314,6 +346,15 @@ export function bindBeltListeners(sheet, root) {
     belt[idx] = "";
     actor.update({ "system.belt.slots": belt });
   });
+  // Click the slot icon/name area = use one (card + formula + consume). Shift-click still opens the item.
+  on(".ce7-belt-use", "click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    const it = actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId);
+    if (ev.shiftKey) return it?.sheet.render(true);
+    useConsumable(actor, it);
+  });
+  on("input.sw25-belt-toggle", "change", (ev) => { ev.stopPropagation(); toggleBelt(actor, ev.currentTarget.closest("[data-item-id]").dataset.itemId, ev.currentTarget.checked).then((ok) => { if (!ok) sheet.render(false); }); });
+  on(".sw25-item-use", "click", (ev) => { ev.preventDefault(); ev.stopPropagation(); useConsumable(actor, actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)); });
   on(".ce7-tick", "click", async (ev) => {
     ev.preventDefault();
     const it = actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId);
@@ -324,7 +365,11 @@ export function bindBeltListeners(sheet, root) {
     if (!restore && u.value <= 0) return;
     if (restore && u.mode === "uses" && nv > u.max) return;
     if (restore && u.mode === "qty" && (Number(it.system.qmax) || 0) > 0 && nv > Number(it.system.qmax)) return;
-    await it.update(u.mode === "uses" ? { "system.uses.value": nv } : { "system.quantity": nv });
+    if (!restore && nv <= 0) {
+      const r = toggleBeltSlot(actor.system.belt?.slots, it.id, false, beltN());
+      if (r.changed) await actor.update({ "system.belt.slots": r.slots });
+      await it.delete();
+    } else await it.update(u.mode === "uses" ? { "system.uses.value": nv } : { "system.quantity": nv });
     if (!restore) {
       ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor }),

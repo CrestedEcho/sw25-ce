@@ -1208,6 +1208,10 @@
       "Belt": {
         "Title": "Consumables Belt",
         "Drop": "Drop a consumable",
+        "Full": "The belt is full - untick something first.",
+        "Empty": "{item} has no uses left.",
+        "Use": "Use",
+        "OnBelt": "On belt",
         "Used": "{actor} uses {item} ({left} left).",
         "Hint": "Click a tick to use one, Shift-click to restore one."
       }
