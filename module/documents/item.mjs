@@ -3,6 +3,7 @@ import { powerRoll } from "../helpers/powerroll.mjs";
 import { hasPowerObject, planPcCast, rollSpellDamage } from "../rules/spell-power.mjs";
 import { castChatHTML } from "../rules/sb-cast.mjs";
 import { weaponCardHTML } from "../rules/weapon-card.mjs";
+import { buildPowerTable } from "../rules/power-table-row.mjs";
 import { isMonsterKnowledge, knowledgeUpdates } from "../rules/mknow.mjs";
 
 /** Monster Knowledge -> flag targets whose Weakness the total meets (GM updates directly; players ask the GM via socket). */
@@ -1957,29 +1958,7 @@ export class SW25Item extends Item {
     let powmod = actorData.attributes?.powertablemod?.[itemData.type] || 0;
     powmod += Number(actorData.attributes?.powertablemod?.all) || 0;
 
-    systemData.powertable = [
-      systemData.power,
-      systemData.totalcvalue,
-      0,
-      systemData.pt3,
-      systemData.pt4,
-      systemData.pt5,
-      systemData.pt6,
-      systemData.pt7,
-      systemData.pt8,
-      systemData.pt9,
-      systemData.pt10,
-      systemData.pt11,
-      systemData.pt12,
-      systemData.powerbase,
-      halfpow,
-      halfpowmod,
-      lethaltech,
-      criticalray,
-      pharmtool,
-      powup,
-      powmod,
-    ];
+    systemData.powertable = buildPowerTable(systemData, { halfpow, halfpowmod, lethaltech, criticalray, pharmtool, powup, powmod });
 
     // Sheet refresh
   }

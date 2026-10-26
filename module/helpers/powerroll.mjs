@@ -9,7 +9,7 @@ import { rpt } from "../sw25.mjs";
 function refPowerValue(power, total) {
   const v = rpt?.[power]?.[total - 3];
   if (v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) || (Array.isArray(rpt?.[power]) && rpt[power].every((x) => !x))) {
-    globalThis.ui?.notifications?.warn(`SW2.5: no power table row for Power ${power} (fill the "Reference Power Table" journal or give the item its own table).`);
+    globalThis.ui?.notifications?.warn(`SW2.5: no power table row for Power ${power} (the item has no table rows: if it is an old world copy, re-import the actor/item from the SW compendium; otherwise fill the "Reference Power Table" journal).`);
     return Number(v) || 0;
   }
   return Number(v);
