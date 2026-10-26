@@ -154,3 +154,5 @@
 .sb-belt-wrap .ce7-belt-clear { position:absolute; top:0; right:3px; cursor:pointer; }
 .sw25-gmonly { font-size:11px; color:#6a3a8a; font-weight:bold; }
 .sb-belt-wrap .ce7-belt-slot:not(.filled) { cursor:pointer; }
+/* ce.16: opaque tab bar so scrolled content never shows through */
+.sb-tabs { position:sticky; top:0; z-index:60; background:#efe1c1 url(../assets/textures/parchment.webp) 0 0/512px repeat; }

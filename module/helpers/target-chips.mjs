@@ -43,3 +43,35 @@ export function resolveTargetTokensOrWarn(g = globalThis.game, c = globalThis.ca
   }
   return tokens;
 }
+
+export const LIVE_LABEL = "Applies to:";
+export const LIVE_EMPTY = "your selected tokens (select or target tokens on the map, then click Apply)";
+/** Inner HTML of the live "Applies to" line: chips for what a click would hit right now. */
+export function liveTargetsInner(tokens, label = LIVE_LABEL, empty = LIVE_EMPTY) {
+  const chips = targetChipsHtml((tokens ?? []).map(tokenTargetInfo));
+  return `<span class="chat-target-label">${esc(label)}</span>`
+    + (chips ? `<span class="targetname">${chips}</span>` : `<span class="targetname target-empty"><i class="fa-solid fa-crosshairs"></i> ${esc(empty)}</span>`);
+}
+/** Refresh every live-targets line under `root` (chat log or one message). */
+export function refreshLiveTargets(root = globalThis.document) {
+  const els = root?.querySelectorAll?.(".sw25-live-targets") ?? [];
+  if (!els.length) return 0;
+  const html = liveTargetsInner(resolveTargetTokens());
+  els.forEach((el) => { el.innerHTML = html; });
+  return els.length;
+}
+/** Hooks: fill on render, update when the user selects or targets tokens. */
+export function registerLiveTargets() {
+  const H = globalThis.Hooks;
+  H.on("renderChatMessageHTML", (msg, el) => {
+    const root = el?.[0] ?? el;
+    // Legacy cards: hide the old "choose target" button, show the live line instead.
+    root?.querySelectorAll?.('button.chat-target[data-buttontype="target-select"]').forEach((b) => {
+      const d = document.createElement("div"); d.className = "sw25-live-targets"; b.replaceWith(d);
+    });
+    refreshLiveTargets(root);
+  });
+  let t = null;
+  const later = () => { clearTimeout(t); t = setTimeout(() => refreshLiveTargets(), 50); };
+  H.on("controlToken", later); H.on("targetToken", later);
+}

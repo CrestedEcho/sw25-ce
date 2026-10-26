@@ -49,3 +49,27 @@ test("feat panel: names are show-in-chat, X/assign separate, tooltip text", () =
   assert.match(js, /closest\("\.ce7-feat-clear, \.ce7-feat-assign"\)\) return/);
   assert.match(js, /ev\.shiftKey\) return it\.sheet\.render\(true\)/);
 });
+
+import { liveTargetsInner, resolveTargetTokens } from "../module/helpers/target-chips.mjs";
+test("live targets: selected first, else targets; chips or empty hint", () => {
+  const tok = (n) => ({ document: { name: n, texture: { src: n + ".png" } } });
+  assert.deepEqual(resolveTargetTokens({ user: { targets: new Set([tok("T")]) } }, { tokens: { controlled: [tok("S")] } }).map((t) => t.document.name), ["S"]);
+  assert.deepEqual(resolveTargetTokens({ user: { targets: new Set([tok("T")]) } }, { tokens: { controlled: [] } }).map((t) => t.document.name), ["T"]);
+  assert.match(liveTargetsInner([tok("Gob")]), /Applies to:.*Gob/);
+  assert.match(liveTargetsInner([]), /your selected tokens/);
+});
+test("cards: no choose-target step, apply never reads stored targets", () => {
+  for (const f of ["roll-check", "roll-power"]) {
+    const t = fs.readFileSync(new URL(`../templates/roll/${f}.hbs`, import.meta.url), "utf8");
+    assert.doesNotMatch(t, /target-select/); assert.match(t, /sw25-live-targets/);
+  }
+  const js = fs.readFileSync(new URL("../module/helpers/chatbutton.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(js, /flags\.sw25\.target\[/); assert.doesNotMatch(js, /const target = flags\.sw25\.target;/);
+  assert.doesNotMatch(js, /setTarget\(false\)/);
+});
+test("sticky tab bars are opaque and above content", () => {
+  const v2 = fs.readFileSync(new URL("../css/sw25-sheet-v2.css", import.meta.url), "utf8");
+  assert.match(v2, /\.v2-tabs\{position:sticky;top:0;z-index:60;background:#e9dcc0 url\(\.\.\/assets\/textures\/parchment\.webp\)/);
+  const sb = fs.readFileSync(new URL("../css/sw25-statblock.css", import.meta.url), "utf8");
+  assert.match(sb, /\.sb-tabs \{ position:sticky;.*parchment/);
+});

@@ -14,10 +14,10 @@ test("target button: label + empty state", () => {
   assert.match(targetButtonInner(""), /Target:.*No target\. Select tokens on the map/);
   assert.equal(tokenTargetInfo({ document: { name: "K", texture: { src: "t.png" } } }).img, "t.png");
 });
-test("both roll templates use the labelled target button with tooltip", () => {
+test("both roll templates show the live Applies-to line with tooltip (ce.16)", () => {
   for (const f of ["roll-power.hbs", "roll-check.hbs"]) {
     const t = fs.readFileSync(root + "templates/roll/" + f, "utf8");
-    assert.match(t, /chat-target[^>]*data-tooltip=/); assert.match(t, /SW25.Card.TargetLabel/); assert.match(t, /SW25.Card.NoTarget/);
+    assert.match(t, /sw25-live-targets[^>]*data-tooltip=/); assert.match(t, /SW25.Card.LiveTargetTip/);
   }
 });
 

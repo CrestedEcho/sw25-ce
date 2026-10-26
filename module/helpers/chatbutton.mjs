@@ -7,7 +7,7 @@ import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "./utils.mjs";
 import { weaponCritValue } from "../rules/crit-value.mjs";
 import { sw25CritModFor } from "../documents/actor.mjs";
-import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn } from "./target-chips.mjs";
+import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn, refreshLiveTargets } from "./target-chips.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -117,6 +117,8 @@ export async function chatButton(chatMessage, buttonType) {
 
     await chatRoll();
   } else if (buttonType == "target-select") {
+    // ce.16: legacy button; targets are resolved live at Apply time. Just refresh the "Applies to" lines.
+    if (true) return refreshLiveTargets();
     const selectedTokens = resolveTargetTokensOrWarn();
     if (selectedTokens.length === 0) {
       return;
@@ -1334,29 +1336,10 @@ export async function chatButton(chatMessage, buttonType) {
     buttonType == "buttonhr" ||
     buttonType == "buttonmr"
   ) {
-    let targetTokenId;
-    if (!chatMessage.flags.sw25.target?.length) {
-      const targetTokens = resolveTargetTokensOrWarn();
-      if (!targetTokens.length) return;
-
-      const targetTokenIds = [];
-      targetTokens.forEach((token) => {
-        targetTokenIds.push(token.id);
-      });
-      for (let i = 0; i < targetTokenIds.length; i++) {
-        targetTokenId = targetTokenIds[i];
-        await applyExec(targetTokenId);
-      }
-    } else {
-      for (let i = 0; i < chatMessage.flags.sw25.target.length; i++) {
-        const targetToken = canvas.tokens.get(chatMessage.flags.sw25.target[i]);
-        targetTokenId = targetToken.id;
-        await applyExec(targetTokenId);
-      }
-    }
-
-    // reset target
-    game.user.targets.forEach((target) => target.setTarget(false));
+    // ce.16: always the tokens selected/targeted right now (never a target stored at roll time).
+    const targetTokens = resolveTargetTokensOrWarn();
+    if (!targetTokens.length) return;
+    for (const token of targetTokens) await applyExec(token.id);
 
     async function applyExec(targetTokenId) {
       const targetToken = canvas.tokens.get(targetTokenId);
@@ -1539,8 +1522,6 @@ export async function chatButton(chatMessage, buttonType) {
       });
     }
 
-    // reset target
-    game.user.targets.forEach((target) => target.setTarget(false));
 
     // Chat message
     const speaker = ChatMessage.getSpeaker({ actor: actor });
@@ -1904,10 +1885,9 @@ export async function chatButton(chatMessage, buttonType) {
   if (buttonType == "buttonrollreq" || buttonType == "buttonresist") {
     let roll;
     const flags = chatMessage.flags;
-    const target = flags.sw25.target;
-    let selectedTokens = target
-      ? canvas.tokens.placeables.filter((token) => target.includes(token.id))
-      : await Util.getControlledActorFromUser();
+    // ce.16: live at click time — selected tokens, else targets, else the user's own character.
+    let selectedTokens = resolveTargetTokens();
+    if (!selectedTokens.length) selectedTokens = await Util.getControlledActorFromUser();
 
     if (selectedTokens.length === 0) {
       ui.notifications.warn(game.i18n.localize("SW25.Noselectwarn"));

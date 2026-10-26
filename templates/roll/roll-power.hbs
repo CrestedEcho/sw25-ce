@@ -1,8 +1,4 @@
-<button class="buttonclick chat-target{{#unless targetName}} no-target{{/unless}}" data-buttontype="target-select" data-tooltip="{{localize "SW25.Card.TargetTip"}}">
-    <span class="chat-target-label">{{localize "SW25.Card.TargetLabel"}}</span>
-    {{#if targetName}}<span class="targetname">{{{targetName}}}</span>
-    {{else}}<span class="targetname target-empty"><i class="fa-solid fa-crosshairs"></i> {{localize "SW25.Card.NoTarget"}}</span>{{/if}}
-</button>
+<div class="sw25-live-targets" data-tooltip="{{localize "SW25.Card.LiveTargetTip"}}"></div>
 <div class="dice-roll" data-action="expandRoll">
     {{#if flavor}}<div class="dice-flavor">{{flavor}}</div>{{/if}}
     {{#if tags}}

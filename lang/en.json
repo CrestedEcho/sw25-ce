@@ -1352,6 +1352,7 @@
       "IgnoreCritsTip": "Recalculate using only the first roll, as if the attack did not crit.",
       "Target": "Choose target",
       "TargetTip": "Select tokens on the map (click or drag a box; targets work if nothing is selected), then click here to set who this applies to.",
+      "LiveTargetTip": "Apply buttons hit the tokens you have selected (or targeted) when you click. No extra step needed.",
       "TargetLabel": "Target:",
       "NoTarget": "No target. Select tokens on the map",
       "NoTokensWarn": "Select tokens on the map first",

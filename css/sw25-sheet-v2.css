@@ -273,3 +273,9 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25v2 .ce7-feat-slot:not(.filled):not(.locked):hover{background:rgba(160,120,40,.15)}
 .sw25v2 .ce7-feat-slot.locked{cursor:help}
 .sw25-feat-pick .note{font-weight:normal;font-size:12px;opacity:.8}
+/* ce.16: sticky tab bar is opaque parchment and sits above panels/ribbons while scrolling */
+.sw25v2 .v2-tabs{position:sticky;top:0;z-index:60;background:#e9dcc0 url(../assets/textures/parchment.webp) 0 0/512px repeat;background-attachment:scroll;box-shadow:0 2px 3px rgba(0,0,0,.12)}
+.sw25v2.theme-dark .v2-tabs,.theme-dark .sw25v2 .v2-tabs{background-color:#2a1d13;background-image:url(../assets/textures/leather.webp)}
+.sw25v2 .panel,.sw25v2 .ribbon{z-index:auto}
+.sw25v2 .sheet-header{background:#e9dcc0 url(../assets/textures/parchment.webp) 0 0/512px repeat}
+.sw25v2.theme-dark .sheet-header{background-color:#2a1d13;background-image:url(../assets/textures/leather.webp)}

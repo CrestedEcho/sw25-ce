@@ -3655,3 +3655,7 @@ input[type=checkbox]:disabled + .checkbox--label:focus {
 .sw25-ptotal .dice-total{font-size:22px}
 .sw25-pstep{display:inline-block;min-width:36px;min-height:36px;line-height:36px;font-size:20px;text-align:center}
 button.sw-attack-apply{display:block;width:100%;margin-top:6px;font-weight:bold}
+/* ce.16: live "Applies to" line on cards (replaces the old Choose-target button) */
+.sw25-live-targets{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 4px;font-size:12px}
+.sw25-live-targets .target-empty{opacity:.75;font-style:italic}
+button.chat-target[data-buttontype="target-select"]{display:none}

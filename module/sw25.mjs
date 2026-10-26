@@ -1,3 +1,4 @@
+import { registerLiveTargets } from "./helpers/target-chips.mjs";
 import { applyDamageToTokenIds } from "./rules/apply-damage.mjs";
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
@@ -194,6 +195,7 @@ Hooks.once("init", function () {
   registerRulesUI();
   registerStatBlockUI();
   registerCombatUI();
+  registerLiveTargets();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
