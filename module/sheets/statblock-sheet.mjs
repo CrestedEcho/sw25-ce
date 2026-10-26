@@ -10,7 +10,7 @@ import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { fixedToDice, parseSbDamage, applyVital, lootFor, castIsWhisper, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
 import { beltContext, bindBeltListeners, dropOnBelt, beltFlags } from "../ce7/equipcard.mjs";
-import { usesOf } from "../ce7/belt-logic.mjs";
+import { usesOf, stackLabel } from "../ce7/belt-logic.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
 const T = "systems/sw25-ce/templates/actor";
@@ -51,7 +51,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const onBelt = beltFlags(this.actor);
     for (const it of base.items) {
       it.rollable = it.type === "weapon";
-      if (it.type === "consumable") { const d = this.actor.items.get(it._id); it.consumable = true; it.onBelt = onBelt.has(it._id); it.limited = !!d?.system?.limitedUses; it.left = it.limited ? usesOf(d).value : "∞"; }
+      if (it.type === "consumable") { const d = this.actor.items.get(it._id); it.consumable = true; it.onBelt = onBelt.has(it._id); it.limited = !!d?.system?.limitedUses; it.left = d ? stackLabel(d) : ""; }
       else if (it.type === "item") it.showable = true;
     }
     base.ce7belt = beltContext(this.actor);

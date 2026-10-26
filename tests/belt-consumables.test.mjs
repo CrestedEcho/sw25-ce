@@ -17,7 +17,7 @@ test("belt toggle: full belt reports full and changes nothing", () => {
 
 const C = (system) => ({ type: "consumable", system: { limitedUses: true, ...system } });
 test("consume: limited consumable decrements quantity/uses; last use deletes; empty is refused", () => {
-  assert.deepEqual(consumePlan(C({ quantity: 3 })), { ok: true, left: 2, delete: false, update: { "system.quantity": 2 }, consumes: true });
+  assert.deepEqual(consumePlan(C({ quantity: 3 })), { ok: true, left: 2, qty: 2, delete: false, update: { "system.quantity": 2 }, consumes: true });
   assert.deepEqual(consumePlan(C({ quantity: 5, uses: { value: 2, max: 3 } })).update, { "system.uses.value": 1 });
   const last = consumePlan(C({ quantity: 1 }));
   assert.equal(last.delete, true); assert.equal(last.left, 0); assert.equal(last.update, null);
@@ -51,9 +51,9 @@ test("non-consumable (regular item, weapon, ...) is never decremented or deleted
   }
 });
 
-test("unlimited consumable (Has limited uses off) posts/rolls but never decrements", () => {
+test("non-limited consumable (Has limited uses off): each use takes one off quantity; last one deletes", () => {
   const p = consumePlan({ type: "consumable", system: { limitedUses: false, quantity: 1, uses: { value: 1, max: 1 } } });
-  assert.equal(p.ok, true); assert.equal(p.consumes, false); assert.equal(p.delete, false); assert.equal(p.update, null);
+  assert.equal(p.ok, true); assert.equal(p.consumes, true); assert.equal(p.delete, true);
 });
 
 test("limited consumable: uses 3 -> 2 -> 1 -> delete", () => {

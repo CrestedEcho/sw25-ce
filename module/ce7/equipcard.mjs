@@ -1,4 +1,4 @@
-import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt, beltPickList, assignBeltSlot } from "./belt-logic.mjs";
+import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt, beltPickList, assignBeltSlot, stackLabel } from "./belt-logic.mjs";
 /**
  * sw25-ce 3.0.0-ce.7 — Equipment Card, Combat-tab Feats / Consumables Belt,
  * portrait framing, class-rule framework hooks and the one-time ce.7 migration.
@@ -189,8 +189,8 @@ export function beltContext(actor, mini = (it) => (it ? { id: it.id, name: it.na
     const it = actor.items.get(belt[index]);
     if (!it || !isConsumable(it)) return { index, item: null };
     const u = usesOf(it);
-    if (!isLimited(it)) return { index, item: { ...mini(it), unlimited: true, left: "∞", max: 0, ticks: [] } };
-    return { index, item: { ...mini(it), left: u.value, max: u.max, ticks: Array.from({ length: Math.min(u.max, 20) }, (_, i) => ({ filled: i < u.value })) } };
+    if (!isLimited(it)) return { index, item: { ...mini(it), unlimited: true, left: "", max: 0, stack: stackLabel(it), ticks: [] } };
+    return { index, item: { ...mini(it), left: u.value, max: u.max, stack: stackLabel(it), ticks: Array.from({ length: Math.min(u.max, 20) }, (_, i) => ({ filled: i < u.value })) } };
   });
 }
 
@@ -224,7 +224,7 @@ export async function toggleBelt(actor, itemId, on) {
  *  roll code when it has one), then consume one use. Last use deletes the item and clears its belt slot. */
 export async function useConsumable(actor, it) {
   if (!it) return;
-  // Non-consumables (and unlimited consumables) only post their card / roll: never decrement, never delete.
+  // Non-consumables only post their card / roll. Consumables: see consumePlan (stacks refill uses, delete on the last one).
   const plan = consumePlan(it);
   if (!plan.ok) return ui.notifications.warn(game.i18n.format("SW25.V2.Belt.Empty", { item: it.name }));
   const esc = foundry.utils.escapeHTML;
@@ -241,7 +241,7 @@ export async function useConsumable(actor, it) {
     await it.delete();
   } else await it.update(plan.update);
   return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="sw25-belt-use"><img src="${esc(img)}" width="28" height="28" style="vertical-align:middle;border:0"/> ${game.i18n.format("SW25.V2.Belt.Used", { actor: esc(actor.name), item: esc(name), left: plan.left })}</div>` });
+    content: `<div class="sw25-belt-use"><img src="${esc(img)}" width="28" height="28" style="vertical-align:middle;border:0"/> ${game.i18n.format("SW25.V2.Belt.Used", { actor: esc(actor.name), item: esc(name), left: plan.delete ? 0 : esc(stackLabel(actor.items.get(it.id) ?? it)) })}</div>` });
 }
 
 /** Feat picker for an empty level slot: big rows (icon, bold name, short note) of feats not in a slot. */
@@ -282,7 +282,7 @@ export async function openBeltPicker(actor, idx) {
   const content = rows.length
     ? `<div class="sw25-belt-pick">${rows.map((r) => `<button type="button" class="sw25-belt-pick-row" data-id="${esc(r.id)}" data-tooltip="${esc(L("PickRowTip", { item: r.name }))}">
         <img src="${esc(r.img)}" alt=""/><span class="nm">${esc(r.name)}</span>
-        <span class="left">${r.unlimited ? esc(L("Unlimited")) : esc(L("UsesLeft", { left: r.left, max: r.max }))}</span></button>`).join("")}</div>`
+        <span class="left">${esc(r.stack)}</span></button>`).join("")}</div>`
     : `<p class="sw25-belt-pick-none"><i class="fas fa-flask"></i> ${esc(L("PickNone"))}</p>`;
   let chosen = null;
   await foundry.applications.api.DialogV2.wait({

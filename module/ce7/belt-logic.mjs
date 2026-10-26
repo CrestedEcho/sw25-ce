@@ -34,15 +34,40 @@ export function usesOf(it) {
   return { mode: "qty", value: q, max: Math.max(q, qmax) };
 }
 
-/** Plan for consuming one use: { ok, left, delete, update }. Last use -> delete the item (and clear its belt slot). */
+/** Stack size (system.quantity; unset/invalid -> 1). */
+export const qtyOf = (it) => { const q = Number(it?.system?.quantity); return Number.isFinite(q) && it?.system?.quantity !== "" && it?.system?.quantity != null ? Math.max(0, Math.floor(q)) : 1; };
+
+/**
+ * Plan for consuming one use: { ok, left, qty, delete, update, consumes }.
+ * - Limited with per-item uses (uses.max > 0): spend a use; when the last use of one item is spent and
+ *   quantity > 1, take one off the stack and refill uses (stays on the belt). Delete only on the last item.
+ * - Limited without uses.max, or not limited: each use takes one off quantity; delete at 0.
+ */
 export function consumePlan(it) {
-  // Non-consumables and unlimited consumables never decrement or delete: Use just posts the card / rolls.
-  if (!isLimited(it)) return { ok: !!it, left: null, delete: false, update: null, consumes: false };
-  const u = usesOf(it);
-  if (u.value <= 0) return { ok: false, left: 0, delete: false, update: null, consumes: true };
-  const left = u.value - 1;
-  if (left <= 0) return { ok: true, left: 0, delete: true, update: null, consumes: true };
-  return { ok: true, left, delete: false, update: u.mode === "uses" ? { "system.uses.value": left } : { "system.quantity": left }, consumes: true };
+  if (!isConsumable(it)) return { ok: !!it, left: null, qty: null, delete: false, update: null, consumes: false };
+  const q = qtyOf(it);
+  const um = Number(it.system?.uses?.max) || 0;
+  if (isLimited(it) && um > 0) {
+    const v = Math.min(Number(it.system.uses?.value) || 0, um);
+    if (v <= 0 && q <= 1) return { ok: false, left: 0, qty: q, delete: false, update: null, consumes: true };
+    if (v <= 0) return { ok: true, left: um - 1, qty: q - 1, delete: false, consumes: true, update: um - 1 > 0 ? { "system.quantity": q - 1, "system.uses.value": um - 1 } : { "system.quantity": q - 1, "system.uses.value": um } };
+    const left = v - 1;
+    if (left > 0) return { ok: true, left, qty: q, delete: false, update: { "system.uses.value": left }, consumes: true };
+    if (q > 1) return { ok: true, left: um, qty: q - 1, delete: false, update: { "system.quantity": q - 1, "system.uses.value": um }, consumes: true };
+    return { ok: true, left: 0, qty: 0, delete: true, update: null, consumes: true };
+  }
+  if (q <= 0) return { ok: false, left: 0, qty: 0, delete: false, update: null, consumes: true };
+  const nq = q - 1;
+  if (nq <= 0) return { ok: true, left: 0, qty: 0, delete: true, update: null, consumes: true };
+  return { ok: true, left: nq, qty: nq, delete: false, update: { "system.quantity": nq }, consumes: true };
+}
+
+/** Short stack label: "x1000 · 2/2 uses", "x3", "2/2 uses" (x1 omitted). */
+export function stackLabel(it) {
+  const q = qtyOf(it); const um = Number(it?.system?.uses?.max) || 0;
+  const uses = isLimited(it) && um > 0 ? `${Math.min(Number(it.system.uses?.value) || 0, um)}/${um} uses` : "";
+  const qs = q !== 1 || !uses ? `x${q}` : "";
+  return [qs, uses].filter(Boolean).join(" · ");
 }
 
 /** Does the consumable carry a rollable formula (check dice 0-3 or a power roll)? */
@@ -56,7 +81,7 @@ export function beltPickList(items, slots) {
   const on = new Set(slotsArray(slots).filter(Boolean));
   return [...(items ?? [])].filter((it) => isConsumable(it) && !on.has(it.id ?? it._id))
     .sort((a, b) => String(a.name).localeCompare(String(b.name)))
-    .map((it) => { const lim = isLimited(it); const u = usesOf(it); return { id: it.id ?? it._id, name: it.name, img: it.img, unlimited: !lim, left: lim ? u.value : null, max: lim ? u.max : null }; });
+    .map((it) => { const lim = isLimited(it); const u = usesOf(it); return { id: it.id ?? it._id, name: it.name, img: it.img, unlimited: !lim, left: lim ? u.value : null, max: lim ? u.max : null, stack: stackLabel(it) }; });
 }
 
 /** Put `id` into belt slot `idx` (moving it if it already sits elsewhere). Returns new slots array. */
