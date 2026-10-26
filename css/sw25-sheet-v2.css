@@ -269,3 +269,7 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25-belt-pick-row .nm{flex:1;font-weight:bold}
 .sw25-belt-pick-row .left{font-size:12px;opacity:.8}
 .sw25-belt-pick-none{font-size:14px;padding:8px}
+.sw25v2 .ce7-feat-slot:not(.filled):not(.locked){cursor:pointer}
+.sw25v2 .ce7-feat-slot:not(.filled):not(.locked):hover{background:rgba(160,120,40,.15)}
+.sw25v2 .ce7-feat-slot.locked{cursor:help}
+.sw25-feat-pick .note{font-weight:normal;font-size:12px;opacity:.8}

@@ -21,3 +21,19 @@ export function activatePlan(feat, on, feats, adv) {
   if (src === "slot") return { patch: { "system.featSource": "", "system.featLevel": 0 } };
   return null;
 }
+
+/** Feat picker rows: combat feats not in a level slot (unassigned or automatic excluded), sorted. Row: { id, name, img, note }. */
+export function featPickList(items) {
+  const strip = (h) => String(h ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return [...(items ?? [])].filter((it) => it.type === "combatability" && !it.system?.featSource)
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    .map((it) => {
+      const s = it.system ?? {};
+      let note = strip(s.overview) || strip(s.description);
+      if (note.length > 90) note = note.slice(0, 87).trimEnd() + "…";
+      return { id: it.id ?? it._id, name: it.name, img: it.img, note };
+    });
+}
+
+/** Patch to put a feat into level slot `level` (Activate stays in sync). */
+export const slotPatch = (level) => ({ "system.featSource": "slot", "system.featLevel": Number(level), "system.equip": true });

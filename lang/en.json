@@ -1201,7 +1201,7 @@
       "Feats": {
         "Title": "Combat Feats",
         "Slot": "Level {level}",
-        "Locked": "Unlocks at adventurer level {level}",
+        "Locked": "Locked: this slot opens at adventurer level {level}. Raise a class to that level to use it.",
         "Auto": "Automatic Feats",
         "Racial": "Racial Abilities",
         "Unassigned": "Not in a slot yet",
@@ -1209,7 +1209,7 @@
         "Hint": "Drag a combat feat onto a level slot, or press Put in slot. Feats in a slot are active.",
         "Chosen": "Chosen feats (one per level slot)",
         "SlotTip": "Active feat. Drag it to another slot, or press X to take it out.",
-        "EmptyTip": "Empty slot: drag a combat feat here.",
+        "EmptyTip": "Click to choose a feat (or drag one here)",
         "LockedShort": "Locked",
         "Remove": "Take out (keeps the feat on the sheet)",
         "UnassignedTip": "Feats you own that are not active. Drag one onto a slot above.",
@@ -1218,7 +1218,11 @@
         "AssignTip": "Put this feat in the first free level slot",
         "AutoTip": "Feats your classes give you for free. They are always active.",
         "NoFreeSlot": "No free level slot for {item}. Take a feat out first, or drag it onto a slot to swap.",
-        "ActivateTip": "On a character: ticking puts this feat in the first free level slot (and turns on its effects); unticking takes it out."
+        "ActivateTip": "On a character: ticking puts this feat in the first free level slot (and turns on its effects); unticking takes it out.",
+        "ClickToChoose": "Click to choose",
+        "PickTitle": "Level {level} slot: choose a combat feat",
+        "PickRowTip": "Put {item} in the Level {level} slot",
+        "PickNone": "All your combat feats are already in a slot. Add a new feat from the Items sidebar or a compendium, then click the slot again."
       },
       "Belt": {
         "Title": "Consumables Belt",

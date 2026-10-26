@@ -31,7 +31,7 @@ const LEFT = ["head", "face", "ear", "neck", "back"];
 const RIGHT = ["armor", "shield", "rhand", "lhand", "waist"];
 const BOTTOM = ["mainHand", "offHand", "feet"];
 const AUTO_ORDER = ["mainHand", "offHand", "armor", "shield", ...LEFT, "rhand", "lhand", "waist", "feet"];
-import { FEAT_LEVELS, unlockedSlots, activatePlan } from "./feat-logic.mjs";
+import { FEAT_LEVELS, unlockedSlots, activatePlan, featPickList, slotPatch } from "./feat-logic.mjs";
 
 const isPC = (actor) => actor?.type === "character" && !actor.system?.toFellow;
 export const is2H = (item) => item?.type === "weapon" && /2H/.test(String(item.system?.usage ?? ""));
@@ -244,6 +244,36 @@ export async function useConsumable(actor, it) {
     content: `<div class="sw25-belt-use"><img src="${esc(img)}" width="28" height="28" style="vertical-align:middle;border:0"/> ${game.i18n.format("SW25.V2.Belt.Used", { actor: esc(actor.name), item: esc(name), left: plan.left })}</div>` });
 }
 
+/** Feat picker for an empty level slot: big rows (icon, bold name, short note) of feats not in a slot. */
+export async function openFeatPicker(actor, level) {
+  const esc = foundry.utils.escapeHTML;
+  const L = (k, d) => game.i18n.format(`SW25.V2.Feats.${k}`, d ?? {});
+  const rows = featPickList(actor.items);
+  const content = rows.length
+    ? `<div class="sw25-belt-pick sw25-feat-pick">${rows.map((r) => `<button type="button" class="sw25-belt-pick-row" data-id="${esc(r.id)}" data-tooltip="${esc(L("PickRowTip", { item: r.name, level }))}">
+        <img src="${esc(r.img)}" alt=""/><span class="nm">${esc(r.name)}${r.note ? `<br/><span class="note">${esc(r.note)}</span>` : ""}</span></button>`).join("")}</div>`
+    : `<p class="sw25-belt-pick-none"><i class="fas fa-circle-info"></i> ${esc(L("PickNone"))}</p>`;
+  let chosen = null;
+  await foundry.applications.api.DialogV2.wait({
+    window: { title: L("PickTitle", { level }), icon: "fas fa-khanda" },
+    position: { width: 420 },
+    content,
+    buttons: [{ action: "cancel", label: game.i18n.localize("Cancel"), default: true }],
+    rejectClose: false,
+    render: (event, dialog) => {
+      const el = dialog?.element ?? event?.target?.element;
+      el?.querySelectorAll(".sw25-belt-pick-row").forEach((b) => b.addEventListener("click", (e) => {
+        e.preventDefault(); chosen = b.dataset.id; dialog.close();
+      }));
+    },
+  });
+  const it = chosen && actor.items.get(chosen);
+  if (!it) return;
+  const prev = actor.items.find((i) => i.type === "combatability" && i.id !== it.id && i.system.featSource === "slot" && Number(i.system.featLevel) === level);
+  if (prev) await prev.update({ "system.featSource": "", "system.featLevel": 0, "system.equip": false }, { sw25Slot: true });
+  return it.update(slotPatch(level), { sw25Slot: true });
+}
+
 /** Small friendly picker: big rows (icon, name, uses left) of the actor's consumables; click one to put it in slot `idx`. */
 export async function openBeltPicker(actor, idx) {
   const esc = foundry.utils.escapeHTML;
@@ -366,6 +396,11 @@ export function bindCe7Listeners(sheet, html) {
   on(".ce7-feat-clear", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.featSource": "", "system.featLevel": 0, "system.equip": false }, { sw25Slot: true });
+  });
+  // Feats: click an EMPTY UNLOCKED slot = pick a feat (locked slots only show their tooltip)
+  on(".ce7-feat-slot:not(.filled):not(.locked)", "click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    openFeatPicker(actor, Number(ev.currentTarget.dataset.level));
   });
   // Feats: one-click "Put in slot" for unassigned feats
   on(".ce7-feat-assign", "click", (ev) => {
