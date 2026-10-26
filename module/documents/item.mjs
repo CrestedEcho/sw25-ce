@@ -42,6 +42,7 @@ import {
   effectBmpMon,
 } from "../sw25.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
+import { resolveTargetTokens } from "../helpers/target-chips.mjs";
 
 let quantityWarn = false;
 
@@ -2571,7 +2572,7 @@ export class SW25Item extends Item {
       this.system.clickitem == "dice3" ||
       this.system.clickitem == "power"
     ) {
-      const targetTokens = game.user.targets;
+      const targetTokens = new Set(resolveTargetTokens());
 
       let apply = "-";
       if (this.system.clickitem == "dice") apply = this.system.applycheck;

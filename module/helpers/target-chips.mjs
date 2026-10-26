@@ -16,7 +16,30 @@ export function tokenTargetInfo(token) {
 }
 
 /** Inner HTML of the target button (label + chips, or the empty state). */
-export function targetButtonInner(chips, label = "Target:", empty = "No target, click to pick") {
+export function targetButtonInner(chips, label = "Target:", empty = "No target. Select tokens on the map") {
   return `<span class="chat-target-label">${esc(label)}</span>`
     + (chips ? `<span class="targetname">${chips}</span>` : `<span class="targetname target-empty"><i class="fa-solid fa-crosshairs"></i> ${esc(empty)}</span>`);
+}
+
+export const NO_TOKENS_MSG = "Select tokens on the map first";
+
+/**
+ * Tokens an apply-to-target action hits: selected tokens (click / drag-box) first,
+ * then the user's targets, else none. No dialog. Returns an array.
+ */
+export function resolveTargetTokens(g = globalThis.game, c = globalThis.canvas) {
+  const controlled = [...(c?.tokens?.controlled ?? [])];
+  if (controlled.length) return controlled;
+  const targets = [...(g?.user?.targets ?? [])];
+  return targets;
+}
+
+/** Same as resolveTargetTokens, but warns when nothing is selected or targeted. */
+export function resolveTargetTokensOrWarn(g = globalThis.game, c = globalThis.canvas) {
+  const tokens = resolveTargetTokens(g, c);
+  if (!tokens.length) {
+    const s = g?.i18n?.localize?.("SW25.Card.NoTokensWarn");
+    globalThis.ui?.notifications?.warn(s && s !== "SW25.Card.NoTokensWarn" ? s : NO_TOKENS_MSG);
+  }
+  return tokens;
 }

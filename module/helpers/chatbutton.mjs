@@ -2,10 +2,10 @@
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { powerRoll } from "./powerroll.mjs";
 import { mpCost, hpCost } from "./mpcost.mjs";
-import { targetRollDialog, targetSelectDialog } from "../helpers/dialogs.mjs";
+import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "./utils.mjs";
-import { targetChipsHtml, tokenTargetInfo, targetButtonInner } from "./target-chips.mjs";
+import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn } from "./target-chips.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -24,7 +24,7 @@ export async function chatButton(chatMessage, buttonType) {
     buttonType == "buttoncheck3" ||
     buttonType == "buttonpower"
   ) {
-    const targetTokens = game.user.targets;
+    const targetTokens = new Set(resolveTargetTokens());
     let apply = "-";
     if (buttonType == "buttoncheck") apply = item.system.applycheck;
     if (buttonType == "buttoncheck1") apply = item.system.applycheck1;
@@ -115,8 +115,7 @@ export async function chatButton(chatMessage, buttonType) {
 
     await chatRoll();
   } else if (buttonType == "target-select") {
-    const selectedTokens = await targetSelectDialog(chatMessage.flavor);
-    
+    const selectedTokens = resolveTargetTokensOrWarn();
     if (selectedTokens.length === 0) {
       return;
     }
@@ -124,7 +123,7 @@ export async function chatButton(chatMessage, buttonType) {
     const targetNames = targetChipsHtml(selectedTokens.map(tokenTargetInfo));
     const flags = chatMessage.flags;
     const L = (k, d) => { const s = game.i18n?.localize?.(k); return s && s !== k ? s : d; };
-    const targetStr = targetButtonInner(targetNames, L("SW25.Card.TargetLabel", "Target:"), L("SW25.Card.NoTarget", "No target, click to pick"));
+    const targetStr = targetButtonInner(targetNames, L("SW25.Card.TargetLabel", "Target:"), L("SW25.Card.NoTarget", "No target. Select tokens on the map"));
 
     flags.sw25.target = target;
     flags.sw25.targetName = targetNames;
@@ -1334,35 +1333,8 @@ export async function chatButton(chatMessage, buttonType) {
   ) {
     let targetTokenId;
     if (!chatMessage.flags.sw25.target?.length) {
-      const targetTokens = game.user.targets;
-
-      // if no target,show dialog
-      if (targetTokens.size === 0) {
-        let type = "";
-        switch (buttonType) {
-          case "buttonpd":
-            type = game.i18n.localize("SW25.Item.pd");
-            break;
-          case "buttonmd":
-            type = game.i18n.localize("SW25.Item.md");
-            break;
-          case "buttoncd":
-            type = game.i18n.localize("SW25.Item.cd");
-            break;
-          case "buttonhr":
-            type = game.i18n.localize("SW25.Item.hr");
-            break;
-          case "buttonmr":
-            type = game.i18n.localize("SW25.Item.mr");
-            break;
-        }
-        const title = `${type} - ${chatMessage.flavor}`;
-        const selectedTokens = await targetSelectDialog(title);
-        selectedTokens.forEach((token) => game.user.targets.add(token));
-        if (!selectedTokens) {
-          return;
-        }
-      }
+      const targetTokens = resolveTargetTokensOrWarn();
+      if (!targetTokens.length) return;
 
       const targetTokenIds = [];
       targetTokens.forEach((token) => {
@@ -1518,17 +1490,8 @@ export async function chatButton(chatMessage, buttonType) {
     const targetEffects = item.effects;
     const targetActorName = [];
     const transferEffectName = [];
-    const targetTokens = game.user.targets;
-
-    // if no target,show dialog
-    if (targetTokens.size === 0) {
-      const title = `${item.name} (${game.i18n.localize("SW25.Effectslong")})`;
-      const selectedTokens = await targetSelectDialog(title);
-      selectedTokens.forEach((token) => game.user.targets.add(token));
-      if (!selectedTokens) {
-        return;
-      }
-    }
+    const targetTokens = resolveTargetTokensOrWarn();
+    if (!targetTokens.length) return;
 
     // Target Actor
     const targetActors = [];

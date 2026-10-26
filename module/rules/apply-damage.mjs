@@ -1,12 +1,13 @@
 /* sw25-ce: apply a damage card to the tokens targeted at click time (spell and weapon cards share this). Foundry-side. */
 import { applySbCost } from "./sb-cast.mjs";
+import { resolveTargetTokens, NO_TOKENS_MSG } from "../helpers/target-chips.mjs";
 import { damageTaken, healedHP } from "./spell-power.mjs";
 const esc = (s) => foundry.utils.escapeHTML(String(s ?? ""));
 const card = (kind, lines) => ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${kind === "heal" ? "Healing" : kind === "physical" ? "Physical damage" : "Magic damage"} applied</b><br>${lines.join("<br>")}</div>` });
 /** Click handler: owned targets are applied here; the rest go to the GM over the "system.sw25" socket. */
 export async function applyDamageToTargets(amount, kind = "magic") {
-  const tokens = [...(game.user.targets ?? [])].filter((t) => t.actor);
-  if (!tokens.length) return ui.notifications.warn("Target one or more tokens first.");
+  const tokens = resolveTargetTokens().filter((t) => t.actor);
+  if (!tokens.length) return ui.notifications.warn(NO_TOKENS_MSG);
   const mine = tokens.filter((t) => t.actor.isOwner); const remote = tokens.filter((t) => !t.actor.isOwner);
   if (remote.length) {
     if (!game.users.some((u) => u.isGM && u.active)) ui.notifications.warn("No GM is connected to apply damage to targets you don't own.");

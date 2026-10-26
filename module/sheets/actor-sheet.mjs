@@ -8,7 +8,8 @@ import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { lootRoll } from "../helpers/lootroll.mjs";
 import { growthCheck } from "../helpers/growthcheck.mjs";
 import { actionRoll } from "../helpers/actionroll.mjs";
-import { targetRollDialog, targetSelectDialog } from "../helpers/dialogs.mjs";
+import { targetRollDialog } from "../helpers/dialogs.mjs";
+import { resolveTargetTokens, resolveTargetTokensOrWarn } from "../helpers/target-chips.mjs";
 import { SW25 } from "../helpers/config.mjs";
 import { Util } from "../helpers/utils.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
@@ -1017,7 +1018,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     }
     const element = event.currentTarget;
     const dataset = element.dataset;
-    const targetTokens = game.user.targets;
+    const targetTokens = new Set(resolveTargetTokens());
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
       await this._onRollExec(event);
       return;
@@ -1234,7 +1235,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     }
     const element = event.currentTarget;
     const dataset = element.dataset;
-    const targetTokens = game.user.targets;
+    const targetTokens = new Set(resolveTargetTokens());
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
       await this._onPowerRollExec(event);
       return;
@@ -1474,17 +1475,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     const targetEffects = item.effects;
     const targetActorName = [];
     const transferEffectName = [];
-    const targetedToken = game.user.targets;
-
-    // if no target,show dialog
-    if (!item.system.selfbuff && targetedToken.size === 0) {
-      const title = `${item.name} (${game.i18n.localize("SW25.Effectslong")})`;
-      const selectedTokens = await targetSelectDialog(title);
-      selectedTokens.forEach((token) => game.user.targets.add(token));
-      if (!selectedTokens) {
-        return;
-      }
-    }
+    const targetTokens = item.system.selfbuff ? new Set(game.user.targets) : new Set(resolveTargetTokensOrWarn());
+    if (!item.system.selfbuff && !targetTokens.size) return;
 
     // Effect name stock for chat message
     targetEffects.forEach((effect) => {
@@ -1492,8 +1484,6 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       transferEffectName.push({ effectName });
     });
 
-    // Apply
-    const targetTokens = game.user.targets;
     let targetTokenId = Array.from(targetTokens, (target) => target.id);
 
     // Target Actor

@@ -29,7 +29,7 @@ import { lootRoll } from "./helpers/lootroll.mjs";
 import { growthCheck } from "./helpers/growthcheck.mjs";
 import { actionRoll } from "./helpers/actionroll.mjs";
 import { rollreq } from "./helpers/rollrequest.mjs";
-import { targetRollDialog, targetSelectDialog } from "./helpers/dialogs.mjs";
+import { targetRollDialog } from "./helpers/dialogs.mjs";
 import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
 import { registerCe7Settings, registerCe7Hooks, runCe7Migration } from "./ce7/equipcard.mjs";
@@ -100,7 +100,6 @@ Hooks.once("init", function () {
     growthCheck,
     actionRoll,
     targetRollDialog,
-    targetSelectDialog,
   };
 
   // Add custom constants for configuration.

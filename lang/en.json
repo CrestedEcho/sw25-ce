@@ -1318,9 +1318,10 @@
       "IgnoreCrits": "Ignore crits",
       "IgnoreCritsTip": "Recalculate using only the first roll, as if the attack did not crit.",
       "Target": "Choose target",
-      "TargetTip": "Pick which token(s) this damage applies to.",
+      "TargetTip": "Select tokens on the map (click or drag a box; targets work if nothing is selected), then click here to set who this applies to.",
       "TargetLabel": "Target:",
-      "NoTarget": "No target, click to pick",
+      "NoTarget": "No target. Select tokens on the map",
+      "NoTokensWarn": "Select tokens on the map first",
       "pd": "Physical",
       "pdTip": "Physical: reduced by the target's Defense.",
       "md": "Magic",
@@ -1332,7 +1333,7 @@
       "mr": "Hits MP",
       "mrTip": "Hits MP: the damage comes off the target's MP instead of HP.",
       "ApplyDamage": "Apply damage {n}",
-      "ApplyDamageTip": "Physical damage: the target's Defense is subtracted. Applies to the tokens you have targeted when you click."
+      "ApplyDamageTip": "Physical damage: the target's Defense is subtracted. Applies to the tokens you have selected (or targeted, if none are selected) when you click."
     }
   },
   "TYPES": {
