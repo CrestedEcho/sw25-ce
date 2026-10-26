@@ -1,9 +1,9 @@
 {{#if targetName}}
-    <button class="buttonclick chat-target" data-buttontype="target-select">
+    <button class="buttonclick chat-target" data-buttontype="target-select" data-tooltip="{{localize "SW25.Card.TargetTip"}}">
         <span class="targetname">{{{targetName}}}</span>
     </button>
 {{else}}
-    <button class="buttonclick chat-target" data-buttontype="target-select">
+    <button class="buttonclick chat-target" data-buttontype="target-select" data-tooltip="{{localize "SW25.Card.TargetTip"}}">
         <i class="fa-solid fa-users-viewfinder"></i>
     </button>
 {{/if}}
@@ -15,70 +15,60 @@
         <div class="element-condition">{{localize (concat "SW25.Effect.Chat." tags.condition)}}</div>
         {{/if}}        
         {{#each tags.elements.magic}}
-        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Item.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Item.md"}}:{{md}}]{{/if}}</div>
+        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Card.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Card.md"}}:{{md}}]{{/if}}</div>
         {{/each}}
         {{#each tags.elements.physical}}
-        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Item.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Item.md"}}:{{md}}]{{/if}}</div>
+        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Card.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Card.md"}}:{{md}}]{{/if}}</div>
         {{/each}}
         {{#each tags.classType}}
-        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Item.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Item.md"}}:{{md}}]{{/if}}</div>
+        <div class="element-tag el-{{key}}">{{localize (concat "SW25.Effect.Chat." key)}}{{#if pd}}[{{localize "SW25.Card.pd"}}:{{pd}}]{{/if}}{{#if md}}[{{localize "SW25.Card.md"}}:{{md}}]{{/if}}</div>
         {{/each}}
     </div>
     {{/if}}
     <div class="sw25-dmghead"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/damage.svg)"></span><div class="v">{{sw25dmgf formula}}</div><div class="n">{{localize "SW25.V2.DamagePCB"}}</div></div>
-    <div class="dice-result">
-        <div class="dice-formula">{{formula}}</div>
-        {{{tooltip}}}
-        <div class="dice-tooltip">
-            <div class="wrapper">
-                <section class="tooltip-part">
-                    <div class="dice">
-                        <header class="part-header flexrow">
-                            <span class="part-formula">{{localize "SW25.Item.Power"}}:{{power}}</span>
-                            {{#if lethalTech}}<span class="part-flavor"> {{localize "SW25.Item.Lethaltech"}}:{{lethalTech}}</span>{{/if}}
-                            {{#if criticalRay}}<span class="part-flavor"> {{localize "SW25.Item.Criticalray"}}:{{criticalRay}}</span>{{/if}}
-                            {{#if pharmTool}}<span class="part-flavor"> {{localize "SW25.Item.Pharmtool"}}:{{pharmTool}}</span>{{/if}}
-                            {{#if powup}}<span class="part-flavor"> {{localize "SW25.Item.Powup"}}:{{powup}}</span>{{/if}}
-                            <span class="part-total">{{results}}</span>
-                            <span class="part-flavor">+{{mod}}</span>
-                            {{#if half}}<span class="part-flavor"> {{localize "SW25.Item.Halfpow"}}:{{half}}</span>{{/if}}
-                        </header>
-                        <ol class="dice-rolls">
-                            {{#each result as |powerResult|}}
-                            <li class="roll die d20">{{powerResult}}</li>
-                            {{/each}}
-                        </ol>
-                    </div>
-                </section>
-                <div class="flexrow">
-                    {{#if shownoc}}
-                    <button class="buttonclick" data-buttontype="buttonhalfc">
-                        {{#if halfcdone}}<span style="color: #0f6f0f;">✔</span>{{/if}}<span style="font-size: 0.8em;">{{localize "SW25.Item.HalfpowC"}}</span>
-                    </button>
-                    <button class="buttonclick" data-buttontype="buttonnoc">
-                        {{#if nocdone}}<span style="color: #0f6f0f;">✔</span>{{/if}}<span style="font-size: 0.8em;">{{localize "SW25.Item.Noc"}}</span>
-                    </button>
-                    {{/if}}
-                </div>
-            </div>
+    <div class="dice-result sw25-pcard">
+        <div class="sw25-prow" data-tooltip="{{localize "SW25.Card.DiceTip"}}"><span class="sw25-plabel">{{localize "SW25.Card.Dice"}}</span><div class="sw25-pval sw25-pdice">{{{tooltip}}}</div></div>
+        <div class="sw25-prow" data-tooltip="{{localize "SW25.Card.TableResultTip"}}"><span class="sw25-plabel">{{localize "SW25.Card.TableResult"}}</span><span class="sw25-pval"><b>{{results}}</b> <small>({{localize "SW25.Card.Power" power=power}})</small>
+            {{#if lethalTech}}<small> · {{localize "SW25.Item.Lethaltech"}} {{lethalTech}}</small>{{/if}}
+            {{#if criticalRay}}<small> · {{localize "SW25.Item.Criticalray"}} {{criticalRay}}</small>{{/if}}
+            {{#if pharmTool}}<small> · {{localize "SW25.Item.Pharmtool"}} {{pharmTool}}</small>{{/if}}
+            {{#if powup}}<small> · {{localize "SW25.Item.Powup"}} {{powup}}</small>{{/if}}
+            {{#if half}}<small> · {{localize "SW25.Item.Halfpow"}} {{half}}</small>{{/if}}</span></div>
+        <div class="sw25-prow" data-tooltip="{{localize "SW25.Card.BonusTip"}}"><span class="sw25-plabel">{{localize "SW25.Card.Bonus"}}</span><span class="sw25-pval"><b>+{{mod}}</b></span></div>
+        <div class="sw25-prow" data-tooltip="{{localize "SW25.Card.CritsTip"}}"><span class="sw25-plabel">{{localize "SW25.Card.Crits"}}</span>
+            <ol class="dice-rolls sw25-pval">
+                {{#each result as |powerResult|}}
+                <li class="roll die d20">{{powerResult}}</li>
+                {{/each}}
+            </ol>
         </div>
+        {{#if shownoc}}
+        <div class="sw25-pbtns">
+            <button class="buttonclick sw25-pbtn" data-buttontype="buttonhalfc" data-tooltip="{{localize "SW25.Card.HalfRoundUpTip"}}">
+                {{#if halfcdone}}<span class="sw25-ok">✔</span>{{/if}}{{localize "SW25.Card.HalfRoundUp"}}
+            </button>
+            <button class="buttonclick sw25-pbtn" data-buttontype="buttonnoc" data-tooltip="{{localize "SW25.Card.IgnoreCritsTip"}}">
+                {{#if nocdone}}<span class="sw25-ok">✔</span>{{/if}}{{localize "SW25.Card.IgnoreCrits"}}
+            </button>
+        </div>
+        {{/if}}
     </div>
 </div>
-<div class="diceresult" style="margin-top: 0px;">
+<div class="diceresult sw25-ptotal" style="margin-top: 0px;" data-tooltip="{{localize "SW25.Card.Total"}}">
     <div class="diceresult-apply">
         <h4 class="dice-total diceresult-apply" style="flex-grow: 1">
-            <span class="buttonclick quantitychange" data-buttontype="buttondecrease">&nbsp;-&nbsp;</span>
+            <span class="buttonclick quantitychange sw25-pstep" data-buttontype="buttondecrease" data-tooltip="{{localize "SW25.Card.Minus"}}">&nbsp;-&nbsp;</span>
             <span class="diceresult-total">
                 {{#if extraRoll}} <span style="color: #0f6f0f; font-size:0.7em;">{{extraRoll}}{{localize "SW25.Extraroll"}} ▶ </span>{{/if}}
                 {{#if fumble}} <span style="color: #862020; font-size:0.7em;">{{localize "SW25.Fumble"}} ▶ </span>{{/if}}
                 {{{total}}}
             </span>
-            <span class="buttonclick quantitychange" data-buttontype="buttonincrease">&nbsp;+&nbsp;</span>
+            <span class="buttonclick quantitychange sw25-pstep" data-buttontype="buttonincrease" data-tooltip="{{localize "SW25.Card.Plus"}}">&nbsp;+&nbsp;</span>
         </h4>
         {{#if showhalf}}
         <div class="result-change">
-            <button class="buttonclick half-button" data-buttontype="buttonhalf">
-                {{#if halfdone}}<span style="color: #0f6f0f; font-size: 0.7em;">✔</span>{{/if}}<span style="font-size: 0.7em;">{{localize "SW25.Item.Halfpow"}}</span>
+            <button class="buttonclick half-button sw25-pbtn" data-buttontype="buttonhalf" data-tooltip="{{localize "SW25.Card.HalfTip"}}">
+                {{#if halfdone}}<span class="sw25-ok">✔</span>{{/if}}{{localize "SW25.Card.Half"}}
             </button>
         </div>
         {{/if}}
@@ -86,12 +76,11 @@
 </div>
 {{#if (eq apply "custom")}}
 <div>
-    <div class="flexrow">
+    <div class="sw25-pbtns">
         {{#each powertype as |type|}}
             {{#unless (eq type "")}}
-            <button class="buttonclick" data-buttontype="button{{type}}" style="font-size:0.6em;">
-                <span style="color: {{#if (or (eq type "hr") (eq type "mr"))}}#0f6f0f{{else}}#862020{{/if}};">✔</span>
-                {{localize (concat "SW25.Item." type)}}
+            <button class="buttonclick sw25-pbtn {{#if (or (eq type "hr") (eq type "mr"))}}sw25-hit{{else}}sw25-kind{{/if}}" data-buttontype="button{{type}}" data-tooltip="{{localize (concat "SW25.Card." type "Tip")}}">
+                <span class="sw25-ok">✔</span>{{localize (concat "SW25.Card." type)}}
             </button>
             {{/unless}}
         {{/each}}
@@ -100,22 +89,22 @@
 {{/if}}
 {{#if (eq apply "on")}}
 <div>
-    <div class="flexrow">
-        <button class="buttonclick" data-buttontype="buttonpd" style="font-size:0.6em;">
-            <span style="color: #862020;">✔</span>{{localize "SW25.Item.pd"}}
+    <div class="sw25-pbtns">
+        <button class="buttonclick sw25-pbtn sw25-kind" data-buttontype="buttonpd" data-tooltip="{{localize "SW25.Card.pdTip"}}">
+            <span class="sw25-ok">✔</span>{{localize "SW25.Card.pd"}}
         </button>
-        <button class="buttonclick" data-buttontype="buttonmd" style="font-size:0.6em;">
-            <span style="color: #862020;">✔</span>{{localize "SW25.Item.md"}}
+        <button class="buttonclick sw25-pbtn sw25-kind" data-buttontype="buttonmd" data-tooltip="{{localize "SW25.Card.mdTip"}}">
+            <span class="sw25-ok">✔</span>{{localize "SW25.Card.md"}}
         </button>
-        <button class="buttonclick" data-buttontype="buttoncd" style="font-size:0.6em;">
-            <span style="color: #862020;">✔</span>{{localize "SW25.Item.cd"}}
+        <button class="buttonclick sw25-pbtn sw25-kind" data-buttontype="buttoncd" data-tooltip="{{localize "SW25.Card.cdTip"}}">
+            <span class="sw25-ok">✔</span>{{localize "SW25.Card.cd"}}
         </button>
-        <span></span>
-        <button class="buttonclick" data-buttontype="buttonhr" style="font-size:0.6em;">
-            <span style="color: #0f6f0f;">✔</span>{{localize "SW25.Item.hr"}}
+        <span class="sw25-psep"></span>
+        <button class="buttonclick sw25-pbtn sw25-hit" data-buttontype="buttonhr" data-tooltip="{{localize "SW25.Card.hrTip"}}">
+            <span class="sw25-ok">✔</span>{{localize "SW25.Card.hr"}}
         </button>
-        <button class="buttonclick" data-buttontype="buttonmr" style="font-size:0.6em;">
-            <span style="color: #0f6f0f;">✔</span>{{localize "SW25.Item.mr"}}
+        <button class="buttonclick sw25-pbtn sw25-hit" data-buttontype="buttonmr" data-tooltip="{{localize "SW25.Card.mrTip"}}">
+            <span class="sw25-ok">✔</span>{{localize "SW25.Card.mr"}}
         </button>
     </div>
 </div>

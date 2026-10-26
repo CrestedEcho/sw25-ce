@@ -3606,3 +3606,22 @@ input[type=checkbox]:disabled + .checkbox--label:focus {
 .sw25-dmghead .v{font-size:16px;font-weight:bold}
 .sw25-dmghead .n{font-size:11px;font-variant:small-caps;opacity:.75}
 .sw25-weaponcard .sw25-dmgval{font-weight:bold}
+
+/* Friendly power/damage chat card: labelled rows, big spelled-out buttons */
+.sw25-pcard{font-size:14px}
+.sw25-pcard .dice-tooltip{display:block}
+.sw25-prow{display:flex;align-items:center;gap:8px;padding:3px 2px;border-bottom:1px dotted #c9b48a;min-height:28px}
+.sw25-plabel{flex:0 0 96px;font-size:13px;font-weight:bold;color:#5a3a1a}
+.sw25-pval{flex:1;font-size:15px}
+.sw25-pval small{font-size:12px;opacity:.8}
+.sw25-pdice .dice-tooltip{margin:0}
+.sw25-pcard ol.dice-rolls{margin:0;padding:0;display:flex;gap:4px;list-style:none}
+.sw25-pbtns{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.sw25-pbtn,button.sw-attack-apply{flex:1 1 auto;min-height:36px;min-width:72px;font-size:14px;line-height:1.2;padding:4px 10px;border-radius:5px;white-space:nowrap}
+.sw25-pbtn .sw25-ok{margin-right:4px}
+.sw25-pbtn.sw25-kind .sw25-ok{color:#862020}
+.sw25-pbtn.sw25-hit .sw25-ok,.sw25-pbtn .sw25-ok{color:#0f6f0f}
+.sw25-psep{flex-basis:100%;height:0}
+.sw25-ptotal .dice-total{font-size:22px}
+.sw25-pstep{display:inline-block;min-width:36px;min-height:36px;line-height:36px;font-size:20px;text-align:center}
+button.sw-attack-apply{display:block;width:100%;margin-top:6px;font-weight:bold}

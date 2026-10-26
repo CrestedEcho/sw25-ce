@@ -7,6 +7,7 @@ import * as RE from "./engine.mjs";
 import { applyDamageToTargets } from "./apply-damage.mjs";
 
 const SYS = CS.SYS;
+const loc = (k, fb, data) => { const i = globalThis.game?.i18n; const t = i?.has?.(k) ? (data ? i.format(k, data) : i.localize(k)) : fb; return data ? String(t).replace(/\{(\w+)\}/g, (m, x) => data[x] ?? m) : t; };
 const esc = (s) => foundry.utils.escapeHTML?.(String(s ?? "")) ?? String(s ?? "");
 
 export async function setDeclare(actor, slugs, on) {
@@ -65,7 +66,7 @@ function renderAttackCard(msg, el) {
   const lines = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join("");
   const btns = (d.buttons ?? []).map((b, i) => `<button type="button" class="sw-attack-btn" data-i="${i}" ${b.used ? "disabled" : ""}>${esc(b.label)}${b.used ? " (used)" : ""}</button>`).join("");
   const links = (d.links ?? []).map((l) => `<div><a class="content-link" draggable="true" data-link data-uuid="${esc(l.uuid)}" data-type="JournalEntry"><i class="fas fa-book-open"></i> ${esc(l.label)}</a></div>`).join("");
-  const apply = d.applyDamage != null ? `<button type="button" class="sw-attack-apply" title="Physical damage: target's Defense is subtracted. Applies to the tokens targeted when you click.">Apply damage ${Number(d.applyDamage)}</button>` : "";
+  const apply = d.applyDamage != null ? `<button type="button" class="sw-attack-apply" data-tooltip="${esc(loc("SW25.Card.ApplyDamageTip", "Physical damage: the target's Defense is subtracted. Applies to the tokens you have targeted when you click."))}">${esc(loc("SW25.Card.ApplyDamage", "Apply damage {n}", { n: Number(d.applyDamage) }))}</button>` : "";
   const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${links}${btns}${apply}</div>`;
   el.querySelector(".sw-attack-apply")?.addEventListener("click", (ev) => { ev.preventDefault(); applyDamageToTargets(d.applyDamage, "physical"); });
   (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
