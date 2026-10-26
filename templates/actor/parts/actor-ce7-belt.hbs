@@ -1,14 +1,14 @@
 <div class="panel ce7-belt"><span class="ribbon">{{localize "SW25.V2.Belt.Title"}}</span>
   <div class="ce7-belt-slots">
     {{#each ce7belt as |b|}}
-    <div class="ce7-belt-slot {{#if b.item}}filled ce7-drag{{/if}}" data-sw-drop="belt" data-index="{{b.index}}" {{#if b.item}}data-item-id="{{b.item.id}}" draggable="true"{{/if}}>
+    <div class="ce7-belt-slot {{#if b.item}}filled ce7-drag{{/if}}" data-sw-drop="belt" data-index="{{b.index}}" {{#if b.item}}data-item-id="{{b.item.id}}" draggable="true"{{else}}data-tooltip="{{localize 'SW25.V2.Belt.EmptyTip'}}"{{/if}}>
       {{#if b.item}}
         <img class="ce7-belt-use" data-tooltip="{{localize 'SW25.V2.Belt.Use'}}" src="{{b.item.img}}" alt=""/>
         <div class="nm ce7-belt-use" data-tooltip="{{b.item.name}}">{{b.item.name}}</div>
         <div class="ticks" data-tooltip="{{localize 'SW25.V2.Belt.Hint'}}">{{#each b.item.ticks as |t|}}<a class="ce7-tick {{#if t.filled}}on{{/if}}"></a>{{/each}}{{#unless b.item.max}}<a class="ce7-tick"></a>{{/unless}}</div>
         <span class="cnt">{{b.item.left}}{{#if b.item.max}}/{{b.item.max}}{{/if}}</span>
         <a class="ce7-belt-clear">&times;</a>
-      {{else}}<span class="ph"><i class="fas fa-flask"></i><br/>{{localize "SW25.V2.Belt.Drop"}}</span>{{/if}}
+      {{else}}<span class="ph"><i class="fas fa-flask"></i><br/>{{localize "SW25.V2.Belt.ClickOrDrop"}}</span>{{/if}}
     </div>
     {{/each}}
   </div>

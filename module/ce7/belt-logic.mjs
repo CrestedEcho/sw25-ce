@@ -50,3 +50,18 @@ export function hasFormula(it) {
   const s = it.system ?? {};
   return !!(s.usedice || s.usedice1 || s.usedice2 || s.usedice3 || s.usepower);
 }
+
+/** Click-to-assign picker rows: consumables in `items` that are not already on the belt. Each row: { id, name, img, left, max, unlimited }. */
+export function beltPickList(items, slots) {
+  const on = new Set(slotsArray(slots).filter(Boolean));
+  return [...(items ?? [])].filter((it) => isConsumable(it) && !on.has(it.id ?? it._id))
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    .map((it) => { const lim = isLimited(it); const u = usesOf(it); return { id: it.id ?? it._id, name: it.name, img: it.img, unlimited: !lim, left: lim ? u.value : null, max: lim ? u.max : null }; });
+}
+
+/** Put `id` into belt slot `idx` (moving it if it already sits elsewhere). Returns new slots array. */
+export function assignBeltSlot(slots, idx, id) {
+  const b = slotsArray(slots).map((x) => (x === id ? "" : x));
+  while (b.length <= idx) b.push("");
+  b[idx] = id; return b;
+}

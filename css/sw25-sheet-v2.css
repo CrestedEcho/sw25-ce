@@ -261,3 +261,11 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25v2 .ce7-feat-clear{font-size:14px}
 .sw25v2 [data-sw-drop].drag-over{outline:2px dashed var(--accent);outline-offset:-2px;background:rgba(160,120,40,.18)}
 .sw25v2 .ce7-belt-slot.filled{cursor:grab}
+.sw25v2 .ce7-belt-slot:not(.filled){cursor:pointer}
+.sw25v2 .ce7-belt-slot:not(.filled):hover{background:rgba(160,120,40,.15)}
+.sw25-belt-pick{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto}
+.sw25-belt-pick-row{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 10px;font-size:15px;text-align:left;cursor:pointer}
+.sw25-belt-pick-row img{width:36px;height:36px;border:0;flex:0 0 36px}
+.sw25-belt-pick-row .nm{flex:1;font-weight:bold}
+.sw25-belt-pick-row .left{font-size:12px;opacity:.8}
+.sw25-belt-pick-none{font-size:14px;padding:8px}

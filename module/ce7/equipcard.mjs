@@ -1,4 +1,4 @@
-import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt } from "./belt-logic.mjs";
+import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt, beltPickList, assignBeltSlot } from "./belt-logic.mjs";
 /**
  * sw25-ce 3.0.0-ce.7 — Equipment Card, Combat-tab Feats / Consumables Belt,
  * portrait framing, class-rule framework hooks and the one-time ce.7 migration.
@@ -244,6 +244,34 @@ export async function useConsumable(actor, it) {
     content: `<div class="sw25-belt-use"><img src="${esc(img)}" width="28" height="28" style="vertical-align:middle;border:0"/> ${game.i18n.format("SW25.V2.Belt.Used", { actor: esc(actor.name), item: esc(name), left: plan.left })}</div>` });
 }
 
+/** Small friendly picker: big rows (icon, name, uses left) of the actor's consumables; click one to put it in slot `idx`. */
+export async function openBeltPicker(actor, idx) {
+  const esc = foundry.utils.escapeHTML;
+  const L = (k, d) => game.i18n.format(`SW25.V2.Belt.${k}`, d ?? {});
+  const rows = beltPickList(actor.items, actor.system.belt?.slots);
+  const content = rows.length
+    ? `<div class="sw25-belt-pick">${rows.map((r) => `<button type="button" class="sw25-belt-pick-row" data-id="${esc(r.id)}" data-tooltip="${esc(L("PickRowTip", { item: r.name }))}">
+        <img src="${esc(r.img)}" alt=""/><span class="nm">${esc(r.name)}</span>
+        <span class="left">${r.unlimited ? esc(L("Unlimited")) : esc(L("UsesLeft", { left: r.left, max: r.max }))}</span></button>`).join("")}</div>`
+    : `<p class="sw25-belt-pick-none"><i class="fas fa-flask"></i> ${esc(L("PickNone"))}</p>`;
+  let chosen = null;
+  await foundry.applications.api.DialogV2.wait({
+    window: { title: L("PickTitle", { n: idx + 1 }), icon: "fas fa-flask" },
+    position: { width: 380 },
+    content,
+    buttons: [{ action: "cancel", label: game.i18n.localize("Cancel"), default: true }],
+    rejectClose: false,
+    render: (event, dialog) => {
+      const el = dialog?.element ?? event?.target?.element;
+      el?.querySelectorAll(".sw25-belt-pick-row").forEach((b) => b.addEventListener("click", (e) => {
+        e.preventDefault(); chosen = b.dataset.id; dialog.close();
+      }));
+    },
+  });
+  if (!chosen || !actor.items.get(chosen)) return;
+  return actor.update({ "system.belt.slots": assignBeltSlot(actor.system.belt?.slots, idx, chosen) });
+}
+
 /** Inventory/belt view flags for consumables: onBelt + left. */
 export function beltFlags(actor) {
   return new Set(slotsArray(actor.system.belt?.slots).filter(Boolean));
@@ -352,6 +380,12 @@ export function bindCe7Listeners(sheet, html) {
 export function bindBeltListeners(sheet, root) {
   const actor = sheet.actor;
   const on = (sel, ev, fn) => root.querySelectorAll(sel).forEach((el) => el.addEventListener(ev, fn));
+  // Click an EMPTY belt slot = pick a consumable from this actor's inventory (drag still works).
+  on(".ce7-belt-slot:not(.filled)", "click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    if (!sheet.isEditable) return;
+    openBeltPicker(actor, Number(ev.currentTarget.dataset.index));
+  });
   on(".ce7-belt-clear", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
     const idx = Number(ev.currentTarget.closest("[data-index]").dataset.index);

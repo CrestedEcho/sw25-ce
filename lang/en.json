@@ -1234,7 +1234,13 @@
         "Show": "Show",
         "ShowHint": "Post this item to chat. Nothing is used up.",
         "Unlimited": "Unlimited uses",
-        "NotConsumable": "{item} is not a Consumable, so it can't go on the belt. Only items of type Consumable can (make one with New Consumable in the inventory)."
+        "NotConsumable": "{item} is not a Consumable, so it can't go on the belt. Only items of type Consumable can (make one with New Consumable in the inventory).",
+        "EmptyTip": "Click to choose a consumable (or drag one here)",
+        "ClickOrDrop": "Click to choose",
+        "PickTitle": "Belt slot {n}: choose a consumable",
+        "PickRowTip": "Put {item} in this belt slot",
+        "UsesLeft": "{left}/{max} uses left",
+        "PickNone": "No consumables in this inventory yet. Use New Consumable in the inventory to make one, then click the slot again."
       }
     },
     "EquipCard": {
