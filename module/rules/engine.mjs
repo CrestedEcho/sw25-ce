@@ -59,6 +59,7 @@ export const KEY_ALIASES = {
   "counter.track": { target: "counter", kind: "counter" },
   "spell.extraTargets": { target: "spell.extraTargets", kind: "spell" },
   "spell.mpMultiplier": { target: "spell.mpMultiplier", kind: "spell" },
+  "spell.makoStoneLimit": { target: "spell.makoStoneLimit", kind: "spell" },
   "equip.rankAllowed": { target: "equip.rankAllowed", kind: "equip" },
   "attack.noStray": { target: "noStray", kind: "flag" },
 };

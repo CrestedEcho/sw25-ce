@@ -17,6 +17,7 @@ export function revealWeakness(targets, total) {
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
+import { castSpellFlow } from "../rules/spell-flow.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "../helpers/utils.mjs";
 
@@ -2571,7 +2572,8 @@ export class SW25Item extends Item {
    */
   async roll() {
     // Compendium spells carry power as {rate, table}: cast via the shared spell card (MP deduction, damage, apply/half).
-    if (this.type === "spell" && hasPowerObject(this.system) && this.actor) return this.castSpell();
+    // Spells on an actor: the cast window (metamagic, MP / Mako Stone payment) and the spell cast card.
+    if (this.type === "spell" && this.actor) return this.castSpell();
     if (
       this.system.clickitem == "dice" ||
       this.system.clickitem == "dice1" ||
@@ -2678,14 +2680,9 @@ export class SW25Item extends Item {
 
     await this.rollExec();
   }
-  /** PC spell cast: deduct MP, roll Power N + Magic Power (powerbase), post the same card as monster casting. */
+  /** PC spell cast: cast window -> pay (MP / Mako Stone) -> casting roll + damage/healing -> cast card. */
   async castSpell() {
-    const actor = this.actor;
-    const plan = planPcCast(this.name, { ...this.system, summary: this.flags?.["sw25-ce"]?.data?.summary ?? "", level: this.flags?.["sw25-ce"]?.data?.level ?? this.system.level }, actor.system.mp?.value);
-    if (plan.res.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${plan.res.mpBefore}) — cast anyway.`);
-    await actor.update({ "system.mp.value": plan.res.mpAfter });
-    plan.res.damage = await rollSpellDamage({ power: plan.meta.power, crit: plan.meta.powerCrit, magicPower: plan.magicPower }, async () => (await new Roll("2d6").evaluate()).total);
-    return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, plan.meta, { mp: plan.mp, hp: 0 }, plan.res) });
+    return castSpellFlow(this.actor, this);
   }
 
   async rollExec(targetTokens) {
@@ -3096,11 +3093,7 @@ export class SW25Item extends Item {
       const name = item.name;
       const type = item.type;
       const meta = 1;
-      if (type === "spell") {
-        const opt = await spellCostOptions(token.actor, item, cost);
-        if (!opt) return;
-        return mpCost(token, opt.cost, opt.label, type, meta);
-      }
+      if (type === "spell") return castSpellFlow(token.actor, token.actor.items.get(item.id) ?? item);
       mpCost(token, cost, name, type, meta);
     }
 

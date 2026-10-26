@@ -43,6 +43,20 @@
         <span class="property--value align-center" style="display:flex;gap:2px;align-items:center"><input type="text" name="system.uses.value" value="{{system.uses.value}}" data-dtype="Number" style="width:2.5em"/>/<input type="text" name="system.uses.max" value="{{system.uses.max}}" data-dtype="Number" style="width:2.5em"/></span>
       </div>
       {{/if}}
+      <div class="property-col" data-tooltip="Mako Stone: holds MP you can spend when casting a spell instead of (or as well as) your own MP.">
+        <label class="property--label-col" for="{{item._id}}system.isMako">Mako Stone</label>
+        <input class="property--value" id="{{item._id}}system.isMako" type="checkbox" name="system.isMako" {{#if system.isMako}}checked{{/if}} data-dtype="Boolean"/>
+      </div>
+      {{#if system.isMako}}
+      <div class="property-col" data-tooltip="Points left / points when full. A stone keeps leftover points and is used up when it hits 0.">
+        <label class="property--label-col">MP points</label>
+        <span class="property--value align-center" style="display:flex;gap:2px;align-items:center"><input type="text" name="system.makoPoints.value" value="{{system.makoPoints.value}}" data-dtype="Number" style="width:2.5em"/>/<input type="text" name="system.makoPoints.max" value="{{system.makoPoints.max}}" data-dtype="Number" style="width:2.5em"/></span>
+      </div>
+      <div class="property-col" data-tooltip="Refills daily (like a Mako Charge Crystal): it is not used up when empty, it waits at 0 until refilled.">
+        <label class="property--label-col" for="{{item._id}}system.makoDaily">Refills daily</label>
+        <input class="property--value" id="{{item._id}}system.makoDaily" type="checkbox" name="system.makoDaily" {{#if system.makoDaily}}checked{{/if}} data-dtype="Boolean"/>
+      </div>
+      {{/if}}
     </section>
     <section class="togglearea">
       <label class="togglearea__btn">

@@ -60,6 +60,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/parts/actor-actions-daemon.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-useitems.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spell-item.hbs",
+    "systems/sw25-ce/templates/actor/parts/actor-spell-header.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-bookmark-item.hbs",
     // ce.7 partials
     "systems/sw25-ce/templates/actor/parts/actor-equipcard.hbs",

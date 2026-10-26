@@ -468,13 +468,17 @@
           }
         }
       },
-      "belt": { "slots": [] },
+      "belt": {
+        "slots": []
+      },
       "sb": {
         "level": null,
         "reputation": 0,
         "weakness": 0,
         "weakPoint": "",
-        "weakPointData": null, "weaknessRevealed": false, "reputationReached": false,
+        "weakPointData": null,
+        "weaknessRevealed": false,
+        "reputationReached": false,
         "initiative": 0,
         "movement": {
           "ground": null,
@@ -668,13 +672,17 @@
       "limited": false,
       "isgm": false,
       "udname": "",
-      "belt": { "slots": [] },
+      "belt": {
+        "slots": []
+      },
       "sb": {
         "level": null,
         "reputation": 0,
         "weakness": 0,
         "weakPoint": "",
-        "weakPointData": null, "weaknessRevealed": false, "reputationReached": false,
+        "weakPointData": null,
+        "weaknessRevealed": false,
+        "reputationReached": false,
         "initiative": 0,
         "movement": {
           "ground": null,
@@ -882,7 +890,13 @@
       "uses": {
         "value": 1,
         "max": 1
-      }
+      },
+      "isMako": false,
+      "makoPoints": {
+        "value": 0,
+        "max": 0
+      },
+      "makoDaily": false
     },
     "spell": {
       "templates": [
@@ -910,7 +924,15 @@
       "excost2": "",
       "extime2": "",
       "expansion2": "",
-      "efallmgpmod": 0
+      "efallmgpmod": 0,
+      "range": "",
+      "status": {
+        "id": "",
+        "label": "",
+        "rounds": 0,
+        "review": false,
+        "note": ""
+      }
     },
     "enhancearts": {
       "templates": [

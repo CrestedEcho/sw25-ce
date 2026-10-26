@@ -1,5 +1,6 @@
 import { registerLiveTargets } from "./helpers/target-chips.mjs";
 import { applyDamageToTokenIds } from "./rules/apply-damage.mjs";
+import { registerSpellCards, applyStatusToTokenIds } from "./rules/spell-flow.mjs";
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
 import { knowledgeUpdates } from "./rules/mknow.mjs";
@@ -196,6 +197,7 @@ Hooks.once("init", function () {
   registerStatBlockUI();
   registerCombatUI();
   registerLiveTargets();
+  registerSpellCards();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
@@ -996,6 +998,7 @@ Hooks.once("ready", async function () {
       .sort();
     if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
 
+    if (data.method == "applyStatus") { applyStatusToTokenIds(data.targetTokens, data.status); return; }
     if (data.method == "applyDamage") { applyDamageToTokenIds(data.targetTokens, data.amount, ["physical", "magic", "heal"].includes(data.kind) ? data.kind : "magic"); return; }
     if (data.method == "revealWeakness") {
       const a = canvas.tokens.get(data.targetToken)?.actor; if (!a) return;

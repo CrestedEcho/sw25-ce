@@ -1,4 +1,4 @@
-<ol class='items-list'>
+<ol class='items-list sw25-spell-list'>
   {{#if magitechrshow}}
     <div class='item flexrow items-header'>
       <div class='item-name'>{{localize "SW25.Item.Resource.Types.Magitech"}}</div>
@@ -40,17 +40,7 @@
       </div>
     </div>
   {{/if}}
-  <li class='item flexrow items-header'>
-    <div class='item-element' style="flex: 0 0 30px;">Lv</div>
-    <div class='item-name'>{{localize "SW25.Item.Spell.Magitech"}}</div>
-    <div class='item-element' style="flex: 0 0 30px;">HP</div>
-    <div class='item-element' style="flex: 0 0 30px;">MP</div>
-    <div class='item-element sidebar-hidden' style="flex: 0 0 60px;">{{localize "SW25.Target"}}</div>
-    <div class='item-element sidebar-hidden' style="flex: 0 0 60px;">{{localize "SW25.Rangeshape"}}</div>
-    <div class='item-element sidebar-hidden' style="flex: 0 0 100px;">{{localize "SW25.Time"}}</div>
-    <div class='item-element sidebar-hidden' style="flex: 0 0 40px;">{{localize "SW25.Item.Resist"}}</div>
-    <div class='item-element' style="flex: 0 0 80px;">{{localize "SW25.Item.Prop"}}</div>
-  </li>
+  {{> "systems/sw25-ce/templates/actor/parts/actor-spell-header.hbs" title=(localize "SW25.Item.Spell.Magitech")}}
   {{#each magitech as |item id|}}
     {{> "systems/sw25-ce/templates/actor/parts/actor-spell-item.hbs" item=item isOwner=../isOwner}}
   {{/each}}

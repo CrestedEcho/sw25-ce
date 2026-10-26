@@ -3659,3 +3659,57 @@ button.sw-attack-apply{display:block;width:100%;margin-top:6px;font-weight:bold}
 .sw25-live-targets{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 4px;font-size:12px}
 .sw25-live-targets .target-empty{opacity:.75;font-style:italic}
 button.chat-target[data-buttontype="target-select"]{display:none}
+
+/* ===== Spell list rows, cast window, spell cards ===== */
+.sw25-spellrow { display:grid; grid-template-columns:40px minmax(120px,1fr) 52px 80px 70px 80px auto; align-items:center; gap:6px; padding:3px 4px; }
+.sw25-spellrow-head { font-weight:bold; font-size:12px; border-bottom:1px solid #7a6a4a; }
+.sw25-spellrow-li { border-bottom:1px solid rgba(0,0,0,.12); list-style:none; }
+.sw25-spellrow-li:hover { background:rgba(120,90,40,.07); }
+.sw25-sr-icon img { border:0; border-radius:6px; display:block; }
+.sw25-sr-title { display:flex; gap:4px; align-items:center; font-weight:bold; }
+.sw25-spell-name { cursor:pointer; }
+.sw25-spell-name:hover { text-decoration:underline; }
+.sw25-sr-sub { font-size:11px; opacity:.75; }
+.sw25-sr-cell { text-align:center; font-size:12px; }
+.sw25-sr-mp { font-weight:bold; color:#2a4f9a; }
+.sw25-sr-actions { display:flex; gap:6px; align-items:center; justify-content:flex-end; }
+.sw25-sr-cast, .sw25-castwin button, .sw25-sc-btn { min-height:28px; padding:2px 12px; border-radius:6px; font-weight:bold; cursor:pointer; }
+.sw25-sr-cast { background:#3c5fa8; color:#fff; border:1px solid #29467f; line-height:1; width:auto; }
+.sw25-sr-desc { padding:4px 10px 8px 48px; font-size:12px; }
+.sw25-sr-status { color:#6a8a2a; font-size:11px; }
+
+.sw25-castwin { display:flex; flex-direction:column; gap:8px; }
+.sw25-cw-title { font-size:16px; font-weight:bold; }
+.sw25-cw-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.sw25-cw-row > span:first-child { min-width:110px; }
+.sw25-cw-step { min-width:70px; }
+.sw25-cw-num { min-width:2.5em; text-align:center; font-weight:bold; }
+.sw25-cw-hint { font-size:11px; opacity:.75; }
+.sw25-cw-cost { display:flex; justify-content:space-between; padding:6px 10px; background:rgba(60,95,168,.1); border-radius:6px; font-size:14px; }
+.sw25-cw-total { font-size:20px; font-weight:bold; color:#2a4f9a; }
+.sw25-cw-pay { border:1px solid rgba(0,0,0,.15); border-radius:6px; padding:6px 8px; display:flex; flex-direction:column; gap:4px; }
+.sw25-cw-paytitle { font-weight:bold; }
+.sw25-cw-plan { font-size:12px; }
+.sw25-cw-warn { color:#a22; font-weight:bold; }
+.sw25-cw-warn:empty { display:none; }
+
+.sw25-spellcard { border:1px solid #7a6a4a; border-radius:8px; padding:6px 8px; background:rgba(255,250,240,.6); }
+.sw25-sc-head { display:flex; gap:8px; align-items:center; }
+.sw25-sc-head img { width:36px; height:36px; border:0; border-radius:6px; }
+.sw25-sc-name { font-size:15px; font-weight:bold; }
+.sw25-sc-sub { font-size:11px; opacity:.8; }
+.sw25-sc-tags { display:flex; flex-wrap:wrap; gap:4px; margin:4px 0; }
+.sw25-sc-tag { background:rgba(0,0,0,.07); border-radius:10px; padding:0 8px; font-size:11px; }
+.sw25-sc-roll { display:flex; justify-content:space-between; align-items:center; margin:3px 0; padding:3px 6px; background:rgba(0,0,0,.05); border-radius:5px; }
+.sw25-sc-roll.fumble { background:rgba(170,30,30,.15); }
+.sw25-sc-total { font-size:18px; font-weight:bold; }
+.sw25-sc-f { font-size:11px; opacity:.75; }
+.sw25-sc-btns { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.sw25-sc-btn { flex:1 1 45%; border:1px solid rgba(0,0,0,.25); }
+.sw25-sc-btn.dmg { background:#a8352f; color:#fff; }
+.sw25-sc-btn.heal { background:#2f8a4a; color:#fff; }
+.sw25-sc-btn.status { background:#6a4fa0; color:#fff; }
+.sw25-sc-btn.alt { background:#d8c9a8; }
+.sw25-sc-mp { font-size:12px; margin-top:4px; border-top:1px dashed rgba(0,0,0,.2); padding-top:3px; }
+.sw25-sc-short { color:#a22; font-weight:bold; font-size:12px; }
+.sw25-sc-desc { font-size:12px; margin-top:4px; }

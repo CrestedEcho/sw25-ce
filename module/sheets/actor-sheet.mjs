@@ -16,6 +16,8 @@ import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equipcard.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
+import { castSpellFlow, postSpellDescription } from "../rules/spell-flow.mjs";
+import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf } from "../rules/spell-school.mjs";
 
 /**
@@ -791,6 +793,10 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     });
     html.find(".spelllist-label").click(this._showSpellList.bind(this));
     html.find(".spell-label").click(this._showSpellDetails.bind(this));
+    // Spell rows: name -> description in chat (no MP), Cast -> cast window. Toggle shows the description inline.
+    html.on("click", ".sw25-spell-name", (ev) => { ev.preventDefault(); const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId); if (it) postSpellDescription(this.actor, it); });
+    html.on("click", ".sw25-spell-cast", (ev) => { ev.preventDefault(); const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId); if (it) castSpellFlow(this.actor, it); });
+    html.on("click", ".sw25-spell-more", (ev) => { ev.preventDefault(); $(ev.currentTarget).closest(".spell").find(".spell-description").slideToggle(); });
     html.find(".action-label").click(this._showActionDetails.bind(this));
 
     // -------------------------------------------------------------
@@ -1593,11 +1599,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       return;
     }
     
-    if (type === "spell") {
-      const opt = await spellCostOptions(token.actor, token.actor.items.get(id) ?? this.actor.items.get(id), cost);
-      if (!opt) return;
-      return mpCost(token, opt.cost, opt.label, type, meta);
-    }
+    if (type === "spell") return castSpellFlow(token.actor, token.actor.items.get(id) ?? this.actor.items.get(id));
     mpCost(token, cost, name, type, meta);
   }
 
