@@ -2,6 +2,7 @@ const SW25_AE_MODES = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4
 import { effectInitPC } from "../sw25.mjs";
 import { PT } from "../helpers/powerroll.mjs";
 import * as RE from "../rules/engine.mjs";
+import { weaponCritValue } from "../rules/crit-value.mjs";
 import * as CS from "../rules/combat-state.mjs";
 import { prepareStatBlock } from "../rules/statblock.mjs";
 import { bestClass, EVASION_CLASSES } from "../rules/class-pick.mjs";
@@ -168,6 +169,15 @@ export class SW25Actor extends Actor {
 
     // ce.7 class-rule framework (data comes from class items; inert when empty)
     systemData.classRules = sw25AggregateClassRules(this);
+    // One crit value per weapon (class rules such as Fencer -1 included) for the sheet, power table and damage card.
+    {
+      const efc = Number(systemData.effect?.efcvalue) || 0;
+      for (const w of this.items) {
+        if (w.type !== "weapon") continue;
+        w.system.totalcvalue = weaponCritValue(w.system.cvalue, efc, sw25CritModFor(systemData.classRules, w));
+        if (Array.isArray(w.system.powertable)) w.system.powertable[1] = w.system.totalcvalue;
+      }
+    }
 
     //Calculate Battle Data (reset first so a missing/unselected weapon doesn't show stale values)
     for (const k of ["itemname","itemhitformula","itemhitbase","itempowerformula","itempower","itemcvalue","itempowerbase"])
@@ -193,18 +203,8 @@ export class SW25Actor extends Actor {
             systemData.resuse = item.system.resuse;
             systemData.resusequantity = item.system.resusequantity;
           }
-          if (item.system.cvalue == null || item.system.cvalue == 0)
-            item.system.cvalue = 10;
-          if (!systemData.effect) systemData.efcmod = 0;
-          else if (systemData.effect.efcvalue)
-            systemData.efcmod = Number(systemData.effect.efcvalue);
-          else systemData.efcmod = 0;
-          systemData.itemcvalue =
-            Number(item.system.cvalue) + Number(systemData.efcmod);
-          {
-            const cm = sw25CritModFor(systemData.classRules, item);
-            if (cm) systemData.itemcvalue = Math.max(8, systemData.itemcvalue + cm);
-          }
+          systemData.efcmod = Number(systemData.effect?.efcvalue) || 0;
+          systemData.itemcvalue = item.system.totalcvalue;
           systemData.itempowerbase = item.system.powerbase;
           if (item.system.halfpowmod)
             systemData.itempowerbase += item.system.halfpowmod;

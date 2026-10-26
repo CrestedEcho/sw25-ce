@@ -1167,7 +1167,7 @@
         "MP": "Magic Points, spent to cast spells and use some abilities.",
         "MaxMod": "Bonus added to the calculated maximum.",
         "Accuracy": "Accuracy check: 2d6 + weapon class level + Dexterity bonus + weapon accuracy modifier. Click to roll.",
-        "Damage": "Damage: roll on the weapon's Power table (k = power, @ = critical value) + weapon class level + Strength bonus. Click to roll.",
+        "Damage": "Damage: roll 2d6 on the weapon's Power table (Power = which row, Crit = roll this or higher to roll again) + Bonus (weapon class level + Strength bonus). Click to roll.",
         "Evasion": "Evasion check: 2d6 + Fighter / Grappler / Fencer level + Agility bonus + armor/shield evasion. Click to roll.",
         "Defense": "Defense: subtracted from physical damage you take.",
         "MagicDefense": "Reduction applied to magical damage.",

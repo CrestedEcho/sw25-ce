@@ -681,6 +681,9 @@ export class SW25Item extends Item {
         if (!systemData.checkskill) { systemData.checkskill = cls.name; if (!systemData.checkabi) systemData.checkabi = "dex"; }
         if (!systemData.powerskill) { systemData.powerskill = cls.name; if (!systemData.powerabi) systemData.powerabi = "str"; }
       }
+      // A class picked but no ability (common in imported/test data) left Dex/Str out of Accuracy/Damage.
+      if (systemData.checkskill && !systemData.checkabi) systemData.checkabi = "dex";
+      if (systemData.powerskill && !systemData.powerabi) systemData.powerabi = "str";
     }
     let checklevelmod = 0;
     let checklevelmod1 = 0;

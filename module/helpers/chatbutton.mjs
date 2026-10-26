@@ -5,6 +5,8 @@ import { mpCost, hpCost } from "./mpcost.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "./utils.mjs";
+import { weaponCritValue } from "../rules/crit-value.mjs";
+import { sw25CritModFor } from "../documents/actor.mjs";
 import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn } from "./target-chips.mjs";
 
 /**
@@ -196,8 +198,9 @@ export async function chatButton(chatMessage, buttonType) {
           actor.system.efcmod = Number(actor.system.effect.efspellcvalue);
         else actor.system.efcmod = 0;
       }
-      item.system.totalcvalue =
-        Number(item.system.cvalue) + Number(actor.system.efcmod);
+      item.system.totalcvalue = item.type === "weapon"
+        ? weaponCritValue(item.system.cvalue, actor.system.efcmod, sw25CritModFor(actor.system.classRules, item))
+        : Number(item.system.cvalue) + Number(actor.system.efcmod);
 
       let halfpow, halfpowmod, lethaltech, criticalray, pharmtool, powup;
       if (item.system.halfpow == true) halfpow = 1;
