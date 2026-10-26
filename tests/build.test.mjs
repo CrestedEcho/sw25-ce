@@ -81,7 +81,7 @@ test("test actors: PC embeds, fellow, multi-part mainPart first, castable magic,
     gear: { weapons: [{ name: "Sword", category: "sword" }], accessories: [{ name: "Belt", slot: "waist" }], items: ["Lifegrass x2"] } }, ctx);
   assert.equal(pc.type, "character"); assert.equal(pc.system.money, 40); assert.equal(pc.system.abilities.dex.valuebase, 11);
   assert.equal(pc.items.find((i) => i.type === "skill").system.skilllevel, 2);
-  assert.equal(pc.items.find((i) => i.name === "Lifegrass").system.quantity, 2);
+  { const lg = pc.items.find((i) => i.name === "Lifegrass"); assert.equal(lg.type, "consumable"); assert.equal(lg.system.limitedUses, true); assert.deepEqual(lg.system.uses, { value: 2, max: 2 }); }
   assert.ok(ctx.gaps.some((g) => g.includes('"nope"')));
   assert.equal(pc.img, artPath("pcs", "pc", "portrait")); assert.equal(pc.prototypeToken.texture.src, "assets/sw25-content/actors/pcs/pc-token.webp");
   const f = testActorDoc("npcs", { slug: "fellow", name: "W", fellow: true, hostile: false, mp: 10, actionTable: [{ action: "Attack" }] }, ctx);

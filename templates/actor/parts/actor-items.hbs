@@ -7,6 +7,10 @@
         <i class='fas fa-plus'></i>
         {{localize 'DOCUMENT.New' type=''}}
       </a>
+      <a class='item-control item-create' title='{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.consumable")}}' data-type='consumable' >
+        <i class='fas fa-flask'></i>
+        {{localize 'TYPES.Item.consumable'}}
+      </a>
     </div>
   </li>
   {{#each gear as |item id|}}
@@ -22,8 +26,12 @@
         </div>
         {{> "systems/sw25-ce/templates/actor/parts/actor-useitems.hbs" item=item}}
         <div class="sw25-belt-inv flexrow" style="flex: 0 0 90px;">
+          {{#if item.consumable}}
           <label data-tooltip="{{localize 'SW25.V2.Belt.OnBelt'}}"><input type="checkbox" class="sw25-belt-toggle" {{#if item.onBelt}}checked{{/if}}/> <i class="fas fa-flask"></i></label>
           <a class="sw25-item-use" data-tooltip="{{localize 'SW25.V2.Belt.Use'}}"><i class="fas fa-hand-sparkles"></i> {{localize 'SW25.V2.Belt.Use'}}</a>
+          {{else}}
+          <a class="sw25-item-use" data-tooltip="{{localize 'SW25.V2.Belt.ShowHint'}}"><i class="fas fa-comment"></i> {{localize 'SW25.V2.Belt.Show'}}</a>
+          {{/if}}
         </div>
         <div class='item-quantity item-prop flexrow flex-group-center' style="flex: 0 0 60px;">
           <a class="quantity-button" data-action="decrease" data-property="item.system.quantity">

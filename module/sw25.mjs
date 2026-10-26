@@ -32,7 +32,7 @@ import { rollreq } from "./helpers/rollrequest.mjs";
 import { targetRollDialog } from "./helpers/dialogs.mjs";
 import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
-import { registerCe7Settings, registerCe7Hooks, runCe7Migration } from "./ce7/equipcard.mjs";
+import { registerCe7Settings, registerCe7Hooks, runCe7Migration, runBeltConsumableMigration } from "./ce7/equipcard.mjs";
 import { formatDamage, formatDamageFormula } from "./rules/damage-display.mjs";
 
 // v14 compat: core "rollMode" setting became "messageMode". Returns a legacy roll-mode string.
@@ -219,6 +219,7 @@ Hooks.once("ready", async () => {
     }
     // ce.7 one-time, non-destructive Equipment Card / feat-slot setup
     await runCe7Migration();
+    await runBeltConsumableMigration();
   }
 });
 

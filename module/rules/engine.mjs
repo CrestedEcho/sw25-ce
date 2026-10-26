@@ -481,5 +481,5 @@ export const KIND_TYPES = {
   language: ["language"],
   weapon: ["weapon"],
   armor: ["armor"],
-  item: ["item", "accessory"],
+  item: ["item", "consumable", "accessory"],
 };

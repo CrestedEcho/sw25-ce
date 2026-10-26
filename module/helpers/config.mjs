@@ -649,6 +649,7 @@ SW25.itemTypeList = [
   { type: "armor", label: "SW25.TYPES.Item.armor" },
   { type: "accessory", label: "SW25.TYPES.Item.accessory" },
   { type: "item", label: "SW25.TYPES.Item.item" },
+  { type: "consumable", label: "SW25.TYPES.Item.consumable" },
   { type: "spell", label: "SW25.TYPES.Item.spell" },
   { type: "enhancearts", label: "SW25.TYPES.Item.enhancearts" },
   { type: "magicalsong", label: "SW25.TYPES.Item.magicalsong" },

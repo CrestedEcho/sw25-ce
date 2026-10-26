@@ -51,7 +51,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const onBelt = beltFlags(this.actor);
     for (const it of base.items) {
       it.rollable = it.type === "weapon";
-      if (it.type === "item") { const d = this.actor.items.get(it._id); it.consumable = true; it.onBelt = onBelt.has(it._id); it.left = usesOf(d).value; }
+      if (it.type === "consumable") { const d = this.actor.items.get(it._id); it.consumable = true; it.onBelt = onBelt.has(it._id); it.limited = !!d?.system?.limitedUses; it.left = it.limited ? usesOf(d).value : "∞"; }
+      else if (it.type === "item") it.showable = true;
     }
     base.ce7belt = beltContext(this.actor);
     // Spellcasting: each castable skill lists its spells with a Cast button (and GM-only toggle when there is no Power).

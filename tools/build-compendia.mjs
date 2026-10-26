@@ -47,6 +47,12 @@ const KEYDOC = { Item: "items", Actor: "actors", JournalEntry: "journal" };
 // XP table: Writer exptable wins; else major -> A, minor -> B.
 export const exptableOf = (d) => d.exptable || ({ major: "A", minor: "B" })[String(d.category ?? "").toLowerCase()] || "";
 /** Recursively list Writer JSON files; nested files get slug "<subdir>/<slug>" (matches grant refs like divine-lyphos/peace). */
+/** Obvious single-use consumables by Writer type/category/name: potions, herbs, bandages, scrolls, ammo, magic stones. */
+const CONSUMABLE_TYPES = new Set(["consumable", "potion", "herb"]);
+const CONSUMABLE_RX = /(potion|tonic|elixir|antidote|salve|herb|grass|leaf|bandage|scroll)|\b(cards?|bullets?|arrows?|bolts?|ammo|mako stones?)\b/i;
+export const isConsumableEntry = (d = {}) => CONSUMABLE_TYPES.has(String(d.type ?? "").toLowerCase()) || CONSUMABLE_TYPES.has(String(d.category ?? "").toLowerCase()) || CONSUMABLE_RX.test(String(d.name ?? ""));
+/** Consumable system fields: limited uses, uses = explicit d.uses, else quantity, else 1. */
+export const consumableSystem = (d = {}, quantity) => { const n = Math.max(1, Number(d.uses ?? quantity ?? d.quantity) || 1); return { limitedUses: d.limitedUses ?? true, uses: { value: n, max: n }, quantity: 1 }; };
 export function listData(dir, prefix = "") {
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -139,7 +145,8 @@ export function toDoc(cat, d) {
       Object.assign(base.flags["sw25-ce"], { mp, ...(d.element ? { element: d.element } : {}), ...(god ? { god: god[1] ?? god[2] } : {}), ...(warn.length ? { warnings: warn } : {}), ...(d.todo ? { todo: d.todo } : {}) });
       return { ...base, type: "spell", img: iconImg("spells", d), system: { ...sys, type: SCHOOL_TO_TYPE[String(d.school ?? "").toLowerCase()] ?? "", mpcost: mp.base ?? mp.raw, mpcostText: mp.raw, element: d.element ?? "", ...(d.mpRule ? { mpRule: d.mpRule } : {}), ...(d.power ? { ...spellPowerFields(d), powerCrit: d.powerCrit ?? null } : {}), ...(d.powerByDeityRank ? { powerByDeityRank: d.powerByDeityRank } : {}), ...(d.weapon ? { weapon: d.weapon } : {}), target: d.target ?? "", time: d.duration ?? "", resist: d.resistance ?? "" } };
     }
-    case "items": return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : "item", img: iconImg("items", d), system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}) } };
+    case "items": { const cons = !["weapon", "armor", "shield", "accessory"].includes(d.type) && isConsumableEntry(d);
+      return { ...base, type: d.type === "weapon" ? "weapon" : d.type === "armor" ? "armor" : d.type === "accessory" ? "accessory" : cons ? "consumable" : "item", img: iconImg("items", d), system: { ...sys, category: d.category ?? "", reqstr: d.minStr ?? null, price: d.price ?? null, ...(d.type === "weapon" ? weaponSystem(d) : {}), ...(cons ? consumableSystem(d) : {}) } }; }
     case "gods": {
       const { data, ...f } = base.flags["sw25-ce"];
       const html = desc({ description: [d.title, d.domain, d.holySymbol && `Holy symbol: ${d.holySymbol}`, d.alignmentRaceNotes].filter(Boolean).join(". ") })
@@ -327,7 +334,8 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
       gearItem(w, "weapon", { type: w.category ?? "", usage: w.stance ?? "", range: w.range ?? "", reqstr: w.minStr ?? null, ...weaponSystem({ ...(cat ?? {}), ...w, accuracy: cat?.accuracy ?? 0, extraDamage: cat?.extraDamage ?? 0, powerTable: w.powerTable ?? cat?.powerTable }) }); }
     for (const a of g.armor ?? []) gearItem(a, "armor", { type: a.category ?? "", pp: a.defense ?? 0, dodge: a.evasion ?? 0, reqstr: a.minStr ?? null });
     for (const a of g.accessories ?? []) { if (!a.slot) gap(`accessory "${a.name}" has no slot`); gearItem(a, "accessory", { accpart: a.slot ?? "" }); }
-    for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); gearItem({ name: m ? m[1] : s }, "item", { quantity: m ? Number(m[2]) : 1 }); }
+    for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); const name = m ? m[1] : s; const q = m ? Number(m[2]) : 1;
+      if (isConsumableEntry({ name })) gearItem({ name }, "consumable", consumableSystem({}, q)); else gearItem({ name }, "item", { quantity: q }); }
     // Ship ready to play: weapons/armor equipped, the first weapon on the Accuracy tile, and Attack/Evasion Class set
     // to the class the engine would pick (best fighter class, Marksman for ranged) instead of "Select...".
     for (const it of items) if (it.type === "weapon" || it.type === "armor") it.system.equip = true;

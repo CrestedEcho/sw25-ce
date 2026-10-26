@@ -700,7 +700,9 @@
         "Otherfeature": "Otherfeature Setting",
         "MonsterAbility": "MonsterAbility Setting"
       },
-      "Uses": "Uses"
+      "Uses": "Uses",
+      "LimitedUses": "Has limited uses",
+      "LimitedUsesHint": "Tick to track uses: Use takes one off, and the item is removed after its last use. Unticked, Use just posts and rolls it."
     },
     "Effect": {
       "Source": "Source",
@@ -1213,7 +1215,12 @@
         "Use": "Use",
         "OnBelt": "On belt",
         "Used": "{actor} uses {item} ({left} left).",
-        "Hint": "Click a tick to use one, Shift-click to restore one."
+        "Hint": "Click a tick to use one, Shift-click to restore one.",
+        "OnlyConsumables": "Only Consumable items can go on the belt.",
+        "Cleaned": "Belt: removed non-consumable entries on {n} actor(s).",
+        "Show": "Show",
+        "ShowHint": "Post this item to chat. Nothing is used up.",
+        "Unlimited": "Unlimited uses"
       }
     },
     "EquipCard": {
@@ -1347,6 +1354,7 @@
       "armor": "Armor & Shield",
       "accessory": "Accessory",
       "item": "Item",
+      "consumable": "Consumable",
       "spell": "Spell",
       "enhancearts": "Technique",
       "magicalsong": "Spellsong",

@@ -62,7 +62,7 @@ export class SW25Item extends Item {
         data.img = "icons/svg/shield.svg";
       } else if (data.type === "accessory") {
         data.img = "icons/svg/wing.svg";
-      } else if (data.type === "item") {
+      } else if (data.type === "item" || data.type === "consumable") {
         data.img = "icons/svg/item-bag.svg";
       } else if (data.type === "spell") {
         data.img = "icons/svg/daze.svg";
@@ -624,6 +624,7 @@ export class SW25Item extends Item {
       itemData.type !== "armor" &&
       itemData.type !== "accessory" &&
       itemData.type !== "item" &&
+      itemData.type !== "consumable" &&
       itemData.type !== "spell" &&
       itemData.type !== "enhancearts" &&
       itemData.type !== "magicalsong" &&
@@ -1965,7 +1966,7 @@ export class SW25Item extends Item {
   }
 
   _prepareItemData(itemData) {
-    if (itemData.type !== "item") return;
+    if (itemData.type !== "item" && itemData.type !== "consumable") return;
 
     // Make modifications to data here. For example:
     const systemData = itemData.system;

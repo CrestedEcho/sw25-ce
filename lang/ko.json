@@ -1066,6 +1066,7 @@
       "armor": "방어구・방패",
       "accessory": "장식품",
       "item": "아이템",
+      "consumable": "소모품",
       "spell": "마법",
       "enhancearts": "연공",
       "magicalsong": "주가・종율",

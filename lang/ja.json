@@ -1066,6 +1066,7 @@
       "armor": "防具・盾",
       "accessory": "装飾品",
       "item": "アイテム",
+      "consumable": "消耗品",
       "spell": "魔法",
       "enhancearts": "練技",
       "magicalsong": "呪歌・終律",

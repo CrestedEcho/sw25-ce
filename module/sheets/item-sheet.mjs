@@ -129,7 +129,7 @@ export class SW25ItemSheet extends foundry.appv1.sheets.ItemSheet {
       };
     }
 
-    if (itemData.type == "item") {
+    if (itemData.type == "item" || itemData.type == "consumable") {
       this._prepareItemRollData(context);
       this._prepareItemData(context);
       context.clickitemOptions = {

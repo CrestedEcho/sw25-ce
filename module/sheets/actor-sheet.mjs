@@ -369,7 +369,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
         }
       }
       // Append to gear.
-      else if (i.type === "item") {
+      else if (i.type === "item" || i.type === "consumable") {
         gear.push(i);
       }
 

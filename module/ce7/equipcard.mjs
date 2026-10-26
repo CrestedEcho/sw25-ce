@@ -1,4 +1,4 @@
-import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray } from "./belt-logic.mjs";
+import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt } from "./belt-logic.mjs";
 /**
  * sw25-ce 3.0.0-ce.7 — Equipment Card, Combat-tab Feats / Consumables Belt,
  * portrait framing, class-rule framework hooks and the one-time ce.7 migration.
@@ -177,7 +177,7 @@ export function prepareCe7Context(sheet, context) {
   // Consumables belt
   context.ce7belt = beltContext(actor, mini);
   const on = beltFlags(actor);
-  for (const g of context.gear ?? []) g.onBelt = on.has(g._id);
+  for (const g of context.gear ?? []) { g.consumable = g.type === "consumable"; g.onBelt = g.consumable && on.has(g._id); }
 }
 
 /** Consumables belt view (PC sheet and NPC / monster stat-block sheet share it). */
@@ -187,17 +187,18 @@ export function beltContext(actor, mini = (it) => (it ? { id: it.id, name: it.na
   const belt = Array.isArray(sys.belt?.slots) ? sys.belt.slots : Object.values(sys.belt?.slots ?? {});
   return Array.from({ length: n }, (_, index) => {
     const it = actor.items.get(belt[index]);
-    if (!it) return { index, item: null };
+    if (!it || !isConsumable(it)) return { index, item: null };
     const u = usesOf(it);
+    if (!isLimited(it)) return { index, item: { ...mini(it), unlimited: true, left: "∞", max: 0, ticks: [] } };
     return { index, item: { ...mini(it), left: u.value, max: u.max, ticks: Array.from({ length: Math.min(u.max, 20) }, (_, i) => ({ filled: i < u.value })) } };
   });
 }
 
-/** Put a dropped consumable (type "item") into a belt slot; copies it onto the actor first if needed. */
+/** Put a dropped consumable (type "consumable") into a belt slot; copies it onto the actor first if needed. */
 export async function dropOnBelt(actor, target, data) {
   const src = await Item.implementation.fromDropData(data);
   if (!src) return true;
-  if (src.type !== "item") { ui.notifications.warn(game.i18n.format("SW25.EquipCard.WrongType", { item: src.name, slot: game.i18n.localize("SW25.V2.Belt.Title") })); return true; }
+  if (!isConsumable(src)) { ui.notifications.warn(game.i18n.format("SW25.EquipCard.WrongType", { item: src.name, slot: game.i18n.localize("SW25.V2.Belt.Title") })); return true; }
   let it = src;
   if (src.parent !== actor) { const obj = src.toObject(); delete obj._id; it = (await actor.createEmbeddedDocuments("Item", [obj], { sw25Slot: true }))[0]; }
   const idx = Number(target.dataset.index);
@@ -212,7 +213,8 @@ const beltN = () => Math.clamp?.(Number(game.settings.get(SYS, "beltSlots")) || 
 
 /** Inventory belt checkbox: tick adds to the first free slot, untick removes. Full belt -> notification. */
 export async function toggleBelt(actor, itemId, on) {
-  const r = toggleBeltSlot(actor.system.belt?.slots, itemId, on, beltN());
+  const r = toggleBeltSlot(actor.system.belt?.slots, itemId, on, beltN(), actor.items.get(itemId) ?? null);
+  if (r.rejected) { ui.notifications.warn(game.i18n.localize("SW25.V2.Belt.OnlyConsumables")); return false; }
   if (r.full) { ui.notifications.warn(game.i18n.localize("SW25.V2.Belt.Full")); return false; }
   if (r.changed) await actor.update({ "system.belt.slots": r.slots });
   return r.changed;
@@ -222,6 +224,7 @@ export async function toggleBelt(actor, itemId, on) {
  *  roll code when it has one), then consume one use. Last use deletes the item and clears its belt slot. */
 export async function useConsumable(actor, it) {
   if (!it) return;
+  // Non-consumables (and unlimited consumables) only post their card / roll: never decrement, never delete.
   const plan = consumePlan(it);
   if (!plan.ok) return ui.notifications.warn(game.i18n.format("SW25.V2.Belt.Empty", { item: it.name }));
   const esc = foundry.utils.escapeHTML;
@@ -231,6 +234,7 @@ export async function useConsumable(actor, it) {
     const desc = await foundry.applications.ux.TextEditor.implementation.enrichHTML(it.system?.description ?? "", { relativeTo: it });
     await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="sw25-sbshow"><header><img src="${esc(img)}" width="32" height="32" style="vertical-align:middle;border:0"> <b>${esc(name)}</b></header>${desc}</div>` });
   }
+  if (!plan.consumes) return;
   if (plan.delete) {
     const r = toggleBeltSlot(actor.system.belt?.slots, it.id, false, beltN());
     if (r.changed) await actor.update({ "system.belt.slots": r.slots });
@@ -359,6 +363,7 @@ export function bindBeltListeners(sheet, root) {
     ev.preventDefault();
     const it = actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId);
     if (!it) return;
+    if (!isLimited(it)) return;
     const u = usesOf(it);
     const restore = ev.shiftKey;
     let nv = restore ? u.value + 1 : u.value - 1;
@@ -471,6 +476,7 @@ export function registerCe7Settings() {
     onChange: () => globalThis.sw25RerenderSheets?.(),
   });
   game.settings.register(SYS, "ce7Migrated", { scope: "world", config: false, type: Boolean, default: false });
+  game.settings.register(SYS, "beltConsumablesMigrated", { scope: "world", config: false, type: Boolean, default: false });
 }
 
 const mine = (userId) => userId === game.user.id;
@@ -589,4 +595,22 @@ export async function runCe7Migration() {
   }
   await game.settings.set(SYS, "ce7Migrated", true);
   if (n) ui.notifications.info(`SW2.5 ce.7: Equipment Card set up for ${n} character(s).`);
+}
+
+/** Belt clean-up: clear belt entries that point at missing items or non-consumables. Returns true if written. */
+export async function cleanBelt(actor) {
+  if (!actor?.system?.belt) return false;
+  const r = sanitizeBelt(actor.system.belt.slots, (id) => actor.items.get(id));
+  if (r.changed) await actor.update({ "system.belt.slots": r.slots }, { sw25Slot: true });
+  return r.changed;
+}
+
+/** One-time (ce.15): remove belt entries pointing at non-consumables on every world actor. Non-destructive to items. */
+export async function runBeltConsumableMigration() {
+  if (!game.user.isGM || game.user.id !== game.users.activeGM?.id) return;
+  if (game.settings.get(SYS, "beltConsumablesMigrated")) return;
+  let n = 0;
+  for (const actor of game.actors) { try { if (await cleanBelt(actor)) n++; } catch (err) { console.error(`sw25-ce | belt clean-up failed for ${actor.name}`, err); } }
+  await game.settings.set(SYS, "beltConsumablesMigrated", true);
+  if (n) ui.notifications.info(game.i18n.format("SW25.V2.Belt.Cleaned", { n }));
 }

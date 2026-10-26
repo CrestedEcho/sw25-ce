@@ -729,6 +729,7 @@
       "armor",
       "accessory",
       "item",
+      "consumable",
       "spell",
       "enhancearts",
       "magicalsong",
@@ -869,6 +870,18 @@
       "uses": {
         "value": 0,
         "max": 0
+      }
+    },
+    "consumable": {
+      "templates": [
+        "base",
+        "item",
+        "roll"
+      ],
+      "limitedUses": true,
+      "uses": {
+        "value": 1,
+        "max": 1
       }
     },
     "spell": {
