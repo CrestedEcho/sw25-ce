@@ -1200,12 +1200,25 @@
       "Debt": "Debt",
       "Feats": {
         "Title": "Combat Feats",
-        "Slot": "Lv {level}",
+        "Slot": "Level {level}",
         "Locked": "Unlocks at adventurer level {level}",
         "Auto": "Automatic Feats",
         "Racial": "Racial Abilities",
-        "Unassigned": "Unassigned Feats",
-        "DropFeat": "Drop a combat feat"
+        "Unassigned": "Not in a slot yet",
+        "DropFeat": "Drop a combat feat",
+        "Hint": "Drag a combat feat onto a level slot, or press Put in slot. Feats in a slot are active.",
+        "Chosen": "Chosen feats (one per level slot)",
+        "SlotTip": "Active feat. Drag it to another slot, or press X to take it out.",
+        "EmptyTip": "Empty slot: drag a combat feat here.",
+        "LockedShort": "Locked",
+        "Remove": "Take out (keeps the feat on the sheet)",
+        "UnassignedTip": "Feats you own that are not active. Drag one onto a slot above.",
+        "UnassignedEmpty": "Drag a feat here to take it out of its slot",
+        "Assign": "Put in slot",
+        "AssignTip": "Put this feat in the first free level slot",
+        "AutoTip": "Feats your classes give you for free. They are always active.",
+        "NoFreeSlot": "No free level slot for {item}. Take a feat out first, or drag it onto a slot to swap.",
+        "ActivateTip": "On a character: ticking puts this feat in the first free level slot (and turns on its effects); unticking takes it out."
       },
       "Belt": {
         "Title": "Consumables Belt",
@@ -1220,7 +1233,8 @@
         "Cleaned": "Belt: removed non-consumable entries on {n} actor(s).",
         "Show": "Show",
         "ShowHint": "Post this item to chat. Nothing is used up.",
-        "Unlimited": "Unlimited uses"
+        "Unlimited": "Unlimited uses",
+        "NotConsumable": "{item} is not a Consumable, so it can't go on the belt. Only items of type Consumable can (make one with New Consumable in the inventory)."
       }
     },
     "EquipCard": {

@@ -27,7 +27,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["sw25", "sheet", "actor"],
-      dragDrop: [{ dragSelector: "li.item", dropSelector: null }],
+      dragDrop: [{ dragSelector: "li.item, .ce7-drag", dropSelector: null }],
       width: 840,
       height: 860,
       tabs: [
@@ -910,7 +910,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // Drag events for macros.
     if (this.actor.isOwner) {
       let handler = (ev) => this._onDragStart(ev);
-      html.find("li.item").each((i, li) => {
+      // ce.15: feat rows/slots and belt items are divs, so they need the explicit hook too.
+      html.find("li.item, .ce7-drag").each((i, li) => {
         if (li.classList.contains("inventory-header")) return;
         li.setAttribute("draggable", true);
         li.addEventListener("dragstart", handler, false);
@@ -3077,8 +3078,9 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     if (!el?.addEventListener || el._sw25DropBound) return;
     el._sw25DropBound = true;
     el.addEventListener("dragover", (ev) => {
+      // Only allow the drop; never force dropEffect (a "copy" effect against a "move"-only drag source
+      // makes the browser cancel the drop silently).
       ev.preventDefault();
-      if (ev.dataTransfer) ev.dataTransfer.dropEffect = "copy";
     }, true);
     el.addEventListener("drop", (ev) => this._sw25HandleDrop(ev), true);
   }

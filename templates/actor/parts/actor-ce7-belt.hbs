@@ -1,7 +1,7 @@
 <div class="panel ce7-belt"><span class="ribbon">{{localize "SW25.V2.Belt.Title"}}</span>
   <div class="ce7-belt-slots">
     {{#each ce7belt as |b|}}
-    <div class="ce7-belt-slot {{#if b.item}}filled{{/if}}" data-sw-drop="belt" data-index="{{b.index}}" {{#if b.item}}data-item-id="{{b.item.id}}"{{/if}}>
+    <div class="ce7-belt-slot {{#if b.item}}filled ce7-drag{{/if}}" data-sw-drop="belt" data-index="{{b.index}}" {{#if b.item}}data-item-id="{{b.item.id}}" draggable="true"{{/if}}>
       {{#if b.item}}
         <img class="ce7-belt-use" data-tooltip="{{localize 'SW25.V2.Belt.Use'}}" src="{{b.item.img}}" alt=""/>
         <div class="nm ce7-belt-use" data-tooltip="{{b.item.name}}">{{b.item.name}}</div>

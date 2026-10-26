@@ -244,3 +244,20 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25v2.theme-dark .money .muted{color:#d6c29c!important}
 .sw25v2.theme-dark .eqc-name,.sw25v2.theme-dark .ce7-row,.sw25v2.theme-dark .ce7-feat-slot,.sw25v2.theme-dark .eqc-other-row span{color:#eadcc0}
 .sw25v2.theme-dark .eqc-label,.sw25v2.theme-dark .ce7-belt-slot .cnt,.sw25v2.theme-dark .ce7-feat-slot .ph,.sw25v2.theme-dark .ce7-belt-slot .ph{color:#d6c29c}
+/* ce.15 combat feats tidy */
+.sw25v2 .ce7-feat-hint{margin:2px 0 6px;font-size:12px;color:var(--muted)}
+.sw25v2 .ce7-feat-h{margin:2px 0;font-variant:small-caps;color:var(--muted);font-size:13px}
+.sw25v2 .ce7-feat-slots{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px}
+.sw25v2 .ce7-feat-slot{min-height:40px;padding:4px 6px;font-size:13px}
+.sw25v2 .ce7-feat-slot .lv{min-width:52px}
+.sw25v2 .ce7-feat-slot.filled{background:rgba(160,120,40,.12);cursor:grab}
+.sw25v2 .ce7-feat-slot img,.sw25v2 .ce7-row img{width:26px;height:26px;flex:0 0 26px}
+.sw25v2 .ce7-feat-list{margin-bottom:8px;min-height:30px}
+.sw25v2 .ce7-row{min-height:32px;padding:3px 2px}
+.sw25v2 .ce7-row.ce7-drag{cursor:grab}
+.sw25v2 .ce7-row .grip{color:var(--muted);font-size:11px}
+.sw25v2 .ce7-feat-assign{flex:0 0 auto;padding:2px 8px;border:1px solid var(--gold);border-radius:4px;font-size:12px;cursor:pointer}
+.sw25v2 .ce7-feat-assign:hover{background:var(--gold);color:#fff}
+.sw25v2 .ce7-feat-clear{font-size:14px}
+.sw25v2 [data-sw-drop].drag-over{outline:2px dashed var(--accent);outline-offset:-2px;background:rgba(160,120,40,.18)}
+.sw25v2 .ce7-belt-slot.filled{cursor:grab}

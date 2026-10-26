@@ -23,7 +23,7 @@
     <section class="header__activate">
       <div class="header__checkbox">
         <input class="checkbox--hidden" id="{{item._id}}system.equip" type="checkbox" name="system.equip" data-dtype="Boolean" {{#if system.equip}} checked {{/if}}/>
-        <label class="checkbox--label" for="{{item._id}}system.equip">{{localize "SW25.Item.Activation"}}</label>
+        <label class="checkbox--label" for="{{item._id}}system.equip" data-tooltip="{{localize 'SW25.V2.Feats.ActivateTip'}}">{{localize "SW25.Item.Activation"}}</label>
       </div>
       <div class="header__checkbox">
         <input class="checkbox--hidden" id="{{item._id}}system.bookmark" type="checkbox" name="system.bookmark" data-dtype="Boolean" {{#if system.bookmark}} checked {{/if}}/>

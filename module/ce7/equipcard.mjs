@@ -31,7 +31,7 @@ const LEFT = ["head", "face", "ear", "neck", "back"];
 const RIGHT = ["armor", "shield", "rhand", "lhand", "waist"];
 const BOTTOM = ["mainHand", "offHand", "feet"];
 const AUTO_ORDER = ["mainHand", "offHand", "armor", "shield", ...LEFT, "rhand", "lhand", "waist", "feet"];
-const FEAT_LEVELS = [1, 3, 5, 7, 9, 11, 13, 15];
+import { FEAT_LEVELS, unlockedSlots, activatePlan } from "./feat-logic.mjs";
 
 const isPC = (actor) => actor?.type === "character" && !actor.system?.toFellow;
 export const is2H = (item) => item?.type === "weapon" && /2H/.test(String(item.system?.usage ?? ""));
@@ -159,13 +159,13 @@ export function prepareCe7Context(sheet, context) {
 
   // Combat feats
   const adv = Number(sys.attributes?.advlevel?.value) || 0;
-  const unlocked = adv >= 1 ? 1 + Math.floor((adv - 1) / 2) : 0;
+  const unlocked = unlockedSlots(adv);
   const feats = actor.items.filter((i) => i.type === "combatability").sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
   const used = new Set();
   const fslots = FEAT_LEVELS.map((level, idx) => {
     const it = feats.find((f) => !used.has(f.id) && f.system.featSource === "slot" && Number(f.system.featLevel) === level);
     if (it) used.add(it.id);
-    return { level, locked: idx >= unlocked, lockTip: game.i18n.format("SW25.V2.Feats.Locked", { level }), item: mini(it) };
+    return { level, locked: idx >= unlocked, lockTip: game.i18n.format("SW25.V2.Feats.Locked", { level }), item: it ? { ...mini(it), app: it.system.app || "", risk: it.system.risk || "" } : null };
   });
   context.ce7feats = {
     slots: fslots,
@@ -198,7 +198,7 @@ export function beltContext(actor, mini = (it) => (it ? { id: it.id, name: it.na
 export async function dropOnBelt(actor, target, data) {
   const src = await Item.implementation.fromDropData(data);
   if (!src) return true;
-  if (!isConsumable(src)) { ui.notifications.warn(game.i18n.format("SW25.EquipCard.WrongType", { item: src.name, slot: game.i18n.localize("SW25.V2.Belt.Title") })); return true; }
+  if (!isConsumable(src)) { ui.notifications.warn(game.i18n.format("SW25.V2.Belt.NotConsumable", { item: src.name })); return true; }
   let it = src;
   if (src.parent !== actor) { const obj = src.toObject(); delete obj._id; it = (await actor.createEmbeddedDocuments("Item", [obj], { sw25Slot: true }))[0]; }
   const idx = Number(target.dataset.index);
@@ -214,7 +214,7 @@ const beltN = () => Math.clamp?.(Number(game.settings.get(SYS, "beltSlots")) || 
 /** Inventory belt checkbox: tick adds to the first free slot, untick removes. Full belt -> notification. */
 export async function toggleBelt(actor, itemId, on) {
   const r = toggleBeltSlot(actor.system.belt?.slots, itemId, on, beltN(), actor.items.get(itemId) ?? null);
-  if (r.rejected) { ui.notifications.warn(game.i18n.localize("SW25.V2.Belt.OnlyConsumables")); return false; }
+  if (r.rejected) { ui.notifications.warn(game.i18n.format("SW25.V2.Belt.NotConsumable", { item: actor.items.get(itemId)?.name ?? "" })); return false; }
   if (r.full) { ui.notifications.warn(game.i18n.localize("SW25.V2.Belt.Full")); return false; }
   if (r.changed) await actor.update({ "system.belt.slots": r.slots });
   return r.changed;
@@ -283,16 +283,20 @@ export async function handleCe7Drop(sheet, event, data) {
       return equipToSlot(actor, "other", await own());
     }
     case "belt": return dropOnBelt(actor, target, data);
+    case "unassigned": {
+      if (src.type !== "combatability") return warnType(game.i18n.localize("SW25.V2.Feats.Title")), true;
+      return own({ "system.featSource": "", "system.featLevel": 0, "system.equip": false });
+    }
     case "feat": case "auto": {
       if (src.type !== "combatability") return warnType(game.i18n.localize("SW25.V2.Feats.Title")), true;
       if (kind === "feat") {
         if (target.classList.contains("locked")) return ui.notifications.warn(target.dataset.tooltip), true;
         const level = Number(target.dataset.level);
         const prev = actor.items.find((i) => i.type === "combatability" && i.id !== src.id && i.system.featSource === "slot" && Number(i.system.featLevel) === level);
-        if (prev) await prev.update({ "system.featSource": "", "system.featLevel": 0 });
-        return own({ "system.featSource": "slot", "system.featLevel": level });
+        if (prev) await prev.update({ "system.featSource": "", "system.featLevel": 0, "system.equip": false }, { sw25Slot: true });
+        return own({ "system.featSource": "slot", "system.featLevel": level, "system.equip": true });
       }
-      return own({ "system.featSource": "auto", "system.featLevel": 0 });
+      return own({ "system.featSource": "auto", "system.featLevel": 0, "system.equip": true });
     }
     case "racial": {
       if (src.type !== "raceability") return warnType(game.i18n.localize("SW25.V2.Feats.Racial")), true;
@@ -333,7 +337,12 @@ export function bindCe7Listeners(sheet, html) {
   // Feats: clear assignment
   on(".ce7-feat-clear", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
-    actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.featSource": "", "system.featLevel": 0 });
+    actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.featSource": "", "system.featLevel": 0, "system.equip": false }, { sw25Slot: true });
+  });
+  // Feats: one-click "Put in slot" for unassigned feats
+  on(".ce7-feat-assign", "click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.equip": true });
   });
   // Belt
   bindBeltListeners(sheet, root);
@@ -528,6 +537,14 @@ export function registerCe7Hooks() {
       return;
     }
     if (!foundry.utils.hasProperty(changes, "system.equip")) return;
+    if (item.type === "combatability") {
+      // "Activate" on the feat sheet = put it in the first free level slot (untick takes it out again).
+      const feats = actor.items.filter((i) => i.type === "combatability" && i.id !== item.id);
+      const plan = activatePlan(item, !!item.system.equip, feats, actor.system.attributes?.advlevel?.value);
+      if (!plan) return;
+      if (plan.warn) { ui.notifications.warn(game.i18n.format("SW25.V2.Feats.NoFreeSlot", { item: item.name })); return; }
+      return guarded(actor, () => item.update(plan.patch, { sw25Slot: true }));
+    }
     if (!["weapon", "armor", "accessory"].includes(item.type)) return;
     return guarded(actor, async () => {
       if (!actor.items.get(item.id)) return;
