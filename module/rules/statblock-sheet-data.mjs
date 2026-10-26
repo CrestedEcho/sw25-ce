@@ -6,6 +6,7 @@ const SYS = "sw25-ce";
 export const ICON_ROOT = `systems/${SYS}/assets/icons`;
 export const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
 import { parseMagicSkill } from "./sb-cast.mjs";
+import { fixedToDice, pairFixed, parseSbDamage } from "./sb-play.mjs";
 export const ARRAY_FIELDS = ["parts", "uniqueSkills", "loot", "classLevels", "relationships", "services"];
 
 /** monsterType (book category, any case/spelling) -> `_type-<slug>` icon slug. */
@@ -84,7 +85,23 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   const summary = type === "npc" && cp ? { level: view.level ?? "—", def: (view.parts ?? [])[cp.i]?.defense ?? "—", ...cp,
     hpPath: `system.sb.parts.${cp.i}.hpValue`, mpPath: `system.sb.parts.${cp.i}.mpValue` } : null;
   const showVitalsInCombat = true; // v3 final mockups: calm + hostile NPCs share one layout
+  // Play mode (fixed button posts F; dice button rolls 2d6 + (F - 7)); Defense has no button.
+  const chk = (label, p) => { const f = pairFixed(p); const d = fixedToDice(f); return d ? { label, ...d } : null; };
+  const playParts = (view.parts ?? []).map((p, i) => ({
+    i, name: p.name, isCore: !!p.isCore, defense: dash(p.defense),
+    accuracy: chk(`${p.name}: Accuracy`, p.accuracy), evasion: chk(`${p.name}: Evasion`, p.evasion),
+    damage: (() => { const d = parseSbDamage(p.damage); return d ? { label: `${p.name}: Damage`, text: p.damage, ...d } : (p.damage ? { label: `${p.name}: Damage`, text: p.damage, formula: null } : null); })(),
+  }));
+  const resistances = [chk("Vitality Resistance", view.fortitude), chk("Mental Resistance", view.willpower)].filter(Boolean);
+  const levelChecks = (view.uniqueSkills ?? []).map((u, i) => (u.check && !parseMagicSkill(u) ? { i, ...chk(u.name, u.check.fixed != null ? u.check : { value: u.check.value }) } : null)).filter((c) => c && c.formula);
+  const casters = (view.uniqueSkills ?? []).map((u, i) => {
+    const ms = parseMagicSkill(u); if (!ms) return null;
+    const powerFixed = u.check ? pairFixed(u.check) : (ms.magicPower != null ? ms.magicPower + 7 : null);
+    return { i, name: u.name, level: ms.level, schools: ms.schools, magicPower: powerFixed != null ? powerFixed - 7 : null,
+      casting: powerFixed != null ? chk(`${u.name}: Casting Power`, { value: powerFixed - 7, fixed: powerFixed }) : null };
+  }).filter(Boolean);
   return {
+    playParts, resistances, levelChecks, casters,
     summary, summaryRows: summary ? [summary] : [], vitals, multiPart, showVitalsInCombat,
     type, isNPC: type === "npc", isMonster: type !== "npc", hostile, isGM,
     hostileToggle: type === "npc" ? hostile : !view.neutral, // monster theme stays rust regardless
