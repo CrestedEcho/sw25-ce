@@ -8,6 +8,7 @@
  */
 import { SCHOOL_TO_TYPE } from "../module/rules/spell-school.mjs";
 import { statBlockFromData, dispositionFor, npcToggleDisposition, parseMovement } from "../module/rules/statblock.mjs";
+import { bestClass, defaultWeaponClass, EVASION_CLASSES } from "../module/rules/class-pick.mjs";
 import fs from "node:fs"; import path from "node:path"; import crypto from "node:crypto";
 
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -327,6 +328,14 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
     for (const a of g.armor ?? []) gearItem(a, "armor", { type: a.category ?? "", pp: a.defense ?? 0, dodge: a.evasion ?? 0, reqstr: a.minStr ?? null });
     for (const a of g.accessories ?? []) { if (!a.slot) gap(`accessory "${a.name}" has no slot`); gearItem(a, "accessory", { accpart: a.slot ?? "" }); }
     for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); gearItem({ name: m ? m[1] : s }, "item", { quantity: m ? Number(m[2]) : 1 }); }
+    // Ship ready to play: weapons/armor equipped, the first weapon on the Accuracy tile, and Attack/Evasion Class set
+    // to the class the engine would pick (best fighter class, Marksman for ranged) instead of "Select...".
+    for (const it of items) if (it.type === "weapon" || it.type === "armor") it.system.equip = true;
+    const weapons = items.filter((i) => i.type === "weapon");
+    const atkCls = weapons.length ? defaultWeaponClass(items, weapons[0]) : bestClass(items, EVASION_CLASSES);
+    const evaCls = bestClass(items, EVASION_CLASSES);
+    for (const w of weapons) { const c = defaultWeaponClass(items, w); if (c) { w.system.checkskill ||= c.name; w.system.powerskill ||= c.name; } }
+    if (weapons.length && !atkCls) gap("weapon but no attack class (fighter/grappler/fencer/battle-dancer/marksman)");
     const ab = d.abilities ?? {}; const B = ab.base ?? {}; const C = ab.correction ?? {};
     const A = { dex: ["dexterity", "tech"], agi: ["agility", "tech"], str: ["strength", "body"], vit: ["vitality", "body"], int: ["intelligence", "mind"], mnd: ["spirit", "mind"] };
     const abilities = {}; for (const [k, [long, b]] of Object.entries(A)) { abilities[k] = { racevalue: B[b] ?? "", valuebase: C[long] ?? ((ab[long] ?? 0) - (B[b] ?? 0)) }; if (ab[long] != null && (B[b] ?? 0) + (C[long] ?? 0) !== ab[long]) gap(`${long} ${ab[long]} != base ${B[b]} + correction ${C[long]}`); }
@@ -334,7 +343,7 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
     if (d.languages?.length) gap("languages kept as flags only (character language items not built)");
     Object.assign(base.flags["sw25-ce"], { racialAbilities: d.racialAbilities ?? [], languages: d.languages ?? [], derived: d.derived ?? {} });
     return { ...base, type: "character", items, prototypeToken: token(1),
-      system: { race: d.race ?? "", class: d.race ?? "", money: d.money ?? 0, faith: d.derived?.deity ?? "", hp: { value: d.hp ?? "" }, mp: { value: d.mp ?? "" }, abilities, attributes: { advlevel: { value: d.adventurerLevel ?? "" } } } };
+      system: { race: d.race ?? "", class: d.race ?? "", money: d.money ?? 0, faith: d.derived?.deity ?? "", hp: { value: d.hp ?? "" }, mp: { value: d.mp ?? "" }, abilities, attributes: { advlevel: { value: d.adventurerLevel ?? "" } }, hitweapon: weapons[0]?.name ?? "", attackskill: atkCls?.name ?? "", dodgeskill: evaCls?.name ?? "" } };
   }
   if (d.fellow) {
     const rows = (d.actionTable ?? []).map((r) => ({ action: r.action ?? "", kind: /attack/i.test(r.action ?? "") ? "attack" : "check", dialogue: r.dialogue ?? "", value: r.value ?? "", effect: r.effect ?? "", mp: r.mp ?? 0 }));
