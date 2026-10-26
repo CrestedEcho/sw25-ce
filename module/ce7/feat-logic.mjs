@@ -37,3 +37,21 @@ export function featPickList(items) {
 
 /** Patch to put a feat into level slot `level` (Activate stays in sync). */
 export const slotPatch = (level) => ({ "system.featSource": "slot", "system.featLevel": Number(level), "system.equip": true });
+
+/** Patch that takes a feat out of its slot (back to "Not in a slot yet"). */
+export const clearPatch = () => ({ "system.featSource": "", "system.featLevel": 0, "system.equip": false });
+
+/** True if `src` (a dropped/clicked item) is an item owned by `actor` — compared by id, not object identity. */
+export const ownedBy = (src, actor) => !!(src && actor && (src.parent === actor || (src.parent?.id && src.parent.id === actor.id && actor.items?.get?.(src.id))));
+
+/**
+ * Auto-fill plan for unslotted feats: [{ _id, featSource, featLevel, equip }].
+ * Only open (unlocked) levels; nothing when the layout is manual or the player already slotted something.
+ */
+export function autoFeatPlan(feats, adv, manual = false) {
+  const list = [...(feats ?? [])];
+  if (manual || list.some((f) => f.system?.featSource === "slot")) return [];
+  const free = FEAT_LEVELS.slice(0, unlockedSlots(adv));
+  return list.filter((f) => !f.system?.featSource).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+    .slice(0, free.length).map((f, i) => ({ _id: f.id ?? f._id, "system.featSource": "slot", "system.featLevel": free[i], "system.equip": true }));
+}

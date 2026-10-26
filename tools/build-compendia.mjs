@@ -313,6 +313,8 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
   if (group === "pcs") {
     for (const c of d.classes ?? []) addRef("classes", c.slug, {}) && (items.at(-1).system.skilllevel = c.level);
     for (const f of d.feats ?? []) addRef("feats", f);
+    // featLayout "manual": ship feats unslotted and tell the auto-filler to leave them alone (test PC for the slot UI).
+    if (d.featLayout === "manual") base.flags["sw25-ce"].featsManual = true;
     // Spellcasting classes learn every spell of their school up to class level (SW2.5). Priest: general divine only
     // (god-specific spells need a deity); Fairy Tamer: element-dependent, not auto-granted.
     const spellLib = ctx.list?.("spells") ?? [];
@@ -331,7 +333,7 @@ export function testActorDoc(group, d, ctx = { lookup: () => undefined, gaps: []
     // PC sheet "accuracy"/"extraDamage" are book TOTALS (class level + Dex/Str bonus); the engine adds those itself
     // from the weapon's class, so only the catalogue weapon's own modifiers go in hit/dmod.
     for (const w of g.weapons ?? []) { const cat = w.slug ? ctx.lookup("items", w.slug) : null;
-      gearItem(w, "weapon", { type: w.category ?? "", usage: w.stance ?? "", range: w.range ?? "", reqstr: w.minStr ?? null, ...weaponSystem({ ...(cat ?? {}), ...w, accuracy: cat?.accuracy ?? 0, extraDamage: cat?.extraDamage ?? 0, powerTable: w.powerTable ?? cat?.powerTable }) }); }
+      gearItem(w, "weapon", { checkabi: "dex", powerabi: "str", type: w.category ?? "", usage: w.stance ?? "", range: w.range ?? "", reqstr: w.minStr ?? null, ...weaponSystem({ ...(cat ?? {}), ...w, accuracy: cat?.accuracy ?? 0, extraDamage: cat?.extraDamage ?? 0, powerTable: w.powerTable ?? cat?.powerTable }) }); }
     for (const a of g.armor ?? []) gearItem(a, "armor", { type: a.category ?? "", pp: a.defense ?? 0, dodge: a.evasion ?? 0, reqstr: a.minStr ?? null });
     for (const a of g.accessories ?? []) { if (!a.slot) gap(`accessory "${a.name}" has no slot`); gearItem(a, "accessory", { accpart: a.slot ?? "" }); }
     for (const s of g.items ?? []) { const m = String(s).match(/^(.*?)\s+x(\d+)$/); const name = m ? m[1] : s; const q = m ? Number(m[2]) : 1;

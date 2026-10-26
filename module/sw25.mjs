@@ -88,6 +88,7 @@ Hooks.once("init", function () {
   // Add utility classes to the global game object so that they're more easily
   // accessible in global contexts.
   game.sw25 = {
+    dropLog: (...a) => globalThis.sw25DropLog?.(...a),
     rules: { ...RulesEngine, syncGrants, resyncGrants, setChoice, resolveRef },
     statblock: StatBlock,
     SW25Actor,
@@ -327,11 +328,15 @@ Handlebars.registerHelper("sw25pct", function (value, max) {
   return Math.max(0, Math.min(100, Math.round((v / m) * 100)));
 });
 
-globalThis.sw25DropLog = function (...args) {
-  let on = false;
-  try { on = game.settings.get("sw25-ce", "debugDrops"); } catch (e) {}
+function sw25DropLog(...args) {
+  let on = !!globalThis.sw25DropDebug;
+  try { on = on || game.settings.get("sw25-ce", "debugDrops"); } catch (e) {}
   (on ? console.log : console.debug)("sw25-ce | ", ...args);
-};
+}
+// ce.16: also attach on window and game.sw25 (set in init) so it is reachable from any console context.
+globalThis.sw25DropLog = sw25DropLog;
+if (typeof window !== "undefined") window.sw25DropLog = sw25DropLog;
+Hooks.once("ready", () => { globalThis.sw25DropLog = sw25DropLog; if (game.sw25) game.sw25.dropLog = sw25DropLog; });
 
 globalThis.sw25RerenderSheets = function () {
   const V1 = foundry.appv1?.sheets ?? {};

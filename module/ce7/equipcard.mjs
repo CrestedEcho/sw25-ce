@@ -31,7 +31,7 @@ const LEFT = ["head", "face", "ear", "neck", "back"];
 const RIGHT = ["armor", "shield", "rhand", "lhand", "waist"];
 const BOTTOM = ["mainHand", "offHand", "feet"];
 const AUTO_ORDER = ["mainHand", "offHand", "armor", "shield", ...LEFT, "rhand", "lhand", "waist", "feet"];
-import { FEAT_LEVELS, unlockedSlots, activatePlan, featPickList, slotPatch } from "./feat-logic.mjs";
+import { FEAT_LEVELS, unlockedSlots, activatePlan, featPickList, slotPatch, clearPatch, ownedBy, autoFeatPlan } from "./feat-logic.mjs";
 
 const isPC = (actor) => actor?.type === "character" && !actor.system?.toFellow;
 export const is2H = (item) => item?.type === "weapon" && /2H/.test(String(item.system?.usage ?? ""));
@@ -320,7 +320,8 @@ export async function handleCe7Drop(sheet, event, data) {
   const src = await Item.implementation.fromDropData(data);
   if (!src) return true;
   const own = async (patch = {}) => {
-    if (src.parent === actor) { if (Object.keys(patch).length) await src.update(patch, { sw25Slot: true }); return src; }
+    // ce.16: compare by id — fromDropData can hand back a different instance of the same owned item.
+    if (ownedBy(src, actor)) { const mine = actor.items.get(src.id) ?? src; if (Object.keys(patch).length) await mine.update(patch, { sw25Slot: true }); globalThis.sw25DropLog?.("feat/gear patch", mine.name, patch); return mine; }
     const obj = src.toObject();
     delete obj._id;
     foundry.utils.mergeObject(obj, foundry.utils.expandObject(patch));
@@ -343,7 +344,7 @@ export async function handleCe7Drop(sheet, event, data) {
     case "belt": return dropOnBelt(actor, target, data);
     case "unassigned": {
       if (src.type !== "combatability") return warnType(game.i18n.localize("SW25.V2.Feats.Title")), true;
-      return own({ "system.featSource": "", "system.featLevel": 0, "system.equip": false });
+      return own(clearPatch());
     }
     case "feat": case "auto": {
       if (src.type !== "combatability") return warnType(game.i18n.localize("SW25.V2.Feats.Title")), true;
@@ -393,10 +394,18 @@ export function bindCe7Listeners(sheet, html) {
   on(".eqc-edit-portrait", "click", (ev) => { ev.preventDefault(); new PortraitEditor(actor).open(); });
 
   // Feats: clear assignment
-  on(".ce7-feat-clear", "click", (ev) => {
-    ev.preventDefault(); ev.stopPropagation();
-    actor.items.get(ev.currentTarget.closest("[data-item-id]").dataset.itemId)?.update({ "system.featSource": "", "system.featLevel": 0, "system.equip": false }, { sw25Slot: true });
+  on(".ce7-feat-clear", "click", async (ev) => {
+    ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation();
+    const id = ev.currentTarget.closest("[data-item-id]")?.dataset.itemId;
+    const it = actor.items.get(id);
+    globalThis.sw25DropLog?.("feat clear", id, it?.name);
+    if (!it) return ui.notifications.warn("SW2.5: couldn't find that feat on this character.");
+    try { await it.update(clearPatch(), { sw25Slot: true }); }
+    catch (err) { console.error("sw25-ce | feat clear failed", err); ui.notifications.error(`SW2.5: couldn't remove the feat: ${err.message}`); }
   });
+  // The X sits inside a draggable slot: never let it start a drag (some browsers then swallow the click).
+  on(".ce7-feat-clear", "mousedown", (ev) => ev.stopPropagation());
+  root.querySelectorAll(".ce7-feat-clear").forEach((a) => a.setAttribute("draggable", "false"));
   // Feats: click an EMPTY UNLOCKED slot = pick a feat (locked slots only show their tooltip)
   on(".ce7-feat-slot:not(.filled):not(.locked)", "click", (ev) => {
     ev.preventDefault(); ev.stopPropagation();
@@ -658,10 +667,9 @@ export async function autoFillActor(actor) {
   }
   const update = { "system.equipSlots": slots };
   const itemUpdates = [];
-  const feats = actor.items.filter((i) => i.type === "combatability" && !i.system.featSource).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
-  const taken = new Set(actor.items.filter((i) => i.type === "combatability" && i.system.featSource === "slot").map((i) => Number(i.system.featLevel)));
-  const free = FEAT_LEVELS.filter((l) => !taken.has(l));
-  feats.forEach((f, i) => { if (free[i]) itemUpdates.push({ _id: f.id, "system.featSource": "slot", "system.featLevel": free[i] }); });
+  const all = actor.items.filter((i) => i.type === "combatability");
+  const plan = autoFeatPlan(all, actor.system.attributes?.advlevel?.value, !!actor.getFlag?.(SYS, "featsManual"));
+  itemUpdates.push(...plan);
   await actor.update(update, { sw25Slot: true });
   if (itemUpdates.length) await actor.updateEmbeddedDocuments("Item", itemUpdates, { sw25Slot: true });
   return true;
