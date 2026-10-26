@@ -139,7 +139,10 @@ export class SW25Item extends Item {
     const itemData = this;
     const systemData = itemData.system;
     const flags = itemData.flags || {};
-    const actor = itemData.actor ? game.actors.get(itemData.actor._id) : null;
+    // Use the owning actor itself. game.actors.get() missed actors not yet in the world list (first prep right
+    // after import/creation, compendium actors) and picked the base actor for unlinked tokens, so skill and
+    // check values stayed 0 until the next update re-prepared the sheet.
+    const actor = itemData.actor ?? null;
     if (actor) {
       this._prepareSkillData(itemData, actor);
       this._prepareCheckData(itemData, actor);
