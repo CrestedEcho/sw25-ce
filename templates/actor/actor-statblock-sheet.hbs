@@ -1,4 +1,4 @@
-<form class="{{cssClass}} sb-sheet sb-{{type}} sb-accent-{{accent}}" autocomplete="off">
+<form class="{{cssClass}} sb-sheet sb-{{type}} sb-accent-{{accent}} {{#if editMode}}sb-mode-edit{{else}}sb-mode-play{{/if}}" autocomplete="off">
 <header class="sb-header">
   <div class="sb-portrait"><img class="sb-por-img" src="{{portrait}}" data-edit="img" title="{{actor.name}}"><img class="sb-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp">{{#unless isNPC}}{{#if typeIcon}}<img class="sb-type-badge" src="{{typeIcon}}" title="{{sb.monsterType}}">{{/if}}{{/unless}}</div>
   <div class="sb-title">
@@ -10,11 +10,12 @@
   <label class="sb-toggle sb-fellow-toggle{{#if fellowOn}} on{{/if}}" title="Fellow mode: players see the public Fellow card (system.fellow)">Fellow <input type="checkbox" name="system.fellow.enabled" {{checked fellowOn}} {{#unless editable}}disabled{{/unless}}><i></i></label>
   {{#if fellowOn}}<a class="sb-fellow-open" data-action="fellow-card" title="Open Fellow card">Card</a>{{/if}}
   {{else}}<label class="sb-toggle{{#if hostileToggle}} on{{/if}}" title="Monster hostile (token Hostile); off = Neutral">Hostile <input type="checkbox" data-sb-toggle="neutral" {{checked hostileToggle}} {{#unless editable}}disabled{{/unless}}><i></i></label>{{/if}}
+  {{#if editable}}<a class="sb-modelock" data-action="sb-mode" title="{{localize 'SW25.SB.ModeHint'}}"><span class="{{#if playMode}}on{{/if}}"><i class="fas fa-lock"></i> {{localize "SW25.SB.Play"}}</span><span class="{{#if editMode}}on{{/if}}"><i class="fas fa-pen"></i> {{localize "SW25.SB.Edit"}}</span></a>{{/if}}
   <span class="sb-token-badge disp-{{tokenDispositionKey}}" title="Prototype token disposition">Token: {{tokenDisposition}}</span></div>
 </header>
 <nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
 <section class="sheet-body sb-body">
-  <div class="tab" data-group="primary" data-tab="combat">{{#if showVitalsInCombat}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=vitals multi=multiPart}}{{/if}}{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
+  <div class="tab" data-group="primary" data-tab="combat">{{#if showVitalsInCombat}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=vitals multi=multiPart}}{{/if}}{{#if playMode}}{{> "systems/sw25-ce/templates/actor/sb/sb-play.hbs"}}{{/if}}{{> "systems/sw25-ce/templates/actor/sb/sb-spells.hbs"}}{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}{{#unless isNPC}}<div class="sb-inv-combat">{{> "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs"}}</div>{{/unless}}</div>
   {{#if isNPC}}
   <div class="tab" data-group="primary" data-tab="person">
     {{#if summary}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=summaryRows}}{{/if}}
@@ -40,7 +41,7 @@
     <div class="sb-person-combat" title="Read-only here; edit on the Combat tab">{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}</div>
   </div>
   <div class="tab" data-group="primary" data-tab="inventory">
-    <ol class="sb-items">{{#each items}}<li class="item" data-item-id="{{_id}}"><img src="{{img}}"> <span>{{name}}</span> <small>{{type}}</small>{{#if @root.editable}}<a data-action="item-edit"><i class="fas fa-edit"></i></a> <a data-action="item-del"><i class="fas fa-trash"></i></a>{{/if}}</li>{{else}}<li class="muted">Drag weapons, armour or gear here (display only).</li>{{/each}}</ol>
+    {{> "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs"}}
   </div>
   <div class="tab" data-group="primary" data-tab="notes">
     <h3>Notes</h3>{{editor notesHTML target="system.sb.notes" button=true owner=owner editable=editable}}

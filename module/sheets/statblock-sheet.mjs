@@ -8,6 +8,8 @@ import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, c
 import { rollSpellDamage } from "../rules/spell-power.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
+import { fixedToDice, parseSbDamage, applyVital, lootFor, castIsWhisper, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
+import { beltContext, bindBeltListeners, dropOnBelt } from "../ce7/equipcard.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
 const T = "systems/sw25-ce/templates/actor";
@@ -41,7 +43,44 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       descriptionHTML: await enrich(raw.description || view.description),
     });
     for (const s of base.skills) s.description = await enrich(s.description);
+    // Play/Edit lock: Play is the default; inputs only show in Edit mode.
+    this._sbEdit ??= false;
+    base.editMode = this.isEditable && this._sbEdit; base.playMode = !base.editMode;
+    // Inventory: weapons roll, everything else is shown to chat; consumable belt (shared with the PC sheet).
+    for (const it of base.items) it.rollable = it.type === "weapon";
+    base.ce7belt = beltContext(this.actor);
+    // Spellcasting: each castable skill lists its spells with a Cast button (and GM-only toggle when there is no Power).
+    const gmMap = this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {};
+    if (base.casters.length) {
+      const docs = await this._sbSpellDocs();
+      for (const c of base.casters) {
+        c.spells = spellsForSkill({ schools: c.schools, level: c.level }, docs).map((m) => {
+          const d = docs.find((x) => x.name === m.name) ?? {};
+          return { name: m.name, level: m.level, cost: m.cost.raw || (m.cost.base != null ? `MP${m.cost.base}` : "—"),
+            target: [d.system?.target, d.flags?.["sw25-ce"]?.data?.range].filter(Boolean).join(" · ") || "—",
+            power: m.power ? (typeof m.power === "object" ? (m.power.rate ?? m.power.value ?? "") : m.power) : null,
+            key: slugKey(m.name), gmOnly: !m.power && spellGmOnly(gmMap, m.name) };
+        });
+      }
+    }
     return base;
+  }
+
+  /** Spell documents for casting: sw25-spells compendium (cached) + embedded spell items. */
+  async _sbSpellDocs() {
+    const pack = game.packs.get("sw25-ce.sw25-spells");
+    SW25StatBlockSheet._spellCache ??= pack ? (await pack.getDocuments()).map((d) => Object.assign(d.toObject(), { uuid: d.uuid })) : [];
+    return [...SW25StatBlockSheet._spellCache, ...this.actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid }))];
+  }
+
+  /** Belt drops reuse the PC sheet's belt logic; everything else is the normal item drop (Inventory). */
+  async _onDrop(event) {
+    const target = event.target?.closest?.("[data-sw-drop=belt]");
+    if (target && this.isEditable) {
+      const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+      if (data?.type === "Item") return dropOnBelt(this.actor, target, data);
+    }
+    return super._onDrop(event);
   }
 
   /** Fellow-mode NPC: players get the public Fellow card; the stat block stays GM-only. */
@@ -91,6 +130,9 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       this.actor.update({ "system.sb.parts": parts });
     }));
     if (!this.isEditable) return;
+    if (!this._sbEdit) root.querySelectorAll(".sb-sheet .sb-in:not(.sb-keep)").forEach((el) => { el.disabled = true; });
+    root.querySelectorAll(".sb-vamt").forEach((el) => { el.addEventListener("change", (ev) => ev.stopPropagation()); el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); } }); });
+    bindBeltListeners(this, root);
     root.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", (ev) => this._onAction(ev, el)));
   }
 
@@ -113,7 +155,13 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       const cur = foundry.utils.getProperty(this.actor.system.sbView ?? {}, path);
       return this.actor.update({ [`system.sb.overrides.${path}`]: { value: cur ?? 0, locked: true } });
     }
-    if (a === "sb-cast") return this._sbCast(Number(el.dataset.index));
+    if (a === "sb-cast") return this._sbCast(Number(el.dataset.index), el.dataset.spell ?? null);
+    if (a === "sb-mode") { this._sbEdit = !this._sbEdit; return this.render(false); }
+    if (a === "sb-check") return this._sbCheck(el.dataset.label, Number(el.dataset.fixed), el.dataset.mode);
+    if (a === "sb-dmg") return this._sbDamage(el.dataset.label, el.dataset.text, el.dataset.mode);
+    if (a === "sb-vital") return this._sbVital(Number(el.dataset.part), el.dataset.kind, el.dataset.mode, el.closest(".sb-vbox")?.querySelector(".sb-vamt"));
+    if (a === "sb-loot") return this._sbLoot();
+    if (a === "sb-gmonly") { const k = el.dataset.key; const cur = spellGmOnly(this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {}, k); return this.actor.setFlag("sw25-ce", "sbSpellGmOnly", { [k]: !cur }); }
     if (a === "skill-desc") {
       const i = Number(el.dataset.index); const rows = arr("uniqueSkills");
       const content = `<textarea name="d" rows="8" style="width:100%">${foundry.utils.escapeHTML(rows[i]?.description ?? "")}</textarea>`;
@@ -123,24 +171,24 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const id = el.closest("[data-item-id]")?.dataset.itemId; const item = id && this.actor.items.get(id);
     if (a === "item-edit") return item?.sheet.render(true);
     if (a === "item-del") return item?.delete();
+    if (a === "item-roll") return item?.roll();
+    if (a === "item-show") return this._sbShowItem(item);
   }
 }
 
 /** NPC/monster casting: pick a spell for "<School> Magic N", confirm cost, deduct current MP/HP of the chosen part, post chat. */
-SW25StatBlockSheet.prototype._sbCast = async function (index) {
+SW25StatBlockSheet.prototype._sbCast = async function (index, spellName = null) {
   const actor = this.actor; const esc = foundry.utils.escapeHTML;
   const raw = actor._source.system?.sb ?? {}; const view = actor.system.sbView ?? {};
   const skills = Array.isArray(raw.uniqueSkills) ? raw.uniqueSkills : Object.values(raw.uniqueSkills ?? {});
   const skill = parseMagicSkill(skills[index]); if (!skill) return;
   // Spells: sw25-spells compendium + embedded spell items (fallback / custom).
-  const docs = [];
-  const pack = game.packs.get("sw25-ce.sw25-spells");
-  if (pack) docs.push(...(await pack.getDocuments()).map((d) => Object.assign(d.toObject(), { uuid: d.uuid })));
-  docs.push(...actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid })));
+  const docs = await this._sbSpellDocs();
   const spells = spellsForSkill(skill, docs);
   if (!spells.length) return ui.notifications.warn(`No ${skill.schools.join("/")} spells up to Lv${skill.level} found.`);
+  const pre = spellName != null ? spells.findIndex((x) => x.name === spellName) : -1;
   const opts = spells.map((s, n) => `<option value="${n}"${n === 0 ? " selected" : ""}>Lv${s.level} · ${esc(s.name)} (${esc(s.cost.raw || `MP${s.cost.base ?? "?"}`)})</option>`).join("");
-  const pick = await foundry.applications.api.DialogV2.prompt({ window: { title: `${skills[index].name}: cast` },
+  const pick = pre >= 0 ? String(pre) : await foundry.applications.api.DialogV2.prompt({ window: { title: `${skills[index].name}: cast` },
     content: `<label>Spell <select name="s" size="12" style="width:100%">${opts}</select></label>`,
     ok: { label: "Next", callback: (_e, b) => b.form.elements.s.value } }).catch((err) => { if (err) console.error("sw25 | cast dialog", err); return null; });
   if (pick == null) return;
@@ -169,7 +217,77 @@ SW25StatBlockSheet.prototype._sbCast = async function (index) {
     out.damage = await rollSpellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: skill.magicPower ?? 0 }, async () => (await new Roll("2d6").evaluate()).total);
   }
   const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out) });
+  // Casting check (2d6 + magic power) on the same card as the damage.
+  const sk = skills[index]; const ck = sk?.check ?? (sk?.magic?.power != null ? sk.magic.power : null);
+  const fixed = ck == null ? null : typeof ck === "object" ? (ck.fixed ?? (Number(ck.value) + 7)) : Number(ck) + 7;
+  const fd = fixedToDice(fixed); const rolls = [];
+  let castLine = "";
+  if (fd) { const r = await new Roll(fd.formula).evaluate(); rolls.push(r);
+    castLine = `<div class="sw25-sbcast-check">Casting Power <small>(fixed ${fd.fixed})</small> 🎲 ${fd.formula} = <b>${r.total}</b></div>`; }
+  const whisper = castIsWhisper(meta, actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {});
+  let desc = "";
+  if (!meta.power) {
+    const d = docs.find((x) => x.name === meta.name);
+    const TE = foundry.applications.ux.TextEditor.implementation;
+    const tgt = [d?.system?.target, d?.flags?.["sw25-ce"]?.data?.range, d?.system?.resist ? `Resist: ${d.system.resist}` : ""].filter(Boolean).join(" · ");
+    desc = (tgt ? `<div><small>${esc(tgt)}</small></div>` : "") + `<div class="sw25-sbcast-desc">${await TE.enrichHTML(d?.system?.description ?? "", { relativeTo: actor })}</div>`;
+  }
+  const head = whisper ? `<div class="sw25-gmonly"><i class="fas fa-eye-slash"></i> Whisper · GM only</div>` : "";
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), rolls,
+    ...(whisper ? { whisper: ChatMessage.getWhisperRecipients("GM").map((u) => u.id) } : {}),
+    content: head + castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out, castLine + desc) });
+};
+
+/** Fixed button posts the value; dice button rolls 2d6 + (fixed - 7). */
+SW25StatBlockSheet.prototype._sbCheck = async function (label, fixed, mode) {
+  const d = fixedToDice(fixed); if (!d) return;
+  const speaker = ChatMessage.getSpeaker({ actor: this.actor }); const esc = foundry.utils.escapeHTML;
+  if (mode === "fixed") return ChatMessage.create({ speaker, content: `<div class="sw25-sbcheck"><b>${esc(label)}</b>: fixed value <b>${d.fixed}</b></div>` });
+  const r = await new Roll(d.formula).evaluate();
+  return r.toMessage({ speaker, flavor: `${esc(label)} <small>(fixed ${d.fixed})</small>` });
+};
+
+/** Damage: dice rolls the stat-block formula; fixed posts the average (2d+X -> 7 + X). */
+SW25StatBlockSheet.prototype._sbDamage = async function (label, text, mode) {
+  const d = parseSbDamage(text); const esc = foundry.utils.escapeHTML; const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+  if (!d) return ui.notifications.warn(`Can't read damage "${text}".`);
+  if (mode === "fixed") return ChatMessage.create({ speaker, content: `<div class="sw25-sbcheck"><b>${esc(label)}</b>: fixed (average) <b>${d.average}</b> <small>(${esc(text)})</small></div>` });
+  const r = await new Roll(d.formula).evaluate();
+  return r.toMessage({ speaker, flavor: `${esc(label)} <small>(${esc(text)})</small>` });
+};
+
+/** Damage/Heal (HP) and Spend/Restore (MP) on one part: writes the same per-part current value the Parts table edits. */
+SW25StatBlockSheet.prototype._sbVital = async function (i, kind, mode, input) {
+  const amount = Number(input?.value); if (!Number.isFinite(amount) || amount <= 0) return ui.notifications.warn("Enter an amount first.");
+  const raw = this.actor._source.system?.sb ?? {}; const view = this.actor.system.sbView ?? {};
+  const parts = structuredClone(Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {}));
+  const vp = (view.parts ?? [])[i]; if (!parts[i] || !vp) return;
+  const key = kind === "mp" ? "mpValue" : "hpValue"; const max = kind === "mp" ? vp.mp : vp.hp;
+  parts[i][key] = applyVital({ current: parts[i][key] ?? vp[key], max, amount, mode, kind, allowNegative: !!view.useDeathCheck });
+  return this.actor.update({ "system.sb.parts": parts });
+};
+
+/** Roll Loot (GM only): 2d6 against system.sb.loot, whispered to the GMs with Sword Shards. */
+SW25StatBlockSheet.prototype._sbLoot = async function () {
+  if (!game.user.isGM) return;
+  const esc = foundry.utils.escapeHTML; const view = this.actor.system.sbView ?? {}; const raw = this.actor._source.system?.sb ?? {};
+  const rows = Array.isArray(raw.loot) ? raw.loot : Object.values(raw.loot ?? {});
+  const r = await new Roll("2d6").evaluate();
+  const got = lootFor(rows, r.total);
+  const li = got.map((l) => `<li>${l.always ? "<small>(Always)</small> " : ""}<b>${esc(l.item || "?")}</b>${l.price != null && l.price !== "" ? ` — ${esc(l.price)}G` : ""}${l.materialCard ? ` <small>[${esc(l.materialCard)}]</small>` : ""}</li>`).join("");
+  const shards = view.swordShards;
+  const content = `<div class="sw25-sbloot"><div class="sw25-gmonly"><i class="fas fa-eye-slash"></i> Whisper · GM only</div><header><b>${esc(this.actor.name)}</b> — loot 🎲 2d6 = <b>${r.total}</b></header>`
+    + `<ul>${li || "<li class=\"muted\">Nothing dropped</li>"}</ul>`
+    + (shards ? `<div>Sword Shards: <b>${esc(shards)}</b></div>` : "") + `</div>`;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), rolls: [r], content, whisper: ChatMessage.getWhisperRecipients("GM").map((u) => u.id) });
+};
+
+/** Show a non-weapon item to chat (image, name, description). */
+SW25StatBlockSheet.prototype._sbShowItem = async function (item) {
+  if (!item) return; const esc = foundry.utils.escapeHTML;
+  const TE = foundry.applications.ux.TextEditor.implementation;
+  const desc = await TE.enrichHTML(item.system?.description ?? "", { relativeTo: item });
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: `<div class="sw25-sbshow"><header><img src="${esc(item.img)}" width="32" height="32" style="vertical-align:middle;border:0"> <b>${esc(item.name)}</b> <small>${esc(item.type)}</small></header>${desc}</div>` });
 };
 
 /** Chat buttons on spell cards: apply magic damage to targeted tokens (Defense ignored, "Magic Damage +N" weak point added). */

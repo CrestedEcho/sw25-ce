@@ -1,0 +1,5 @@
+<h3>{{localize "SW25.SB.Inventory"}} <small>({{localize "SW25.SB.InventoryHint"}})</small></h3>
+<ol class="sb-items">{{#each items}}<li class="item" data-item-id="{{_id}}"><img src="{{img}}"> <span>{{name}}</span> <small>{{type}}</small>
+  {{#if @root.editable}}{{#if rollable}}<a class="sb-btn" data-action="item-roll"><i class="fas fa-dice"></i> {{localize "SW25.SB.Roll"}}</a>{{else}}<a class="sb-btn" data-action="item-show"><i class="fas fa-comment"></i> {{localize "SW25.SB.Show"}}</a>{{/if}}
+  {{#if @root.editMode}}<a data-action="item-edit"><i class="fas fa-edit"></i></a> <a data-action="item-del"><i class="fas fa-trash"></i></a>{{/if}}{{/if}}</li>{{else}}<li class="muted">{{localize "SW25.SB.InventoryEmpty"}}</li>{{/each}}</ol>
+<div class="sb-belt-wrap">{{> "systems/sw25-ce/templates/actor/parts/actor-ce7-belt.hbs"}}</div>

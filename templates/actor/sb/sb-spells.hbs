@@ -1,0 +1,14 @@
+{{#each casters}}
+<div class="sb-casting">
+  <h3>{{localize "SW25.SB.Spellcasting"}} <small>({{name}}{{#if magicPower}} · {{localize "SW25.SB.MagicPower"}} {{magicPower}}{{/if}})</small></h3>
+  <div class="sb-prow"><label>{{localize "SW25.SB.CastingPower"}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=casting}}</div>
+  <table class="sb-table sb-spells"><thead><tr><th>{{localize "SW25.SB.Spell"}}</th><th>MP</th><th>{{localize "SW25.SB.TargetRange"}}</th><th>{{localize "SW25.SB.Effect"}}</th><th></th></tr></thead><tbody>
+  {{#each spells}}<tr>
+    <td>Lv{{level}} · {{name}}</td><td>{{cost}}</td><td>{{target}}</td>
+    <td>{{#if power}}{{localize "SW25.SB.Power"}} {{power}}{{else}}<span class="muted">{{localize "SW25.SB.NoDamage"}}</span>{{/if}}</td>
+    <td class="sb-spell-btns">{{#if @root.editable}}<a class="sb-btn sb-castbtn" data-action="sb-cast" data-index="{{../i}}" data-spell="{{name}}"><i class="fas fa-magic"></i> {{localize "SW25.SB.Cast"}}</a>
+      {{#unless power}}<a class="sb-btn sb-eye{{#if gmOnly}} on{{/if}}" data-action="sb-gmonly" data-key="{{key}}" title="{{localize 'SW25.SB.GmOnlyHint'}}"><i class="fas {{#if gmOnly}}fa-eye-slash{{else}}fa-eye{{/if}}"></i> {{#if gmOnly}}{{localize "SW25.SB.GmOnly"}}{{else}}{{localize "SW25.SB.Public"}}{{/if}}</a>{{/unless}}{{/if}}</td>
+  </tr>{{else}}<tr><td colspan="5" class="muted">{{localize "SW25.SB.NoSpells"}}</td></tr>{{/each}}
+  </tbody></table>
+</div>
+{{/each}}

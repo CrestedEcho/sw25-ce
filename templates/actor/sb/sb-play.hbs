@@ -1,0 +1,24 @@
+{{!-- Play mode: roll buttons. Fixed posts the value; dice rolls 2d6 + (fixed − 7). Defense has no button. --}}
+<div class="sb-play-block">
+{{#each playParts}}
+  <div class="sb-pcard">
+    <h4>{{#if ../multiPart}}{{name}}{{#if isCore}} ★{{/if}} — {{/if}}{{localize "SW25.SB.Attack"}}</h4>
+    <div class="sb-prow"><label>{{localize "SW25.SB.Accuracy"}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=accuracy}}</div>
+    <div class="sb-prow"><label>{{localize "SW25.SB.Damage"}} <small>({{localize "SW25.SB.FixedAvg"}})</small></label>{{#if damage.formula}}<span class="sb-rollpair"><a class="sb-btn sb-fx" data-action="sb-dmg" data-mode="fixed" data-label="{{damage.label}}" data-text="{{damage.text}}"><i class="fas fa-square"></i> {{damage.average}}</a><a class="sb-btn sb-dice" data-action="sb-dmg" data-mode="dice" data-label="{{damage.label}}" data-text="{{damage.text}}"><i class="fas fa-dice"></i> {{damage.formula}}</a></span>{{else}}<span class="muted">{{#if damage.text}}{{damage.text}}{{else}}—{{/if}}</span>{{/if}}</div>
+  </div>
+  <div class="sb-pcard">
+    <h4>{{#if ../multiPart}}{{name}} — {{/if}}{{localize "SW25.SB.Defense"}}</h4>
+    <div class="sb-prow"><label>{{localize "SW25.SB.Evasion"}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=evasion}}</div>
+    <div class="sb-prow"><label>{{localize "SW25.SB.DefenseNoRoll"}}</label><span class="sb-static">{{defense}}</span></div>
+  </div>
+{{/each}}
+  <div class="sb-pcard">
+    <h4>{{localize "SW25.SB.Resistances"}}</h4>
+    {{#each resistances}}<div class="sb-prow"><label>{{label}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=this}}</div>{{/each}}
+  </div>
+  {{#if levelChecks.length}}<div class="sb-pcard">
+    <h4>{{localize "SW25.SB.LevelChecks"}}</h4>
+    {{#each levelChecks}}<div class="sb-prow"><label>{{label}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=this}}</div>{{/each}}
+  </div>{{/if}}
+</div>
+<p class="sb-legend"><i class="fas fa-square"></i> {{localize "SW25.SB.FixedHint"}} · <i class="fas fa-dice"></i> {{localize "SW25.SB.DiceHint"}}</p>

@@ -72,13 +72,13 @@ export function applySbCost(rawParts, viewParts, { mp = 0, hp = 0, partIndex = n
 }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-export function castChatHTML(actorName, meta, { mp, hp, rank, ritual, partName }, res) {
+export function castChatHTML(actorName, meta, { mp, hp, rank, ritual, partName }, res, extraHTML = "") {
   return `<div class="sw25-sbcast"><header><b>${esc(actorName)}</b> casts <b>${esc(meta.name)}</b> <small>(${esc(meta.school)} Lv${meta.level})</small></header>`
     + (partName ? `<div><small>Paid by: ${esc(partName)}</small></div>` : "")
     + `<div>Cost spent: <b>MP ${mp}</b>${hp ? ` + <b>HP ${hp}</b>` : ""}${rank ? ` <small>(deity rank: ${esc(rank)})</small>` : ""}${ritual ? " <small>(ritual)</small>" : ""}${meta.cost.raw ? ` <small>[listed ${esc(meta.cost.raw)}]</small>` : ""}</div>`
     + `<div>MP ${res.mpBefore} → ${res.mpAfter}${hp ? ` · HP ${res.hpBefore} → ${res.hpAfter}` : ""}</div>`
     + (res.mpShort ? `<div class="fw-fail">⚠ Not enough MP (had ${res.mpBefore}) — GM proceeded.</div>` : "")
-    + (res.hpShort ? `<div class="fw-fail">⚠ HP cost brings it to ${res.hpAfter}.</div>` : "") + damageHTML(meta, res.damage) + `</div>`;
+    + (res.hpShort ? `<div class="fw-fail">⚠ HP cost brings it to ${res.hpAfter}.</div>` : "") + extraHTML + damageHTML(meta, res.damage) + `</div>`;
 }
 
 /** Damage block for the cast card: rolls, Power N + Magic Power, full / half (resisted, rounded up) apply buttons. */

@@ -113,3 +113,43 @@
 .sb-person-combat .sb-in:disabled { color:inherit; opacity:1; }
 .sb-cast { margin-left:6px; font-size:11px; color:var(--sb-rust); cursor:pointer; white-space:nowrap; }
 .sw25-sbcast .fw-fail { color:#9a2a1f; }
+/* ce.14: Play / Edit lock, roll buttons, damage/heal box, inventory + belt, spellcasting */
+.sb-modelock { display:inline-flex; border:1px solid var(--acc); border-radius:12px; overflow:hidden; cursor:pointer; font-size:12px; margin-right:6px; }
+.sb-modelock span { padding:2px 8px; color:var(--acc); }
+.sb-modelock span.on { background:var(--acc); color:#fff; }
+.sb-mode-play .sb-in:disabled { border-color:transparent; background:transparent; color:inherit; -webkit-text-fill-color:currentColor; opacity:1; cursor:default; }
+.sb-mode-play .sb-add, .sb-mode-play .sb-del, .sb-mode-play .sb-lock, .sb-mode-play .sb-edit-only, .sb-mode-play .sb-core:not(.on), .sb-mode-play .sb-parts-wrap { display:none; }
+.sb-sheet .sb-btn { display:inline-block; padding:1px 7px; margin:0 2px; border:1px solid var(--acc); border-radius:4px; background:rgba(255,255,255,.45); color:var(--sb-ink); cursor:pointer; font-size:12px; white-space:nowrap; }
+.sb-sheet .sb-btn:hover { background:var(--acc); color:#fff; }
+.sb-sheet .sb-btn.sb-dice { background:rgba(138,74,42,.12); }
+.sb-rollpair { display:inline-flex; gap:2px; }
+.sb-play-block { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:8px; margin:6px 0; }
+.sb-pcard { border:1px solid rgba(58,37,18,.35); border-radius:6px; padding:4px 8px; background:rgba(255,255,255,.25); }
+.sb-pcard h4 { margin:0 0 4px; font-variant:small-caps; border-bottom:1px solid var(--acc); }
+.sb-prow { display:flex; justify-content:space-between; align-items:center; padding:2px 0; gap:6px; }
+.sb-prow label { flex:1; }
+.sb-static { font-weight:bold; padding:0 8px; }
+.sb-legend { font-size:11px; color:#6a5032; margin:2px 0 6px; }
+.sb-vbox { display:inline-flex; align-items:center; gap:2px; margin-left:6px; }
+.sb-vbox .sb-vamt { width:48px; height:22px; }
+.sb-sheet .sb-btn.sb-neg { border-color:#8a2a2a; }
+.sb-sheet .sb-btn.sb-pos { border-color:#2a6a3a; }
+.sb-casting { margin:6px 0; }
+.sb-spells td.sb-spell-btns { white-space:nowrap; text-align:right; }
+.sb-sheet .sb-btn.sb-eye.on { background:#3a2512; color:#efe1c1; }
+.sb-lootbtn { font-size:12px; }
+.sb-items li.item { display:flex; align-items:center; gap:6px; }
+.sb-items li.item > span { flex:1; }
+.sb-belt-wrap .ce7-belt { margin-top:6px; }
+.sb-belt-wrap .ribbon { display:block; font-weight:bold; font-variant:small-caps; border-bottom:1px solid var(--acc); margin-bottom:4px; }
+.sb-belt-wrap .ce7-belt-slots { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:6px; }
+.sb-belt-wrap .ce7-belt-slot { position:relative; min-height:72px; border:1px solid var(--acc); border-radius:6px; padding:4px; text-align:center; background:rgba(0,0,0,.04); }
+.sb-belt-wrap .ce7-belt-slot img { width:30px; height:30px; border:0; }
+.sb-belt-wrap .ce7-belt-slot .nm { font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-belt-wrap .ce7-belt-slot .ticks { display:flex; flex-wrap:wrap; justify-content:center; gap:2px; margin:2px 0; }
+.sb-belt-wrap .ce7-tick { display:inline-block; width:10px; height:10px; border:1px solid var(--acc); border-radius:2px; cursor:pointer; }
+.sb-belt-wrap .ce7-tick.on { background:var(--acc); }
+.sb-belt-wrap .ce7-belt-slot .cnt { font-size:10px; }
+.sb-belt-wrap .ce7-belt-slot .ph { display:block; padding-top:10px; color:#6a5032; font-size:11px; font-style:italic; }
+.sb-belt-wrap .ce7-belt-clear { position:absolute; top:0; right:3px; cursor:pointer; }
+.sw25-gmonly { font-size:11px; color:#6a3a8a; font-weight:bold; }

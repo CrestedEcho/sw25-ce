@@ -12,7 +12,7 @@
   {{/if}}
   {{#if showSections}}<div class="f"><label>Sections / Main</label><span>{{sb.partCount}} / {{sb.coreParts}}</span></div>{{/if}}
 </div>
-<h3>Parts {{#if editable}}<a class="sb-add" data-action="add" data-field="parts" title="Add part"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+<div class="sb-parts-wrap"><h3>Parts {{#if editable}}<a class="sb-add" data-action="add" data-field="parts" title="Add part"><i class="fas fa-plus"></i></a>{{/if}}</h3>
 <table class="sb-table sb-parts"><thead><tr><th>Part / style</th><th>×</th><th>Accuracy</th><th>Damage</th><th>Evasion</th><th>Defense</th><th>HP</th><th>MP</th><th></th></tr></thead><tbody>
 {{#each parts}}<tr class="{{#if dead}}is-dead{{/if}}">
   <td><input class="sb-in w-name" type="text" name="system.sb.parts.{{i}}.name" value="{{name}}"><a data-action="core" data-index="{{i}}" class="sb-core{{#if isCore}} on{{/if}}" title="Main section">★</a></td>
@@ -25,15 +25,15 @@
   <td><input class="sb-in w-xs" type="text" name="system.sb.parts.{{i}}.mpValue" value="{{mpValue}}" data-dtype="Number">/{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=mp}}</td>
   <td>{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="parts" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</td>
 </tr>{{else}}<tr><td colspan="9" class="muted">No parts — add one.</td></tr>{{/each}}
-</tbody></table>
+</tbody></table></div>
 <h3>Unique skills {{#if editable}}<a class="sb-add" data-action="add" data-field="uniqueSkills"><i class="fas fa-plus"></i></a>{{/if}}</h3>
 {{#each skills}}<div class="sb-skill">
-  <b>{{#each tags}}{{#if icon}}<img class="sb-tag" src="{{icon}}" title="{{label}}">{{else}}<span class="sb-glyph" title="{{label}}">{{glyph}}</span>{{/if}}{{/each}} <input class="sb-in w-name" type="text" name="system.sb.uniqueSkills.{{i}}.name" value="{{name}}"></b>{{#if castable}}{{#if @root.editable}} <a class="sb-cast" data-action="sb-cast" data-index="{{i}}" title="Cast a spell (deducts MP from the stat block)"><i class="fas fa-magic"></i> Cast</a>{{/if}}{{/if}}
+  <b>{{#each tags}}{{#if icon}}<img class="sb-tag" src="{{icon}}" title="{{label}}">{{else}}<span class="sb-glyph" title="{{label}}">{{glyph}}</span>{{/if}}{{/each}} <input class="sb-in w-name" type="text" name="system.sb.uniqueSkills.{{i}}.name" value="{{name}}"></b>{{#if castable}}{{#if @root.editMode}} <a class="sb-cast" data-action="sb-cast" data-index="{{i}}" title="Cast a spell (deducts MP from the stat block)"><i class="fas fa-magic"></i> Cast</a>{{/if}}{{/if}}
   {{#if check}}<small>{{check}}{{#if resist}} · {{resist}}{{/if}}</small>{{/if}}
   <span class="sb-desc">— {{{description}}}</span>
   {{#if @root.editable}}<span class="sb-edit-only"><label>tags <input class="sb-in" type="text" name="system.sb.uniqueSkills.{{i}}.tags" value="{{#each tags}}{{key}} {{/each}}" title="passive major minor prep declared"></label><a class="sb-del" data-action="del" data-field="uniqueSkills" data-index="{{i}}"><i class="fas fa-times"></i></a><a data-action="skill-desc" data-index="{{i}}" title="Edit description"><i class="fas fa-edit"></i></a></span>{{/if}}
 </div>{{else}}<div class="sb-skill muted">None</div>{{/each}}
-<h3>Loot <small>(2d · Sword Shards {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.swordShards}})</small> {{#if editable}}<a class="sb-add" data-action="add" data-field="loot"><i class="fas fa-plus"></i></a>{{/if}}</h3>
+<h3>Loot <small>(2d · Sword Shards {{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=stats.swordShards}})</small> {{#if isGM}}<a class="sb-btn sb-lootbtn" data-action="sb-loot" title="{{localize 'SW25.SB.LootHint'}}"><i class="fas fa-dice"></i> {{localize "SW25.SB.RollLoot"}}</a>{{/if}} {{#if editable}}<a class="sb-add" data-action="add" data-field="loot"><i class="fas fa-plus"></i></a>{{/if}}</h3>
 <table class="sb-table"><thead><tr><th>Roll</th><th>Item</th><th>Price</th><th>Material card</th><th></th></tr></thead><tbody>
 {{#each loot}}<tr><td><input class="sb-in w-roll" type="text" name="system.sb.loot.{{i}}.roll" value="{{roll}}"></td><td><input class="sb-in" type="text" name="system.sb.loot.{{i}}.item" value="{{item}}"></td><td><input class="sb-in w-xs" type="text" name="system.sb.loot.{{i}}.price" value="{{price}}" data-dtype="Number">G</td><td><input class="sb-in" type="text" name="system.sb.loot.{{i}}.materialCard" value="{{materialCard}}"></td><td>{{#if @root.editable}}<a class="sb-del" data-action="del" data-field="loot" data-index="{{i}}"><i class="fas fa-times"></i></a>{{/if}}</td></tr>{{else}}<tr><td colspan="5" class="muted">No loot</td></tr>{{/each}}
 </tbody></table>
