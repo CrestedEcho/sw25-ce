@@ -1319,6 +1319,8 @@
       "IgnoreCritsTip": "Recalculate using only the first roll, as if the attack did not crit.",
       "Target": "Choose target",
       "TargetTip": "Pick which token(s) this damage applies to.",
+      "TargetLabel": "Target:",
+      "NoTarget": "No target, click to pick",
       "pd": "Physical",
       "pdTip": "Physical: reduced by the target's Defense.",
       "md": "Magic",

@@ -5,6 +5,7 @@ import { mpCost, hpCost } from "./mpcost.mjs";
 import { targetRollDialog, targetSelectDialog } from "../helpers/dialogs.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "./utils.mjs";
+import { targetChipsHtml, tokenTargetInfo, targetButtonInner } from "./target-chips.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -120,11 +121,10 @@ export async function chatButton(chatMessage, buttonType) {
       return;
     }
     const target = selectedTokens.map((target) => target.id);
-    const targetNames = selectedTokens
-      .map((target) => ">>> " + target.document.name)
-      .join("<br>");
+    const targetNames = targetChipsHtml(selectedTokens.map(tokenTargetInfo));
     const flags = chatMessage.flags;
-    const targetStr = `<span class="targetname">${targetNames}</span>`;
+    const L = (k, d) => { const s = game.i18n?.localize?.(k); return s && s !== k ? s : d; };
+    const targetStr = targetButtonInner(targetNames, L("SW25.Card.TargetLabel", "Target:"), L("SW25.Card.NoTarget", "No target, click to pick"));
 
     flags.sw25.target = target;
     flags.sw25.targetName = targetNames;
@@ -344,13 +344,7 @@ export async function chatButton(chatMessage, buttonType) {
       if (targetTokens) {
         const targetArray = Array.from(targetTokens);
         target = targetArray.map((target) => target.id);
-        let targetNames = targetArray.map((target) => target.document.name);
-        targetName = ``;
-        for (let i = 0; i < targetNames.length; i++) {
-          if (i != 0) targetName = targetName + `<br>`;
-          targetName = targetName + `>>> ${targetNames[i]}`;
-        }
-        targetName = targetName + ``;
+        targetName = targetChipsHtml(targetArray.map(tokenTargetInfo));
       }
 
       chatData.flags = {
@@ -473,13 +467,7 @@ export async function chatButton(chatMessage, buttonType) {
       if (targetTokens) {
         const targetArray = Array.from(targetTokens);
         target = targetArray.map((target) => target.id);
-        let targetNames = targetArray.map((target) => target.document.name);
-        targetName = ``;
-        for (let i = 0; i < targetNames.length; i++) {
-          if (i != 0) targetName = targetName + `<br>`;
-          targetName = targetName + `>>> ${targetNames[i]}`;
-        }
-        targetName = targetName + ``;
+        targetName = targetChipsHtml(targetArray.map(tokenTargetInfo));
       }
 
       chatData.flags = {
