@@ -6,6 +6,7 @@ import * as SC from "./spell-cast.mjs";
 import { castOptionsFor } from "./spell-ui.mjs";
 import { hasPowerObject, rollSpellDamage } from "./spell-power.mjs";
 import { usableStones, makoLimit, finalCost, payPlan, stoneAfterPay, mpLine, shortLine } from "./spell-pay.mjs";
+import { conditionFor } from "./conditions.mjs";
 import { spellInfo, descCardHTML, castCardHTML, castWindowHTML, rowData, effectData } from "./spell-card.mjs";
 import { resolveTargetTokensOrWarn } from "../helpers/target-chips.mjs";
 import { toggleBeltSlot, slotsArray } from "../ce7/belt-logic.mjs";
@@ -123,13 +124,12 @@ export async function applyStatusToTokenIds(ids, st) {
 }
 async function applyStatusToActors(actors, st) {
   if (!st || !(st.id || st.label)) return;
-  const id = String(st.id ?? "").trim();
-  const cfg = id ? (CONFIG.statusEffects ?? []).find((s) => s.id === id) : null;
-  const eff = { ...st, label: st.label || (cfg?.name ? game.i18n.localize(cfg.name) : id) };
-  const data = effectData(eff, { img: cfg?.img ?? (st.buff ? "icons/svg/upgrade.svg" : "icons/svg/aura.svg"), spell: st.spell ?? "" });
-  for (const a of actors) await a.createEmbeddedDocuments("ActiveEffect", [data]);
+  const cond = conditionFor(st.id) ?? conditionFor(st.label);
+  const eff = { ...st, label: st.label || (cond ? game.i18n.localize(`SW25.Condition.${cond.id}.Name`) : st.id) };
+  const data = effectData(eff, { spell: st.spell ?? "", combat: game.combat?.started ? game.combat : null });
+  for (const a of actors) await a.createEmbeddedDocuments("ActiveEffect", [foundry.utils.deepClone(data)]);
   const esc = foundry.utils.escapeHTML;
-  return ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${st.buff ? "Buff" : "Effect"} applied: ${esc(eff.label)}</b>${eff.rounds ? ` (${eff.rounds} rounds)` : ""}<br>${actors.map((a) => esc(a.name)).join(", ")}</div>` });
+  return ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${st.buff ? "Buff" : "Effect"} applied: ${esc(data.name)}</b>${eff.rounds ? ` (${eff.rounds} rounds)` : ""}<br>${actors.map((a) => esc(a.name)).join(", ")}</div>` });
 }
 
 export function registerSpellCards() {

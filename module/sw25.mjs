@@ -1,6 +1,7 @@
 import { registerLiveTargets } from "./helpers/target-chips.mjs";
 import { applyDamageToTokenIds } from "./rules/apply-damage.mjs";
 import { registerSpellCards, applyStatusToTokenIds } from "./rules/spell-flow.mjs";
+import { registerConditions } from "./rules/conditions.mjs";
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
 import { knowledgeUpdates } from "./rules/mknow.mjs";
@@ -198,6 +199,7 @@ Hooks.once("init", function () {
   registerCombatUI();
   registerLiveTargets();
   registerSpellCards();
+  registerConditions();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();

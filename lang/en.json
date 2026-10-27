@@ -53,7 +53,84 @@
     "Selectpotionskill": "Select Potion Class",
     "Selectrepairskill": "Select Repair Tool Class",
     "Defaultitemskill": "Default Item Class",
-    "Condition": "Condition",
+    "Condition": {
+      "prone": {
+        "Name": "Prone",
+        "Desc": "On the ground: -2 to action checks. Stand up with a Minor Action."
+      },
+      "unconscious": {
+        "Name": "Unconscious",
+        "Desc": "HP 0 or less: can't act; make Death Checks."
+      },
+      "asleep": {
+        "Name": "Asleep",
+        "Desc": "Can't move or act; -4 to checks. Damage or a shake wakes them."
+      },
+      "petrified": {
+        "Name": "Petrified",
+        "Desc": "Turning to stone (ability score lowered) or fully a statue."
+      },
+      "entangled": {
+        "Name": "Entangled",
+        "Desc": "Held or tangled: movement limited; break free with a Major Action."
+      },
+      "blinded": {
+        "Name": "Blinded",
+        "Desc": "Can't see: everyone counts as invisible to them."
+      },
+      "invisible": {
+        "Name": "Invisible",
+        "Desc": "Can't be targeted directly: attackers -4 Accuracy."
+      },
+      "flying": {
+        "Name": "Flying",
+        "Desc": "In the air: Full Move only; falls if knocked out or the flight ends."
+      },
+      "stun": {
+        "Name": "Stunned",
+        "Desc": "Automatically fails the next Evasion check, which ends it."
+      },
+      "fear": {
+        "Name": "Frightened",
+        "Desc": "Afraid: slowed (-1 checks), fleeing, or cowering, per the Fear table."
+      },
+      "frenzy": {
+        "Name": "Frenzied",
+        "Desc": "Berserk: no reason-based actions or spells; +2 Accuracy, -2 Evasion."
+      },
+      "confused": {
+        "Name": "Confused",
+        "Desc": "Can't choose its own targets: they are picked at random or forced."
+      },
+      "charmed": {
+        "Name": "Charmed / Dominated",
+        "Desc": "Treats the caster as a friend, or obeys them more easily."
+      },
+      "hungry": {
+        "Name": "Hungry / Sleep-deprived",
+        "Desc": "Missed a meal or sleep: Max HP and MP -1, -1 to skill checks."
+      },
+      "intoxicated": {
+        "Name": "Intoxicated",
+        "Desc": "Still drunk: -1 to skill checks."
+      },
+      "poison": {
+        "Name": "Poisoned",
+        "Desc": "Marker: under a poison-type effect (Cure Poison removes it)."
+      },
+      "curse": {
+        "Name": "Cursed",
+        "Desc": "Marker: under a curse-type effect (only Remove Curse removes it)."
+      },
+      "disease": {
+        "Name": "Diseased",
+        "Desc": "Marker: under a disease-type effect (Cure Disease removes it)."
+      },
+      "dead": {
+        "Name": "Dead",
+        "Desc": "Dead or defeated."
+      }
+    },
     "Contents": " Contents",
     "Level": "Level",
     "Rank": "Rank",

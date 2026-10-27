@@ -9,7 +9,7 @@ test("statusOf: data-driven, empty id = no status", () => {
   assert.equal(C.statusOf({}), null);
   assert.equal(C.statusOf({ status: { id: "" } }), null);
   const st = C.statusOf({ status: { id: "stun", rounds: 3 } });
-  assert.equal(st.id, "stun"); assert.equal(st.label, "Stun"); assert.equal(st.rounds, 3); assert.equal(st.review, false);
+  assert.equal(st.id, "stun"); assert.equal(st.label, "Stunned"); assert.equal(st.rounds, 3); assert.equal(st.review, false);
 });
 
 test("spellInfo: range field wins over rangeshape; plain duration", () => {
@@ -99,5 +99,5 @@ test("cast card: unreviewed hint, buff wording, effect JSON on the button, damag
   assert.match(html, /Apply Buff: Poisonous Attacker/); assert.match(html, /sw25-sc-unrev">unreviewed/);
   assert.match(html, /data-sw25-effect="\{&quot;id&quot;/); assert.match(html, />poison</);
   const plain = C.castCardHTML(C.spellInfo(spell({ status: { id: "stun", rounds: 1 } })), {}).html;
-  assert.doesNotMatch(plain, /unreviewed/); assert.match(plain, /Apply Effect: Stun/);
+  assert.doesNotMatch(plain, /unreviewed/); assert.match(plain, /Apply Effect: Stunned/);
 });

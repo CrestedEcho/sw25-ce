@@ -4,6 +4,7 @@
  */
 import { isHealSpell, hasPowerObject } from "./spell-power.mjs";
 import { mpLine, shortLine } from "./spell-pay.mjs";
+import { conditionFor } from "./conditions.mjs";
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const txt = (v) => (v == null || v === 0 || v === "0" ? "" : String(v).trim());
@@ -35,7 +36,7 @@ export function statusOf(sys = {}) {
   const id = String(s.id ?? "").trim(); const label = txt(s.label);
   const changes = (Array.isArray(s.changes) ? s.changes : []).map((c) => ({ key: String(c?.key ?? "").trim(), value: Number(c?.value) || 0 })).filter((c) => c.key && c.value);
   if (!id && !label && !changes.length) return null;
-  return { id, label: label || (id ? id.charAt(0).toUpperCase() + id.slice(1) : "Effect"), rounds: Math.max(0, Math.floor(Number(s.rounds) || 0)) || roundsFromTime(sys.time),
+  return { id, label: label || conditionFor(id)?.name || (id ? id.charAt(0).toUpperCase() + id.slice(1) : "Effect"), rounds: Math.max(0, Math.floor(Number(s.rounds) || 0)) || roundsFromTime(sys.time),
     review: !!s.review, note: txt(s.note), description: txt(s.description), buff: !!s.buff, changes };
 }
 /** "Accuracy -2, Evasion -2" */
@@ -43,11 +44,16 @@ export function changesText(changes = []) {
   return changes.map((c) => `${STAT_WORDS[c.key] ?? c.key} ${sign(c.value)}`).join(", ");
 }
 /** ActiveEffect create data for a spell effect (pure). img = status icon or fallback. */
-export function effectData(st, { img = "icons/svg/aura.svg", origin = null, spell = "" } = {}) {
+export function effectData(st, { img = null, origin = null, spell = "", combat = null } = {}) {
+  // Matching SW2.5 condition (by id, then by label e.g. "Petrifaction") -> statuses, so it shows on the token.
+  const cond = conditionFor(st.id) ?? conditionFor(st.label);
+  const statuses = cond ? [cond.id] : (st.id ? [st.id] : []);
+  img = img ?? cond?.icon ?? (st.buff ? "icons/svg/upgrade.svg" : "icons/svg/aura.svg");
+  const dur = st.rounds ? { rounds: st.rounds, ...(combat ? { combat: combat.id, startRound: combat.round, startTurn: combat.turn ?? 0 } : {}) } : {};
   const changes = (st.changes ?? []).map((c) => ({ key: EFFECT_KEYS[c.key] ?? c.key, mode: 2, value: String(c.value), priority: 20 }));
   const desc = [st.description, changesText(st.changes)].filter(Boolean).map(esc).join("<br>");
-  return { name: st.label, img, statuses: st.id ? [st.id] : [], changes, description: desc ? `<p>${desc}</p>` : "",
-    duration: st.rounds ? { rounds: st.rounds } : {}, ...(origin ? { origin } : {}), flags: { "sw25-ce": { spellEffect: { spell, buff: !!st.buff, review: !!st.review } } } };
+  return { name: st.label || cond?.name || "Effect", img, statuses, changes, description: desc ? `<p>${desc}</p>` : (cond ? `<p>${esc(cond.description)}</p>` : ""),
+    duration: dur, ...(origin ? { origin } : {}), flags: { "sw25-ce": { spellEffect: { spell, buff: !!st.buff, review: !!st.review } } } };
 }
 /** Damage-type tags (poison, curse...) are labels, not statuses. */
 export function tagsOf(sys = {}) {
