@@ -16,10 +16,10 @@ export async function setDeclare(actor, slugs, on) {
 }
 
 /** Call after a weapon damage roll: attack-scoped declarations end (risk lingers to next turn). */
-export async function afterWeaponDamage(actor) {
+export async function afterWeaponDamage(actor, item = null) {
   if (!actor?.isOwner) return;
   // counters spent by the first melee attack of the turn (Dodge)
-  const w = actor.system?.itemid ? actor.items.get(actor.system.itemid) : null;
+  const w = item ?? (actor.system?.itemid ? actor.items.get(actor.system.itemid) : null);
   const spend = (actor.system?._rules?.counters ?? []).filter((d) => d.firstMelee).map((d) => d.name);
   const cur0 = actor.getFlag(SYS, "counters") ?? {};
   if (spend.some((n) => cur0[n]) && w && !RANGED.includes(String(w.system.category ?? "").toLowerCase()))

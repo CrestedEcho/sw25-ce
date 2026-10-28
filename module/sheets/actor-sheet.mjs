@@ -20,6 +20,7 @@ import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow, postSpellDescription } from "../rules/spell-flow.mjs";
 import { postAttackCard, rollWeaponDamage, attackWithWeapon } from "../rules/attack-flow.mjs";
 import { weaponRoute } from "../rules/weapon-route.mjs";
+import { weaponCardRow, pcWeaponBattle } from "../rules/weapon-battle.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf } from "../rules/spell-school.mjs";
 
@@ -680,6 +681,9 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.resources = resources;
     context.weapons = weapons;
     context.battleweapons = battleweapons;
+    // sw25-ce: Combat-tab Weapons list cards (all weapons; equipped first, unequipped dimmed)
+    context.weaponCards = [...weapons].sort((a, b) => Number(!!b.system.equip) - Number(!!a.system.equip))
+      .map((w) => weaponCardRow(w, w.system._battle ?? pcWeaponBattle(w.system, this.actor.system), { description: w.system.description ?? "", dedicated: !!w.system.dedicated }));
     context.armors = armors;
     context.battlearmors = battlearmors;
     context.accessories = accessories;
@@ -799,6 +803,12 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // Spell rows: name -> description in chat (no MP), Cast -> cast window. Toggle shows the description inline.
     html.on("click", ".sw25-spell-name", (ev) => { ev.preventDefault(); const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId); if (it) postSpellDescription(this.actor, it); });
     html.on("click", ".sw25-spell-cast", (ev) => { ev.preventDefault(); const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId); if (it) castSpellFlow(this.actor, it); });
+    // Weapons list cards: Roll Accuracy -> attack card, Roll Damage -> damage card, for THIS weapon (by item id).
+    html.on("click", ".sw25-wpn-acc, .sw25-wpn-dmg", (ev) => {
+      ev.preventDefault(); ev.stopPropagation();
+      const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId);
+      if (it) attackWithWeapon(this.actor, it, ev.currentTarget.classList.contains("sw25-wpn-dmg") ? "damage" : "attack");
+    });
     html.on("click", ".sw25-spell-more", (ev) => { ev.preventDefault(); $(ev.currentTarget).closest(".spell").find(".spell-description").slideToggle(); });
     html.find(".action-label").click(this._showActionDetails.bind(this));
 

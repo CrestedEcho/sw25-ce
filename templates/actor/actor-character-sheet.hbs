@@ -226,7 +226,7 @@
           <div class="stat" data-tooltip="{{localize 'SW25.V2.Tip.Move'}}"><i class="fa-solid fa-person-running"></i><div class="v sm">{{system.attributes.move.limited}} / {{system.attributes.move.normal}} / {{system.attributes.move.max}}</div><div class="n">{{localize "SW25.V2.Move"}}</div></div>
         </div>
         <div class="selects">
-          <label data-tooltip="{{localize 'SW25.V2.Tip.HitWeapon'}}"><i class="mgc_knife_fill"></i><select name="system.hitweapon"><option value="-">{{localize "SW25.Selecthitweapon"}}</option>{{selectOptions battleweapons selected=system.hitweapon valueAttr="name" labelAttr="name"}}</select></label>
+          <label data-tooltip="{{localize 'SW25.V2.Tip.HitWeapon'}}"><i class="mgc_knife_fill"></i><select name="system.hitweapon"><option value="-">{{localize "SW25.Selecthitweapon"}}</option>{{selectOptions battleweapons selected=system.itemid valueAttr="_id" labelAttr="name"}}</select></label>
           <label data-tooltip="{{localize 'SW25.V2.Tip.AttackSkill'}}"><i class="fa-solid fa-bullseye"></i><select name="system.attackskill"><option value="-">{{localize "SW25.Selectattackskill"}}</option>{{selectOptions skills selected=system.attackskill valueAttr="name" labelAttr="name"}}</select></label>
           <label data-tooltip="{{localize 'SW25.V2.Tip.DodgeSkill'}}"><i class="fa-solid fa-wind"></i><select name="system.dodgeskill"><option value="-">{{localize "SW25.Selectdodgeskill"}}</option>{{selectOptions skills selected=system.dodgeskill valueAttr="name" labelAttr="name"}}</select></label>
           <label class="fumble" data-tooltip="{{localize 'SW25.V2.Tip.Fumble'}}">{{localize "SW25.Attributes.Fumble"}}

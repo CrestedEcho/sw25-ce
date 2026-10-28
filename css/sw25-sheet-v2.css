@@ -279,3 +279,26 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25v2 .panel,.sw25v2 .ribbon{z-index:auto}
 .sw25v2 .sheet-header{background:#e9dcc0 url(../assets/textures/parchment.webp) 0 0/512px repeat}
 .sw25v2.theme-dark .sheet-header{background-color:#2a1d13;background-image:url(../assets/textures/leather.webp)}
+/* sw25-ce: Combat-tab Weapons list cards (approved mockup) */
+.sw25v2 .sw25-wlist{list-style:none;margin:0;padding:0}
+.sw25v2 .sw25-wc{display:block;border:1px solid var(--line);border-radius:8px;padding:8px;margin:0 0 8px;background:rgba(255,255,255,.35)}
+.sw25v2 .sw25-wc.off .sw25-wc-row{opacity:.5}
+.sw25v2 .sw25-wc-row{display:flex;gap:10px;align-items:stretch}
+.sw25v2 .sw25-wc-left{display:flex;gap:8px;align-items:center;flex:0 0 210px;width:210px;min-width:0}
+.sw25v2 .sw25-wc-ic{width:44px;height:44px;flex:0 0 44px;border:1px solid var(--line);border-radius:6px;background:#e9e0cc;object-fit:contain}
+.sw25v2 .sw25-wc-nm{min-width:0}
+.sw25v2 .sw25-wc-nm b{display:block;font-size:15px;color:var(--ink);cursor:pointer;overflow:hidden;text-overflow:ellipsis}
+.sw25v2 .sw25-wc-nm small{display:block;font-size:11px;color:var(--muted)}
+.sw25v2 .sw25-wc-eq{display:inline-flex;gap:4px;align-items:center;font-size:11px;margin-top:3px;padding:1px 7px;border-radius:9px;border:1px solid #3f6b2f;color:#3f6b2f;cursor:pointer}
+.sw25v2 .sw25-wc-eq.on{background:#3f6b2f;color:#f3e6c8!important}
+.sw25v2 .sw25-wc-eq input{display:none}
+.sw25v2 .sw25-wc-tiles{display:flex;gap:6px;flex:1;min-width:0}
+.sw25v2 .sw25-wc-tiles .stat{flex:1;text-align:center;display:flex;flex-direction:column;justify-content:center;background:rgba(255,255,255,.4);cursor:default}
+.sw25v2 .sw25-wc-tiles .stat.dmg{flex:1.9}.sw25v2 .sw25-wc-tiles .stat .n{white-space:nowrap}
+.sw25v2 .sw25-wc-btns{display:flex;flex-direction:column;gap:5px;justify-content:center;flex:0 0 118px}
+.sw25v2 .sw25-wc-btns button{font:bold 12px Signika,sans-serif;padding:5px;margin:0;line-height:1.2;border-radius:5px;border:1px solid #7a1f1f;background:#7a1f1f;color:#f3e6c8;cursor:pointer}
+.sw25v2 .sw25-wc-btns button.alt{background:#e9e0cc;color:#7a1f1f}
+.sw25v2 .sw25-wc-desc{font-size:.8em;padding-top:6px}
+.sw25v2 .sw25-wc-empty{font-size:12px;color:var(--muted);padding:6px}
+.sw25v2.theme-dark .sw25-wc{background:rgba(0,0,0,.25)}
+.sw25v2.theme-dark .sw25-wc-btns button{color:#f3e6c8!important}.sw25v2.theme-dark .sw25-wc-btns button.alt{color:#7a1f1f!important}

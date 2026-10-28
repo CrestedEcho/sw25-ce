@@ -32,10 +32,11 @@ test("item image click and old item-card buttons route too", () => {
   assert.match(c, /const wr = weaponRoute\(actor, item, buttonType\);/);
   assert.ok(c.indexOf("weaponRoute(actor, item, buttonType)") < c.indexOf("isSelfCheckItem(item, which)"));
 });
-test("attackWithWeapon selects the weapon then posts the tile cards", () => {
+test("attackWithWeapon posts the cards for that weapon by item id (no hitweapon rename dance)", () => {
   const a = src("rules/attack-flow.mjs");
   const body = a.slice(a.indexOf("export async function attackWithWeapon"), a.indexOf("export async function postAttackCard"));
-  assert.match(body, /actor\.update\(\{ "system\.hitweapon": item\.name \}\)/);
-  assert.match(body, /route === "damage" \? rollWeaponDamage\(actor\) : postAttackCard\(actor\)/);
+  assert.doesNotMatch(body, /system\.hitweapon/);
+  assert.doesNotMatch(body, /same name/);
+  assert.match(body, /route === "damage" \? rollWeaponDamage\(actor, \{ itemId: item\.id \}\) : postAttackCard\(actor, \{ itemId: item\.id \}\)/);
   assert.match(body, /actor\.isOwner/);
 });

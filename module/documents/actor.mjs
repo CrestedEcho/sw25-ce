@@ -6,6 +6,7 @@ import { weaponCritValue } from "../rules/crit-value.mjs";
 import * as CS from "../rules/combat-state.mjs";
 import { prepareStatBlock } from "../rules/statblock.mjs";
 import { bestClass, EVASION_CLASSES } from "../rules/class-pick.mjs";
+import { pcWeaponBattle } from "../rules/weapon-battle.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -185,11 +186,13 @@ export class SW25Actor extends Actor {
     // sw25-ce: no weapon picked for the Accuracy tile -> first equipped weapon (else the only weapon), in memory only.
     if (!systemData.hitweapon) {
       const ws = this.items.filter((i) => i.type == "weapon");
-      systemData.hitweapon = (ws.find((i) => i.system.equip) ?? (ws.length === 1 ? ws[0] : null))?.name ?? "";
+      systemData.hitweapon = (ws.find((i) => i.system.equip) ?? (ws.length === 1 ? ws[0] : null))?.id ?? "";
     }
+    // sw25-ce: hitweapon holds the item id (older worlds stored the name: first name match still works).
+    const hwSel = this.items.get?.(systemData.hitweapon) ?? this.items.find((i) => i.type == "weapon" && i.name == systemData.hitweapon) ?? null;
     this.items.forEach((item) => {
       if (item.type == "weapon") {
-        if (item.name == systemData.hitweapon) {
+        if (item === hwSel) {
           systemData.itemname = item.name;
           systemData.itemhitformula = item.system.checkformula;
           systemData.itemhitbase = item.system.checkbase;
@@ -210,7 +213,7 @@ export class SW25Actor extends Actor {
             systemData.itempowerbase += item.system.halfpowmod;
           if (systemData.attributes.efwphalfmod)
             systemData.itempowerbase += systemData.attributes.efwphalfmod;
-          systemData.itempowertable = item.system.powertable;
+          systemData.itempowertable = [...(item.system.powertable ?? [])]; // copy: don't mutate the item's own table
           systemData.itempowertable[PT.LETHALTECH] += systemData.lt;
           systemData.itempowertable[PT.LETHALTECH] += Number(systemData?.attributes?.ltmod) || 0;
           if (!/^f\d+$/.test(systemData.itempowertable[PT.CRITICALRAY])) {
@@ -583,6 +586,8 @@ export class SW25Actor extends Actor {
 
     // Rule engine: final phase for derived values (weapon extras, HP/MP/evasion/defense/accuracy/magic power)
     sw25ApplyFinalTargets(this, systemData);
+    // sw25-ce: Accuracy / Power / Crit / Bonus for every weapon (Weapons list cards + item-id attack cards)
+    sw25WeaponBattles(this, systemData);
 
     // Sheet refresh
   }
@@ -1399,6 +1404,7 @@ function sw25ApplyAbilityTargets(sd) {
 }
 function sw25ApplyFinalTargets(actor, sd) {
   const eng = sd._rules;
+  sd._accDelta = 0;
   if (!eng) return;
   // weapon extras for the selected attack weapon (extras only; sheet already adds class level)
   if (sd.itemid) {
@@ -1412,7 +1418,12 @@ function sw25ApplyFinalTargets(actor, sd) {
   }
   const powers = Object.fromEntries(RE.SCHOOLS.map((s) => [s, Number(sd.attributes?.[`${s}power`]) || 0]));
   const targets = Object.keys(RE.ACTOR_TARGETS).filter((t) => !t.startsWith("ability."));
+  // actor-wide Accuracy rules land on itemhitbase; measure the change so every weapon card gets it too
+  const hadHit = sd.itemhitbase != null; if (!hadHit) sd.itemhitbase = 0;
+  const hit0 = Number(sd.itemhitbase) || 0;
   const rep = RE.applyActorTargets(sd, eng.active, sd.overrides, eng.ctx, targets);
+  sd._accDelta = (Number(sd.itemhitbase) || 0) - hit0;
+  if (!hadHit) sd.itemhitbase = null;
   for (const s of RE.SCHOOLS) {
     const d = (Number(sd.attributes?.[`${s}power`]) || 0) - powers[s];
     if (d && sd.attributes[`${s}cast`] != null) sd.attributes[`${s}cast`] = Number(sd.attributes[`${s}cast`]) + d;
@@ -1426,6 +1437,22 @@ function sw25ApplyFinalTargets(actor, sd) {
     .map((i) => ({ name: i.name, ...RE.rankCheck(eng.active, { type: i.type, category: i.system.category, rank: i.system.rank }) }))
     .filter((r) => !r.ok);
   sd.rulesNotes = eng.notes.map((n) => ({ key: n.key, label: n.label || n.key, source: n.source.name, value: n.rawValue, reason: n.reason }));
+}
+
+/** Per-weapon battle numbers on item.system._battle (selected weapon matches the Accuracy / Damage tiles). */
+function sw25WeaponBattles(actor, sd) {
+  const eng = sd._rules;
+  for (const w of actor.items) {
+    if (w.type !== "weapon") continue;
+    let extraAcc = 0, extraDmg = 0;
+    if (eng) {
+      try {
+        const ex = RE.weaponExtras(eng.active, { checkskill: w.system.checkskill, category: w.system.category }, eng.ctx);
+        extraAcc = Number(ex.accuracy?.value) || 0; extraDmg = Number(ex.extraDamage?.value) || 0;
+      } catch (e) { console.warn("sw25 | weapon extras", w.name, e); }
+    }
+    w.system._battle = pcWeaponBattle(w.system, sd, { extraAcc, extraDmg, accDelta: Number(sd._accDelta) || 0 });
+  }
 }
 
 function sw25RuleApplies(entry, item) {

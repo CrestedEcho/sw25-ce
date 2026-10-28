@@ -3,11 +3,12 @@
  * (breakdown + Apply panel for the live selected tokens, else the user's own character).
  * Numbers and HTML come from the pure attack-card.mjs / damage-card.mjs.
  */
-import { pcAccuracy, pcEvasion, monsterCheck, readRoll, attackCardHTML, checkRollHTML, contest, linkedRolls, accuracyOutcomes, outcomeLinesHTML } from "./attack-card.mjs";
+import { check, pcEvasion, monsterCheck, readRoll, attackCardHTML, checkRollHTML, contest, linkedRolls, accuracyOutcomes, outcomeLinesHTML } from "./attack-card.mjs";
 import { rollMessageData } from "./dice-fx.mjs";
 import { damageBreakdown, damageCardHTML, applyPanelHTML, applyRow, validMult } from "./damage-card.mjs";
 import { formatDamage } from "./damage-display.mjs";
 import { parseSbDamage } from "./sb-play.mjs";
+import { pcWeaponBattle } from "./weapon-battle.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { powerTableFor, parsePowerCommand } from "./power-command.mjs";
 import { resolveTargetTokens } from "../helpers/target-chips.mjs";
@@ -50,37 +51,38 @@ function evasionPartPicks(cardId) {
   return partPicksFrom(evs);
 }
 
-/** Attack data for a PC's Accuracy-tile weapon (null + warning when none). */
-async function pcAttackData(actor) {
-  const sys = actor.system; const item = sys.itemid ? actor.items.get(sys.itemid) : null;
-  if (!item) { ui.notifications.warn(game.i18n.localize("SW25.V2.NeedWeapon")); return null; }
-  const label = formatDamage(sys.itempower, sys.itemcvalue, sys.itempowerbase);
-  const damage = { type: "power", formula: sys.itempowerformula || "2d6", pt: [...(sys.itempowertable ?? [])], label, bonusParts: item.system._dmgParts ?? [] };
+/** Attack data for one PC weapon by item id (default: the Accuracy-tile weapon). null + warning when none. */
+async function pcAttackData(actor, itemId = null) {
+  const sys = actor.system; const id = itemId ?? sys.itemid; const item = id ? actor.items.get(id) : null;
+  if (!item || item.type !== "weapon") { ui.notifications.warn(game.i18n.localize("SW25.V2.NeedWeapon")); return null; }
+  const b = item.system._battle ?? pcWeaponBattle(item.system, sys);
+  const label = formatDamage(b.power, b.crit, b.bonus);
+  const damage = { type: "power", formula: b.formula, pt: [...(b.pt ?? [])], label, bonusParts: b.dmgParts ?? [] };
   const desc = item.system.description ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description, { relativeTo: item }) : "";
-  const state = { name: item.name, img: item.img, sub: [item.system.category, item.system.usage].filter(Boolean).join(" · "), desc, acc: pcAccuracy(sys, item.system), damageLabel: `${label} (power / crit / bonus)` };
-  return { state, damage, itemId: item.id };
+  const state = { name: item.name, img: item.img, sub: [item.system.category, item.system.usage].filter(Boolean).join(" · "), desc, acc: check("Accuracy", b.acc, b.accParts ?? []), damageLabel: `${label} (power / crit / bonus)` };
+  const resuse = item.system.autouseres && item.system.resuse ? { id: item.system.resuse, n: Number(item.system.resusequantity) || 0 } : null;
+  return { state, damage, itemId: item.id, item, resuse };
 }
-/** Sheet Damage tile: roll the weapon's damage straight to a damage card. */
-export async function rollWeaponDamage(actor) {
-  const w = await pcAttackData(actor); if (!w) return;
+/** Damage tile / Weapons list Damage button: roll that weapon's damage straight to a damage card. */
+export async function rollWeaponDamage(actor, { itemId = null } = {}) {
+  const w = await pcAttackData(actor, itemId); if (!w) return;
   const msg = await postDamageCard(actor, w);
-  await afterWeaponDamage(actor);
+  await afterWeaponDamage(actor, w.item);
   return msg;
 }
 /**
- * Weapons list / item card click on a character's weapon: make it the Accuracy-tile weapon (system.hitweapon),
- * then post the same card as the tiles. route: "attack" (attack card) or "damage" (damage card).
+ * Weapons list / item card click on a character's weapon: post the card for THAT weapon (by item id, so
+ * duplicate names are fine). The Accuracy-tile choice (system.hitweapon) is left alone.
+ * route: "attack" (attack card) or "damage" (damage card).
  */
 export async function attackWithWeapon(actor, item, route) {
   if (!actor || !item) return;
   if (!actor.isOwner) return ui.notifications.warn(`Only the owner of ${actor.name} can attack with ${item.name}.`);
-  if (actor.system.itemid !== item.id) await actor.update({ "system.hitweapon": item.name });
-  if (actor.system.itemid !== item.id) return ui.notifications.warn(`${item.name}: another weapon has the same name. Rename one of them to attack with it.`);
-  return route === "damage" ? rollWeaponDamage(actor) : postAttackCard(actor);
+  return route === "damage" ? rollWeaponDamage(actor, { itemId: item.id }) : postAttackCard(actor, { itemId: item.id });
 }
-/** Post the attack card for a PC's Accuracy-tile weapon, or for a stat-block part (opts.partIndex). */
-export async function postAttackCard(actor, { partIndex = null } = {}) {
-  let state, damage, itemId = null;
+/** Post the attack card for a PC weapon (opts.itemId, default the Accuracy-tile weapon), or for a stat-block part (opts.partIndex). */
+export async function postAttackCard(actor, { partIndex = null, itemId: wantId = null } = {}) {
+  let state, damage, itemId = null, resuse = null, item = null;
   if (partIndex != null && actor.system?.sb) {
     const p = (actor.system.sbView?.parts ?? [])[partIndex];
     if (!p) return;
@@ -90,14 +92,12 @@ export async function postAttackCard(actor, { partIndex = null } = {}) {
     damage = d ? { type: "dice", formula: d.formula, text: p.damage } : null;
     state = { name: `${actor.name}${p.name ? `: ${p.name}` : ""}`, img: actor.img, sub: "Attack", acc, damageLabel: d ? `Damage ${p.damage}` : "No damage on the stat block" };
   } else {
-    const w = await pcAttackData(actor); if (!w) return;
-    ({ state, damage, itemId } = w);
+    const w = await pcAttackData(actor, wantId); if (!w) return;
+    ({ state, damage, itemId, resuse, item } = w);
   }
-  const sysx = actor.system;
-  const resuse = itemId && sysx.resuse ? { id: sysx.resuse, n: Number(sysx.resusequantity) || 0 } : null;
   const flag = { resuse, actorId: actor.id, tokenId: actor.token?.id ?? actor.getActiveTokens?.()[0]?.id ?? null, itemId, partIndex, damage, state };
   const msg = await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: attackCardHTML(state), flags: { [SYS]: { attack: flag } } });
-  if (itemId) await annotateAttackCard(actor, msg?.id, "hit");
+  if (itemId) await annotateAttackCard(actor, msg?.id, "hit", item);
   return msg;
 }
 
@@ -178,7 +178,7 @@ async function onDamage(msg) {
   if (!actor?.isOwner) return ui.notifications.warn("Only the attacker rolls damage.");
   if (!f.damage) return ui.notifications.warn("This attack has no damage.");
   await postDamageCard(actor, f, { cardId: msg.id });
-  if (f.itemId) await afterWeaponDamage(actor);
+  if (f.itemId) await afterWeaponDamage(actor, actor.items.get(f.itemId) ?? null);
 }
 
 /** Power roll -> damage card state (power, crits, bonus breakdown) + the dice roll for the message. */
@@ -219,7 +219,7 @@ export async function postDamageCard(actor, f, { cardId = null } = {}) {
     rolls = [r];
   }
   const msg = await ChatMessage.create(rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor.id, total: state.total, kind: "physical", pool: "hp", cardId, partPicks: evasionPartPicks(cardId) } } } }));
-  if (f.itemId) await annotateAttackCard(actor, msg?.id, "damage");
+  if (f.itemId) await annotateAttackCard(actor, msg?.id, "damage", actor.items.get(f.itemId) ?? null);
   return msg;
 }
 
