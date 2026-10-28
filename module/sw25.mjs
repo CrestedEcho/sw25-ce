@@ -41,6 +41,7 @@ import { Migrator } from "./helpers/migrator.mjs";
 import { registerNoAutoEquip } from "./rules/no-autoequip.mjs";
 import { registerCe7Settings, registerCe7Hooks, runCe7Migration, runBeltConsumableMigration } from "./ce7/equipcard.mjs";
 import { formatDamage, formatDamageFormula } from "./rules/damage-display.mjs";
+import { magicPowerText } from "./rules/magic-power.mjs";
 
 // v14 compat: core "rollMode" setting became "messageMode". Returns a legacy roll-mode string.
 globalThis.sw25RollMode = function () {
@@ -404,6 +405,9 @@ Handlebars.registerHelper("localizeAbility", function (ability) {
       return game.i18n.localize("SW25.Ability.Heart");
   }
 });
+
+// School header Magic Power: "—" instead of NaN when no class skill is linked.
+Handlebars.registerHelper("sw25MagicPower", (sys, school) => magicPowerText(sys, school));
 
 Handlebars.registerHelper("localizeResist", function (resist) {
   switch (resist) {

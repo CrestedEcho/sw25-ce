@@ -314,14 +314,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.scpower =
-      Number(systemData.scbase) +
-      Number(systemData.attributes.scmod) +
-      Number(systemData.attributes.efscmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.scbase) || 0) +
+      (Number(systemData.attributes.scmod) || 0) +
+      (Number(systemData.attributes.efscmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.sccast =
-      Number(systemData.attributes.scpower) +
-      Number(systemData.attributes.efscckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.scpower) || 0) +
+      (Number(systemData.attributes.efscckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.cnskill) {
@@ -330,14 +330,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.cnpower =
-      Number(systemData.cnbase) +
-      Number(systemData.attributes.cnmod) +
-      Number(systemData.attributes.efcnmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.cnbase) || 0) +
+      (Number(systemData.attributes.cnmod) || 0) +
+      (Number(systemData.attributes.efcnmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.cncast =
-      Number(systemData.attributes.cnpower) +
-      Number(systemData.attributes.efcnckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.cnpower) || 0) +
+      (Number(systemData.attributes.efcnckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.wzskill) {
@@ -346,14 +346,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.wzpower =
-      Number(systemData.wzbase) +
-      Number(systemData.attributes.wzmod) +
-      Number(systemData.attributes.efwzmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.wzbase) || 0) +
+      (Number(systemData.attributes.wzmod) || 0) +
+      (Number(systemData.attributes.efwzmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.wzcast =
-      Number(systemData.attributes.wzpower) +
-      Number(systemData.attributes.efwzckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.wzpower) || 0) +
+      (Number(systemData.attributes.efwzckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.prskill) {
@@ -362,14 +362,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.prpower =
-      Number(systemData.prbase) +
-      Number(systemData.attributes.prmod) +
-      Number(systemData.attributes.efprmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.prbase) || 0) +
+      (Number(systemData.attributes.prmod) || 0) +
+      (Number(systemData.attributes.efprmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.prcast =
-      Number(systemData.attributes.prpower) +
-      Number(systemData.attributes.efprckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.prpower) || 0) +
+      (Number(systemData.attributes.efprckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.mtskill) {
@@ -378,14 +378,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.mtpower =
-      Number(systemData.mtbase) +
-      Number(systemData.attributes.mtmod) +
-      Number(systemData.attributes.efmtmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.mtbase) || 0) +
+      (Number(systemData.attributes.mtmod) || 0) +
+      (Number(systemData.attributes.efmtmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.mtcast =
-      Number(systemData.attributes.mtpower) +
-      Number(systemData.attributes.efmtckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.mtpower) || 0) +
+      (Number(systemData.attributes.efmtckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.frskill) {
@@ -431,14 +431,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.frpower =
-      Number(systemData.frbase) +
-      Number(systemData.attributes.frmod) +
-      Number(systemData.attributes.effrmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.frbase) || 0) +
+      (Number(systemData.attributes.frmod) || 0) +
+      (Number(systemData.attributes.effrmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.frcast =
-      Number(systemData.attributes.frpower) +
-      Number(systemData.attributes.effrckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.frpower) || 0) +
+      (Number(systemData.attributes.effrckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.drskill) {
@@ -447,14 +447,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.drpower =
-      Number(systemData.drbase) +
-      Number(systemData.attributes.drmod) +
-      Number(systemData.attributes.efdrmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.drbase) || 0) +
+      (Number(systemData.attributes.drmod) || 0) +
+      (Number(systemData.attributes.efdrmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.drcast =
-      Number(systemData.attributes.drpower) +
-      Number(systemData.attributes.efdrckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.drpower) || 0) +
+      (Number(systemData.attributes.efdrckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.dmskill) {
@@ -463,14 +463,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.dmpower =
-      Number(systemData.dmbase) +
-      Number(systemData.attributes.dmmod) +
-      Number(systemData.attributes.efdmmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.dmbase) || 0) +
+      (Number(systemData.attributes.dmmod) || 0) +
+      (Number(systemData.attributes.efdmmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.dmcast =
-      Number(systemData.attributes.dmpower) +
-      Number(systemData.attributes.efdmckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.dmpower) || 0) +
+      (Number(systemData.attributes.efdmckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.abskill) {
@@ -479,14 +479,14 @@ export class SW25Actor extends Actor {
       }
     });
     systemData.attributes.abpower =
-      Number(systemData.abbase) +
-      Number(systemData.attributes.abmod) +
-      Number(systemData.attributes.efabmod) +
-      Number(systemData.efallmgpacmod);
+      (Number(systemData.abbase) || 0) +
+      (Number(systemData.attributes.abmod) || 0) +
+      (Number(systemData.attributes.efabmod) || 0) +
+      (Number(systemData.efallmgpacmod) || 0);
     systemData.attributes.abcast =
-      Number(systemData.attributes.abpower) +
-      Number(systemData.attributes.efabckmod) +
-      Number(systemData.attributes.efmckall);
+      (Number(systemData.attributes.abpower) || 0) +
+      (Number(systemData.attributes.efabckmod) || 0) +
+      (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
         if (item.name == systemData.bmskill) {
