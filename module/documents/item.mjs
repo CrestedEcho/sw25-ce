@@ -17,6 +17,15 @@ export function revealWeakness(targets, total) {
 }
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { baseMpCost, clampMpCost } from "../rules/spell-mp.mjs";
+import { resistLabel } from "../rules/resist-label.mjs";
+
+/** Localize a built key when it exists; otherwise show the stored text (or "-" when empty) instead of a raw key. */
+const i18nOrRaw = (key, raw) => {
+  const t = String(raw ?? "").trim();
+  if (!t) return "-";
+  if (typeof game.i18n.has !== "function") return game.i18n.localize(key);
+  return game.i18n.has(key) ? game.i18n.localize(key) : t;
+};
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow } from "../rules/spell-flow.mjs";
@@ -2267,15 +2276,9 @@ export class SW25Item extends Item {
           )
         : "-";
 
-    systemData.resistname =
-      systemData.resist != "" && systemData.resist != null
-        ? game.i18n.localize(`SW25.Item.${systemData.resist.capitalize()}`)
-        : "-";
+    systemData.resistname = resistLabel(systemData.resist, (k) => game.i18n.localize(k)) || "-";
 
-    systemData.propname =
-      systemData.prop != "" && systemData.prop != null
-        ? game.i18n.localize(`SW25.Item.${systemData.prop.capitalize()}`)
-        : "-";
+    systemData.propname = i18nOrRaw(`SW25.Item.${String(systemData.prop ?? "").capitalize()}`, systemData.prop);
 
     if (systemData.upget == null) systemData.upget = 0;
     if (systemData.downget == null) systemData.downget = 0;
@@ -2299,10 +2302,7 @@ export class SW25Item extends Item {
     // Make modifications to data here. For example:
     const systemData = itemData.system;
 
-    systemData.resistname =
-      systemData.resist != "" && systemData.resist != null
-        ? game.i18n.localize(`SW25.Item.${systemData.resist.capitalize()}`)
-        : "-";
+    systemData.resistname = resistLabel(systemData.resist, (k) => game.i18n.localize(k)) || "-";
 
     if (systemData.red == null) systemData.red = 0;
     if (systemData.green == null) systemData.green = 0;
@@ -2324,10 +2324,7 @@ export class SW25Item extends Item {
           )
         : "-";
 
-    systemData.propname =
-      systemData.prop != "" && systemData.prop != null
-        ? game.i18n.localize(`SW25.Item.${systemData.prop.capitalize()}`)
-        : "-";
+    systemData.propname = i18nOrRaw(`SW25.Item.${String(systemData.prop ?? "").capitalize()}`, systemData.prop);
 
     if (systemData.mincost == null) systemData.mincost = 0;
     if (systemData.maxcost == null) systemData.maxcost = 0;
@@ -2362,10 +2359,7 @@ export class SW25Item extends Item {
     // Make modifications to data here. For example:
     const systemData = itemData.system;
 
-    systemData.resistname =
-      systemData.resist != "" && systemData.resist != null
-        ? game.i18n.localize(`SW25.Item.${systemData.resist.capitalize()}`)
-        : "-";
+    systemData.resistname = resistLabel(systemData.resist, (k) => game.i18n.localize(k)) || "-";
   }
 
   _prepareEssenceweaveData(itemData) {}
@@ -2384,15 +2378,9 @@ export class SW25Item extends Item {
         ? game.i18n.localize(`SW25.Item.Spell.${systemData.type.capitalize()}`)
         : "-";
 
-    systemData.resistname =
-      systemData.resist != "" && systemData.resist != null
-        ? game.i18n.localize(`SW25.Item.${systemData.resist.capitalize()}`)
-        : "-";
+    systemData.resistname = resistLabel(systemData.resist, (k) => game.i18n.localize(k)) || "-";
 
-    systemData.propname =
-      systemData.prop != "" && systemData.prop != null
-        ? game.i18n.localize(`SW25.Item.${systemData.prop.capitalize()}`)
-        : "-";
+    systemData.propname = i18nOrRaw(`SW25.Item.${String(systemData.prop ?? "").capitalize()}`, systemData.prop);
 
     systemData.fairytypename =
       systemData.fairytype != "" && systemData.fairytype != null
