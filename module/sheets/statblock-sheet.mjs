@@ -144,7 +144,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       const [, idx, key] = path.split(".");
       const parts = foundry.utils.deepClone(this.actor._source.system?.sb?.parts ?? []);
       if (!parts[Number(idx)]) return;
-      parts[Number(idx)][key] = val;
+      // Max shown with Sword Shards added: store the base (shards stay derived).
+      parts[Number(idx)][key] = val != null && el.dataset.shard ? Math.max(0, val - Number(el.dataset.shard)) : val;
       this.actor.update({ "system.sb.parts": parts });
     }));
     if (!this.isEditable) return;

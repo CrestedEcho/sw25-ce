@@ -1,3 +1,4 @@
+import { applyShards } from "./sb-shards.mjs";
 /**
  * sw25-ce NPC / Monster stat block (SHEET_SPEC_NPC_MONSTER.md), pure logic.
  * Stored under system.sb.* so it never collides with the legacy sw25 monster fields
@@ -85,7 +86,8 @@ export function prepareStatBlock(sbIn, legacy = {}, type = "monster") {
     q.accuracy = pair(`parts.${i}.accuracy`, q.accuracy);
     q.evasion = pair(`parts.${i}.evasion`, q.evasion);
     for (const k of ["defense", "hp", "mp"]) { const r = overrideFor(ov, `parts.${i}.${k}`, num(q[k])); if (r.overridden) locked.push(`parts.${i}.${k}`); q[k] = r.value; }
-    if (q.hpValue == null) q.hpValue = q.hp; if (q.mpValue == null) q.mpValue = q.mp;
+    q._hpAuto = q.hpValue == null || q.hpValue === ""; q._mpAuto = q.mpValue == null || q.mpValue === "";
+    if (q._hpAuto) q.hpValue = q.hp; if (q._mpAuto) q.mpValue = q.mp;
     return q;
   });
   if (sb.parts.length && !sb.parts.some((p) => p.isCore)) sb.parts[0].isCore = sb.parts.length === 1;
@@ -94,6 +96,8 @@ export function prepareStatBlock(sbIn, legacy = {}, type = "monster") {
   for (const k of ["level", "reputation", "weakness", "initiative", "soulscars", "swordShards", "movement.ground", "movement.other"]) {
     const r = overrideFor(ov, k, num(get(sb, k))); if (r.overridden) locked.push(k); set(sb, k, r.value);
   }
+  // Sword Shards (monsters only, derived; CRB I p.384)
+  applyShards(sb, type === "npc" ? 0 : sb.swordShards, locked);
   sb.loot = arr(sb.loot).map((l) => ({ roll: "", min: null, max: null, always: /^always$/i.test(String(l.roll ?? "")), item: "", price: null, materialCard: null, ...l }));
   sb.uniqueSkills = arr(sb.uniqueSkills).map((u) => ({ name: "", tags: [], part: null, check: null, resist: null, resistResult: null, magic: null, description: "", ...u }));
   sb.locked = locked;

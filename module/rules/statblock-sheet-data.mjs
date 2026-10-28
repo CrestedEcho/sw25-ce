@@ -6,6 +6,7 @@ const SYS = "sw25-ce";
 export const ICON_ROOT = `systems/${SYS}/assets/icons`;
 export const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
 import { parseMagicSkill } from "./sb-cast.mjs";
+import { shardTip } from "./sb-shards.mjs";
 import { fixedToDice, pairFixed, parseSbDamage } from "./sb-play.mjs";
 export const ARRAY_FIELDS = ["parts", "uniqueSkills", "loot", "classLevels", "relationships", "services"];
 
@@ -49,15 +50,18 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   const hostile = type === "npc" && !!view.hostile;
   const locked = new Set(view.locked ?? []);
   const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
-  const num = (path, value, base) => ({ path, value: dash(value), edit: locked.has(path) ? value : (base ?? value ?? ""), locked: locked.has(path) });
-  const pair = (path, p, rawP) => (p ? { value: num(`${path}.value`, p.value, rawP?.value ?? p.value), fixed: p.fixed, fixedLocked: locked.has(`${path}.fixed`) } : null);
+  // Sword Shards (derived): boost = {add, tip} on numbers raised by shards (shown purple, sw25-shard-boost).
+  const sh = view.shards ?? { n: 0, parts: [] };
+  const boost = (b) => (b && sh.n ? { add: b.add, tip: shardTip(b.base, b.add, sh.n) } : null);
+  const num = (path, value, base, bst = null) => ({ path, value: dash(value), edit: locked.has(path) ? value : (bst ? bst.base : (base ?? value ?? "")), locked: locked.has(path), boost: boost(bst) });
+  const pair = (path, p, rawP, bst = null) => (p ? { value: num(`${path}.value`, p.value, rawP?.value ?? p.value, bst?.value), fixed: p.fixed, fixedLocked: locked.has(`${path}.fixed`), fixedBoost: boost(bst?.fixed) } : null);
   const parts = (view.parts ?? []).map((p, i) => ({
     i, name: p.name, count: p.count, isCore: p.isCore, damage: p.damage ?? "",
     accuracy: pair(`parts.${i}.accuracy`, p.accuracy, rawParts[i]?.accuracy),
     evasion: pair(`parts.${i}.evasion`, p.evasion, rawParts[i]?.evasion),
     defense: num(`parts.${i}.defense`, p.defense, rawParts[i]?.defense),
-    hp: num(`parts.${i}.hp`, p.hp, rawParts[i]?.hp), hpValue: p.hpValue,
-    mp: num(`parts.${i}.mp`, p.mp, rawParts[i]?.mp), mpValue: p.mpValue,
+    hp: num(`parts.${i}.hp`, p.hp, rawParts[i]?.hp, sh.parts?.[i]?.hp), hpValue: p.hpValue,
+    mp: num(`parts.${i}.mp`, p.mp, rawParts[i]?.mp, sh.parts?.[i]?.mp), mpValue: p.mpValue,
     dead: p.hp > 0 && Number(p.hpValue) <= 0,
   }));
   // Magic Unique skills live in the Magic section (system.sb.magic); moved ones stay here for reference (Edit mode).
@@ -80,8 +84,8 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   const pct = (v, m) => (m > 0 ? Math.max(0, Math.min(100, Math.round((Number(v ?? m) / m) * 100))) : 0);
   const vitals = (view.parts ?? []).map((p, i) => ({
     i, name: p.name, isCore: !!p.isCore,
-    hp: p.hpValue ?? p.hp ?? "", hpMax: p.hp ?? "", hpPct: pct(p.hpValue, p.hp), hpLocked: locked.has(`parts.${i}.hp`),
-    mp: p.mp ? (p.mpValue ?? p.mp) : "", mpMax: p.mp ?? "", mpPct: pct(p.mpValue, p.mp), mpLocked: locked.has(`parts.${i}.mp`),
+    hp: p.hpValue ?? p.hp ?? "", hpMax: p.hp ?? "", hpPct: pct(p.hpValue, p.hp), hpLocked: locked.has(`parts.${i}.hp`), hpBoost: boost(sh.parts?.[i]?.hp),
+    mp: p.mp ? (p.mpValue ?? p.mp) : "", mpMax: p.mp ?? "", mpPct: pct(p.mpValue, p.mp), mpLocked: locked.has(`parts.${i}.mp`), mpBoost: boost(sh.parts?.[i]?.mp),
   })).sort((x, y) => Number(y.isCore) - Number(x.isCore) || x.i - y.i);
   const multiPart = vitals.length > 1;
   const cp = vitals[0];
@@ -95,7 +99,8 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
     accuracy: chk(`${p.name}: Accuracy`, p.accuracy), evasion: chk(`${p.name}: Evasion`, p.evasion),
     damage: (() => { const d = parseSbDamage(p.damage); return d ? { label: `${p.name}: Damage`, text: p.damage, ...d } : (p.damage ? { label: `${p.name}: Damage`, text: p.damage, formula: null } : null); })(),
   }));
-  const resistances = [chk("Vitality Resistance", view.fortitude), chk("Mental Resistance", view.willpower)].filter(Boolean);
+  const resBoost = (k) => { const b = sh[k]?.fixed ?? sh[k]?.value; return b ? { boost: boost(b) } : {}; };
+  const resistances = [["Vitality Resistance", "fortitude"], ["Mental Resistance", "willpower"]].map(([l, k]) => { const c = chk(l, view[k]); return c ? { ...c, ...resBoost(k) } : null; }).filter(Boolean);
   const levelChecks = (view.uniqueSkills ?? []).map((u, i) => (u.check && !parseMagicSkill(u) ? { i, ...chk(u.name, u.check.fixed != null ? u.check : { value: u.check.value }) } : null)).filter((c) => c && c.formula);
   const casters = (view.uniqueSkills ?? []).map((u, i) => {
     const ms = parseMagicSkill(u); if (!ms) return null;
@@ -112,11 +117,13 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
     typeIcon: type === "npc" ? null : monsterTypeIcon(view.monsterType), portrait: img,
     tabs: tabs.map((t, n) => ({ key: t, label: t[0].toUpperCase() + t.slice(1), first: n === 0 })), initialTab: tabs[0],
     quill: QUILL, sb: view, raw,
+    shards: sh.n ? { n: sh.n, label: `Enhanced: ${sh.n} shard${sh.n === 1 ? "" : "s"}`,
+      tip: `${sh.n} Sword Shard${sh.n === 1 ? "" : "s"}: +${sh.hp} max HP${sh.mp ? ` / +${sh.mp} max MP` : ""} per part, Fortitude & Willpower +${sh.res} (CRB I p.384)` } : null,
     stats: {
       level: num("level", view.level, raw.level), reputation: num("reputation", view.reputation, raw.reputation),
       weakness: num("weakness", view.weakness, raw.weakness), initiative: num("initiative", view.initiative, raw.initiative),
       soulscars: num("soulscars", view.soulscars, raw.soulscars), swordShards: num("swordShards", view.swordShards, raw.swordShards),
-      fortitude: pair("fortitude", view.fortitude, raw.fortitude), willpower: pair("willpower", view.willpower, raw.willpower),
+      fortitude: pair("fortitude", view.fortitude, raw.fortitude, sh.fortitude), willpower: pair("willpower", view.willpower, raw.willpower, sh.willpower),
       moveGround: num("movement.ground", mv.ground, raw.movement?.ground), moveOther: num("movement.other", mv.other, raw.movement?.other),
       movementText: `${fmtMove(mv.ground, mv.groundMode)} / ${fmtMove(mv.other, mv.otherMode)}`,
     },

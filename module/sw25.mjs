@@ -13,6 +13,7 @@ import { registerRulesUI } from "./rules/sheet-ui.mjs";
 import { registerStatBlockUI } from "./rules/statblock-ui.mjs";
 import { registerCombatUI } from "./rules/combat-ui.mjs";
 import * as StatBlock from "./rules/statblock.mjs";
+import { shardFollowUpdate } from "./rules/sb-shards.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat } from "./documents/combat.mjs";
@@ -1091,6 +1092,17 @@ Hooks.once("ready", async function () {
         chatMessage.update(updateData);
       }
     }
+  });
+
+  // Sword Shards: when the shard count changes, current HP/MP at full follow the new max (CRB I p.384).
+  Hooks.on("preUpdateActor", (actor, changes) => {
+    if (actor.type !== "monster") return;
+    const patch = foundry.utils.expandObject(changes)?.system?.sb;
+    if (!patch) return;
+    try {
+      const parts = shardFollowUpdate(actor._source.system?.sb ?? {}, patch, StatBlock.prepareStatBlock, actor._source.system ?? {}, actor.type);
+      if (parts) foundry.utils.setProperty(changes, "system.sb.parts", parts);
+    } catch (err) { console.error("sw25-ce | sword shard follow failed", err); }
   });
 
   // preCreateActor hook

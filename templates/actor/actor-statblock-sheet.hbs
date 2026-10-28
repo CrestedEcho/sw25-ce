@@ -1,9 +1,9 @@
 <form class="{{cssClass}} sb-sheet sb-{{type}} sb-accent-{{accent}} {{#if editMode}}sb-mode-edit{{else}}sb-mode-play{{/if}}" autocomplete="off">
-<header class="sb-header">
+<header class="sb-header{{#if shards}} sw25-shard-glow{{/if}}">
   <div class="sb-portrait"><img class="sb-por-img" src="{{portrait}}" data-edit="img" title="{{actor.name}}"><img class="sb-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp">{{#unless isNPC}}{{#if typeIcon}}<img class="sb-type-badge" src="{{typeIcon}}" title="{{sb.monsterType}}">{{/if}}{{/unless}}</div>
   <div class="sb-title">
     <h1><input class="sb-in sb-name" name="name" type="text" value="{{actor.name}}" placeholder="Name"></h1>
-    <div class="sb-sub">{{roleLine}}</div>
+    <div class="sb-sub">{{roleLine}}{{#if shards}} <span class="sw25-shard-badge" title="{{shards.tip}}"><i class="fas fa-gem"></i> {{shards.label}}</span>{{/if}}</div>
     <div class="sb-src">{{sb.source}}</div>
   </div>
   <div class="sb-hdr-right">{{#if isNPC}}<label class="sb-toggle{{#if hostile}} on{{/if}}" title="Fight this NPC (token hostile, Combat tab first)">Hostile <input type="checkbox" name="system.sb.hostile" {{checked hostile}} {{#unless editable}}disabled{{/unless}}><i></i></label>

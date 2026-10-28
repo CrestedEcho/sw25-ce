@@ -199,3 +199,14 @@
 .sb-mg-itool { font-size:10px; opacity:.55; cursor:pointer; } .sb-mg-itool:hover { opacity:1; }
 .sb-mg-unassigned { border-style:dashed; }
 .sb-mg-unassigned .sb-mg-addschool { margin-left:auto; }
+
+/* ---- Sword Shard enhancement (derived; CRB I p.384) ---- */
+.sw25-shard-boost, .sw25-shard-boost .sb-in, input.sb-in.sw25-shard-boost { color: #6a2c9e !important; font-weight: 700; }
+.sb-sheet .sb-num.sw25-shard-boost .sb-in, .sb-sheet input.sb-in.sw25-shard-boost { -webkit-text-fill-color: #6a2c9e; text-shadow: 0 0 6px rgba(150, 90, 210, .28); }
+.sb-fixed.sw25-shard-boost { color: #6a2c9e; }
+.sb-rollpair.sw25-shard-boost .sb-btn { color: #5b2489; border-color: rgba(122, 63, 176, .55); box-shadow: 0 0 0 1px rgba(150, 90, 210, .15), 0 0 6px rgba(150, 90, 210, .25); }
+.sw25-shard-add { margin-left: 2px; font-size: .82em; color: #6a2c9e; background: rgba(140, 80, 200, .1); border: 1px solid rgba(122, 63, 176, .35); border-radius: 8px; padding: 0 4px; cursor: help; }
+.sw25-shard-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1px 8px; font-size: .78em; font-weight: 700; letter-spacing: .02em;
+  color: #5b2489; background: linear-gradient(180deg, rgba(185, 140, 230, .22), rgba(140, 80, 200, .14)); border: 1px solid rgba(122, 63, 176, .5); border-radius: 10px; box-shadow: 0 0 8px rgba(150, 90, 210, .35); cursor: help; vertical-align: middle; }
+.sb-header.sw25-shard-glow { box-shadow: inset 0 -2px 0 rgba(122, 63, 176, .35), 0 0 14px rgba(150, 90, 210, .22); }
+.sb-header.sw25-shard-glow .sb-por-img { filter: drop-shadow(0 0 5px rgba(150, 90, 210, .55)); }

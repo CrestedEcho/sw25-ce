@@ -1,1 +1,1 @@
-{{#if p}}{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=p.value}} <small class="sb-fixed">({{p.fixed}}){{#if p.fixedLocked}}<img class="sb-quill" src="{{@root.quill}}">{{/if}}</small>{{else}}—{{/if}}
+{{#if p}}{{> "systems/sw25-ce/templates/actor/sb/sb-num.hbs" n=p.value}} <small class="sb-fixed{{#if p.fixedBoost}} sw25-shard-boost{{/if}}"{{#if p.fixedBoost}} title="{{p.fixedBoost.tip}}"{{/if}}>({{p.fixed}}){{#if p.fixedLocked}}<img class="sb-quill" src="{{@root.quill}}">{{/if}}</small>{{else}}—{{/if}}
