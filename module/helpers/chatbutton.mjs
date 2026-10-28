@@ -11,7 +11,8 @@ import { sw25CritModFor } from "../documents/actor.mjs";
 import { isSelfCheck, isSelfCheckItem } from "../rules/self-check.mjs";
 import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn, refreshLiveTargets } from "./target-chips.mjs";
 import { weaponRoute } from "../rules/weapon-route.mjs";
-import { sbResistFor, sbResistFormula } from "../rules/sb-resist.mjs";
+import { sbResistFor, sbResistFormula, needsDodgePart } from "../rules/sb-resist.mjs";
+import { pickEvasionPart } from "../rules/attack-flow.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -1964,7 +1965,15 @@ export async function chatButton(chatMessage, buttonType) {
         const resKey = checkName == game.i18n.localize("SW25.Resist.Check.Dodge") ? "Dodge"
           : checkName == game.i18n.localize("SW25.Resist.Check.Vitres") ? "Vitres"
           : checkName == game.i18n.localize("SW25.Resist.Check.Mndres") ? "Mndres" : null;
-        const sbRes = sbResistFormula(sbResistFor(selectActor.system?.sbView, resKey), selectActor.system?.sbView?.useFixed !== false);
+        const sbView = selectActor.system?.sbView;
+        let dodgePart = null;
+        if (needsDodgePart(sbView, resKey)) {
+          // Multi-part monster: each part has its own Evasion, so ask which part dodges (same picker as the attack card).
+          dodgePart = await pickEvasionPart(selectActor, null);
+          if (dodgePart == null) continue; // cancelled: skip this token
+          checkName = `${checkName} (${sbView.parts[dodgePart]?.name || "Part"})`;
+        }
+        const sbRes = sbResistFormula(sbResistFor(sbView, resKey, dodgePart), sbView?.useFixed !== false);
         if (sbRes) {
           checkItem = { name: checkName, system: {} };
           checkformula = sbRes.checkformula;

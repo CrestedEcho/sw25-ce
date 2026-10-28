@@ -36,7 +36,7 @@ function evasionFor(actor, part = null) {
   return null;
 }
 /** Multi-part defender: ask which part dodges (2d6 + that part's Evasion Standard Value). null = cancelled. */
-async function pickEvasionPart(actor, preferred) {
+export async function pickEvasionPart(actor, preferred) {
   const parts = sbParts(actor); const DV2 = foundry.applications?.api?.DialogV2;
   if (!DV2) return defaultPart(parts, preferred);
   const content = `<p>${esc(actor.name)} has several parts. Which part rolls Evasion?</p><label>Part ${partSelectHTML(parts, preferred, { cls: "sw25-eva-part" })}</label>`;
