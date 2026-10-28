@@ -1,7 +1,7 @@
 # Sword World 2.5 — Community Edition (sw25-ce) for Foundry VTT
 
 ![Foundry v14](https://img.shields.io/badge/Foundry-v14-informational)
-![Status: test pre-release](https://img.shields.io/badge/status-test%20pre--release-orange)
+![Release](https://img.shields.io/github/v/release/CrestedEcho/sw25-ce)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 **sw25-ce** is a community edition of the excellent
@@ -10,8 +10,8 @@ It started as a fork of that system, ported it to Foundry v14, and adds new auto
 sheets and chat cards on top of it. All the groundwork (actors, items, sheets, rolls, translations) is the work
 of Jean.N and the original contributors. See [Credits](#credits).
 
-> **This is a test build.** Releases are tagged `-test` and published as GitHub **pre-releases**. Expect rough
-> edges, and back up your world before you try it.
+> **ce.19 is the first full release.** It's still a young community project, so back up your world before you
+> upgrade, and please report any bugs.
 
 ![Classes card (parchment theme), with fictional test classes](docs/images/classes-card-light.png)
 
@@ -84,10 +84,12 @@ Everything below was added on top of the original system. Full details are in [C
 2. Paste this manifest URL at the bottom and click **Install**:
 
    ```
-   https://github.com/CrestedEcho/sw25-ce/releases/download/v3.0.0-ce.18-test/system.json
+   https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json
    ```
 
-   This is **3.0.0-ce.18-test**, a **test pre-release**.
+   This link always points to the **latest full release** (currently **3.0.0-ce.19**). Foundry's **Update**
+   button picks up new versions automatically. If you installed one of the old `-test` builds, install again with
+   this link to get updates.
 3. Create a world and choose **Sword World 2.5 (CE Edition)** as its game system.
 
 The system id is `sw25-ce`, so it installs **next to** the original `sw25` system instead of replacing it.

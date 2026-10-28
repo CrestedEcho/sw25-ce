@@ -21,7 +21,7 @@
       "thumbnail": "systems/sw25-ce/assets/sw25fvtt.png"
     }
   ],
-  "version": "3.0.0-ce.9",
+  "version": "3.0.0-ce.19",
   "compatibility": {
     "minimum": "14",
     "verified": "14"
@@ -134,7 +134,7 @@
   ],
   "socket": true,
   "manifest": "https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json",
-  "download": "https://github.com/CrestedEcho/sw25-ce/releases/download/v3.0.0-ce.9/sw25-ce.zip",
+  "download": "https://github.com/CrestedEcho/sw25-ce/releases/download/v3.0.0-ce.19/sw25-ce.zip",
   "background": "systems/sw25-ce/assets/sw25fvtt.png",
   "grid": {
     "distance": 1,

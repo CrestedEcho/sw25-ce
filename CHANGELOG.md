@@ -2,8 +2,14 @@
 
 sw25-ce is a community edition of [sw25-fvtt](https://github.com/jeannjeann/sw25-fvtt) by Jean.N. Versions 2.4.1 and
 older are the original system's history, kept as it was written. The 3.0.0-ce.* entries are sw25-ce's changes.
-All ce.10 and later builds are **test pre-releases** (`-test` tags on GitHub). They are framework only, and no
-rulebook content packs are included.
+Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
+All builds are framework only, and no rulebook content packs are included.
+
+## 3.0.0-ce.19 (2026-10-28) — first full release
+- First full (non-test) release of sw25-ce. It includes everything from ce.10 to ce.18 below.
+- Installs from the "latest" manifest now update automatically: `https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json`.
+- Stat-block skills: the Declaration tooltip now says it is "declared as part of the attack or action it modifies" (it used to say "declared at turn start").
+- English manual: the timing symbols now match the sheet (○ Constant, ► Major Action, ⏩ Minor Action, △ Combat Preparation, 🗨 Declaration). It also notes that spells don't show timing icons, since casting is normally a Major Action.
 
 ## 3.0.0-ce.18-test (2026-10-28)
 - Gear is never auto-equipped when it lands on a character (drops, compendium, grants). Dropping it onto a slot still equips it.
