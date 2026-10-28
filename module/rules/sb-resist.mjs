@@ -5,7 +5,7 @@
 /**
  * key: "Dodge" | "Vitres" | "Mndres". Returns { value, fixed } from actor.system.sbView, or null when the stat block has no data.
  * Dodge uses `part` (index) when given, else the core part (else the first). Fortitude/Willpower come from the
- * prepared view, which already carries the Sword Shard bonus (applyShards in prepareStatBlock; NPCs get none).
+ * prepared view, which already carries the Sword Shard bonus (applyShards in prepareStatBlock, monsters and NPCs alike).
  */
 export function sbResistFor(view, key, part = null) {
   if (!view || !Array.isArray(view.parts) || !view.parts.length) return null;

@@ -96,8 +96,8 @@ export function prepareStatBlock(sbIn, legacy = {}, type = "monster") {
   for (const k of ["level", "reputation", "weakness", "initiative", "soulscars", "swordShards", "movement.ground", "movement.other"]) {
     const r = overrideFor(ov, k, num(get(sb, k))); if (r.overridden) locked.push(k); set(sb, k, r.value);
   }
-  // Sword Shards (monsters only, derived; CRB I p.384)
-  applyShards(sb, type === "npc" ? 0 : sb.swordShards, locked);
+  // Sword Shards (monsters and NPCs, derived; CRB I p.384)
+  applyShards(sb, sb.swordShards, locked);
   sb.loot = arr(sb.loot).map((l) => ({ roll: "", min: null, max: null, always: /^always$/i.test(String(l.roll ?? "")), item: "", price: null, materialCard: null, ...l }));
   sb.uniqueSkills = arr(sb.uniqueSkills).map((u) => ({ name: "", tags: [], part: null, check: null, resist: null, resistResult: null, magic: null, description: "", ...u }));
   sb.locked = locked;

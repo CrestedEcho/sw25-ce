@@ -41,7 +41,7 @@ test("dodge: chosen part's Evasion on multi-part monsters; single part auto-pick
   assert.deepEqual(sbResistFor(one, "Dodge"), { value: 5, fixed: 12 });
 });
 
-test("fortitude/willpower include the Sword Shard bonus (monsters only, not NPCs)", () => {
+test("fortitude/willpower include the Sword Shard bonus (monsters and NPCs)", () => {
   const raw = (n) => ({ fortitude: 6, willpower: 5, swordShards: n, parts: [{ name: "Body", evasion: 3 }] });
   for (const [n, add] of [[0, 0], [1, 1], [5, 1], [6, 2], [10, 2], [11, 3], [15, 3], [16, 4], [30, 4]]) {
     const v = prepareStatBlock(raw(n), {}, "monster");
@@ -49,7 +49,8 @@ test("fortitude/willpower include the Sword Shard bonus (monsters only, not NPCs
     assert.deepEqual(sbResistFor(v, "Mndres"), { value: 5 + add, fixed: 12 + add }, `shards ${n}`);
   }
   const npc = prepareStatBlock(raw(12), {}, "npc");
-  assert.deepEqual(sbResistFor(npc, "Vitres"), { value: 6, fixed: 13 });
+  assert.deepEqual(sbResistFor(npc, "Vitres"), { value: 9, fixed: 16 });
+  assert.deepEqual(sbResistFor(npc, "Mndres"), { value: 8, fixed: 15 });
   assert.deepEqual(sbResistFor(prepareStatBlock(raw(3), {}, "monster"), "Dodge"), { value: 3, fixed: 10 }); // evasion unaffected
 });
 

@@ -1,5 +1,5 @@
 /**
- * Sword Shard enhancement for monster stat blocks (CRB I p.384).
+ * Sword Shard enhancement for monster and NPC stat blocks (CRB I p.384).
  * N shards: every part +5×N max HP and +N max MP (parts with MP only),
  * Fortitude / Willpower +1 (1–5), +2 (6–10), +3 (11–15), +4 (16+) to value and fixed.
  * Derived only: applied to the prepared view, never to system.sb. Locked (hand-edited) values are left alone.
@@ -84,7 +84,7 @@ export function mergeSbPreview(base, patch) {
  * max when the shard count changes (current == old max -> new max), or null. prepare = prepareStatBlock.
  */
 export function shardFollowUpdate(oldSb, patch, prepare, legacy = {}, type = "monster") {
-  if (type === "npc" || !isObj(patch)) return null;
+  if (!isObj(patch)) return null;
   const newSb = mergeSbPreview(oldSb ?? {}, patch);
   const oldView = prepare(oldSb ?? {}, legacy, type); const newView = prepare(newSb, legacy, type);
   return shardFollowParts(oldView, newView, newSb.parts ?? []);

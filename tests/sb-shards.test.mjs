@@ -28,9 +28,8 @@ test("every part gets +5N HP / +N MP; resistances +bonus to value, fixed and dic
   assert.equal(ctx.shards.label, "Enhanced: 7 shards");
 });
 
-test("no shards / NPCs / locked values are not boosted", () => {
+test("no shards / locked values are not boosted", () => {
   const v0 = prepareStatBlock(SB(0), {}, "monster"); assert.equal(v0.parts[0].hp, 30); assert.equal(buildStatBlockContext({ type: "monster", view: v0, raw: SB(0) }).shards, null);
-  assert.equal(prepareStatBlock(SB(5), {}, "npc").parts[0].hp, 30);
   const vl = prepareStatBlock(SB(2, { overrides: { "parts.0.hp": { value: 99, locked: true } } }), {}, "monster");
   assert.equal(vl.parts[0].hp, 99); assert.equal(vl.parts[1].hp, 30);
 });
@@ -40,9 +39,22 @@ test("current HP follows max only when it was full", () => {
   const parts = shardFollowUpdate(old, { swordShards: 3 }, prepareStatBlock);
   assert.equal(parts[0].hpValue, 45); assert.equal(parts[1].hpValue, 10);
   assert.equal(shardFollowUpdate(old, { name: "x" }, prepareStatBlock), null);
-  assert.equal(shardFollowUpdate(old, { swordShards: 3 }, prepareStatBlock, {}, "npc"), null);
+  assert.equal(shardFollowUpdate(old, { swordShards: 3 }, prepareStatBlock, {}, "npc")[0].hpValue, 45); // NPCs follow too
   const down = shardFollowUpdate({ ...old, swordShards: 3, parts: [{ ...old.parts[0], hpValue: 45 }, old.parts[1]] }, { swordShards: 0 }, prepareStatBlock);
   assert.equal(down[0].hpValue, 30);
   assert.equal(shardFollowParts({ shards: { n: 1 } }, { shards: { n: 1 } }, []), null);
   assert.deepEqual(mergeSbPreview([{ a: 1 }, { a: 2 }], { 1: { a: 3 } }), [{ a: 1 }, { a: 3 }]);
+});
+
+test("NPCs get the same Sword Shard boost, display and badge as monsters", () => {
+  const raw = SB(7); const v = prepareStatBlock(raw, {}, "npc");
+  assert.deepEqual(v.parts.map((p) => p.hp), [65, 55]); // +5 HP per shard on every part
+  assert.equal(v.parts[0].mp, 19); assert.equal(v.parts[1].mp, null); // +1 MP per shard only on parts with MP
+  assert.deepEqual(v.fortitude, { value: 7, fixed: 14 }); assert.deepEqual(v.willpower, { value: 8, fixed: 15 }); // 6-10 shards: +2
+  assert.equal(v.parts[1].hpValue, 15); assert.equal(v.parts[0].hpValue, 65);
+  const ctx = buildStatBlockContext({ type: "npc", view: v, raw });
+  assert.equal(ctx.isNPC, true); assert.equal(ctx.shards.label, "Enhanced: 7 shards");
+  assert.match(ctx.shards.tip, /\+35 max HP \/ \+7 max MP per part, Fortitude & Willpower \+2/);
+  assert.ok(ctx.stats.swordShards); // shard tracking field
+  for (const n of [0, 3, 8, 12, 20]) assert.deepEqual(prepareStatBlock(SB(n), {}, "npc").shards.res, prepareStatBlock(SB(n), {}, "monster").shards.res);
 });
