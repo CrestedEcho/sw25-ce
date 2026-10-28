@@ -57,6 +57,7 @@ FVTT用ソード・ワールド2.5ゲームシステム
 - Modとの相性などはほとんど検証していません。「Dice So Nice!」「Times Up」「Chat Commander」「Token Action HUD」「Polyglot」は簡単に検証済み。
 - バフ・デバフの持続時間の管理には「Times Up」Modの使用をオススメします。
 - 威力ロールのチャットコマンド（/rp k10@9+3、/r p10 など）はシステム内蔵です（「Chat Commander」は不要）。
+- 威力表は非公式のコミュニティ威力表（威力0〜100）を同梱しています。ワールドの「Reference Power Table」ジャーナルに入力済みの行があれば、その威力ではそちらが優先されます。
 - 戦闘に関する実装は行っていません。行動順に関しては手動で行うか、Modの導入をオススメします。
 - 行動順をサポートするModの一例（ポップコーンイニシアチブが向いているのではないかと個人的には思う）
   - ポップコーンタイプ「Lancer Initiative」「Just Popcorn Initiative」

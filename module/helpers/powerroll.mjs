@@ -1,18 +1,16 @@
 // Power Roll
 
 import { rpt } from "../sw25.mjs";
+import { powerLookup } from "../rules/power-lookup.mjs";
 
 /**
  * Powertable index
  */
-/** Reference-table value; the shipped "Reference Power Table" journal is blank, so warn instead of silently rolling 0. */
+/** Power table value: the world's "Reference Power Table" journal row if filled, else the bundled unofficial community table; warn only when neither has the row. */
 function refPowerValue(power, total) {
-  const v = rpt?.[power]?.[total - 3];
-  if (v === undefined || v === null || v === "" || !Number.isFinite(Number(v)) || (Array.isArray(rpt?.[power]) && rpt[power].every((x) => !x))) {
-    globalThis.ui?.notifications?.warn(`SW2.5: no power table row for Power ${power} (the item has no table rows: if it is an old world copy, re-import the actor/item from the SW compendium; otherwise fill the "Reference Power Table" journal).`);
-    return Number(v) || 0;
-  }
-  return Number(v);
+  const r = powerLookup(power, total, { journal: rpt });
+  if (r.source === null) globalThis.ui?.notifications?.warn(`SW2.5: no power table row for Power ${power} (not in the bundled table and the "Reference Power Table" journal row is blank).`);
+  return r.value;
 }
 export const PT = {
   POWER: 0,

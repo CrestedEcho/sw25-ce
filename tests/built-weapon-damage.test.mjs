@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs"; import path from "node:path"; import os from "node:os";
 import { buildPowerTable, missingOwnRows } from "../module/rules/power-table-row.mjs";
 
+import { POWER_TABLE } from "../module/data/power-table.mjs";
 // Real built data (private, outside git): skip when the build isn't on this machine.
 const SRC = process.env.SW25_BUILD_SRC ?? "/tmp/sw25-compendia-build/src";
 const ACTORS = path.join(SRC, "sw25-test-actors");
@@ -10,7 +11,8 @@ const haveBuild = fs.existsSync(ACTORS);
 
 async function loadPowerRoll(warnings) {
   const src = fs.readFileSync(new URL("../module/helpers/powerroll.mjs", import.meta.url), "utf8")
-    .replace(/import \{ rpt \} from "\.\.\/sw25\.mjs";/, "const rpt = {};");
+    .replace(/import \{ rpt \} from "\.\.\/sw25\.mjs";/, "const rpt = {};")
+    .replace("../rules/power-lookup.mjs", new URL("../module/rules/power-lookup.mjs", import.meta.url).href);
   const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "sw25bw-")), "powerroll.mjs");
   fs.writeFileSync(f, src);
   globalThis.ui = { notifications: { warn: (m) => warnings.push(m) } };
@@ -49,16 +51,17 @@ test("Human Warrior Bastard Sword (real built item): roll 5 -> table 3, bonus co
   assert.equal(r.powerResult, 7); // ce.12 in Foundry: 3 + 4 = 7
 });
 
-test("old-build world copy (dmod = sheet total, no rows) is what produced 'no row' + doubled bonus", async () => {
+test("old-build world copy (no rows): the bundled community table now fills the row, no 'no row' warning", async () => {
   const stale = { power: 17, cvalue: 10, totalcvalue: 10, hit: 5, dmod: 4 };
   assert.equal(missingOwnRows(stale), true);
   const warnings = []; const { powerRoll } = await loadPowerRoll(warnings);
   globalThis.Roll = fixedRoll(2, 3);
   const r = await powerRoll("2d6", asDataPt(buildPowerTable({ ...stale, powerbase: 4 + stale.dmod })));
   assert.equal(r.powMod, 8);
-  assert.deepEqual(r.eachPowerResult, [0]);
-  assert.equal(r.powerResult, 8); // "totals only the bonus"
-  assert.ok(warnings.some((m) => /Power 17/.test(m) && /re-import/.test(m)));
+  const v = POWER_TABLE[17][5 - 3];
+  assert.deepEqual(r.eachPowerResult, [v]);
+  assert.equal(r.powerResult, v + 8); // bonus is still the stale doubled dmod (old build), but the roll is no longer 0
+  assert.equal(warnings.length, 0);
 });
 
 test("buildPowerTable slot layout matches PT indices", async () => {

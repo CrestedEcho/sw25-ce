@@ -7,7 +7,8 @@ import { join } from "node:path";
 // Load powerroll.mjs without Foundry: swap the sw25.mjs import for an empty reference table.
 async function loadPowerRoll() {
   const src = readFileSync(new URL("../module/helpers/powerroll.mjs", import.meta.url), "utf8")
-    .replace(/import \{ rpt \} from "\.\.\/sw25\.mjs";/, "const rpt = {};");
+    .replace(/import \{ rpt \} from "\.\.\/sw25\.mjs";/, "const rpt = {};")
+    .replace("../rules/power-lookup.mjs", new URL("../module/rules/power-lookup.mjs", import.meta.url).href);
   const f = join(mkdtempSync(join(tmpdir(), "sw25pr-")), "powerroll.mjs");
   writeFileSync(f, src);
   return import(f);

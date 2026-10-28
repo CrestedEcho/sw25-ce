@@ -58,7 +58,7 @@ export function parsePowerCommand(line) {
   return { command: cmd, mode: isAlias ? null : ROLL_CMDS[cmd], formula, text: powerFormulaText(formula), comment: words.slice(i).join(" ") };
 }
 
-/** Old 20-slot powertable for powerRoll(); table rows 2..12 blank -> values come from the Reference Power Table. */
+/** Old 20-slot powertable for powerRoll(); table rows 2..12 blank -> journal row if filled, else the bundled community table. */
 export function powerTableFor(f) {
   const pt = new Array(20).fill(0);
   pt[0] = f.power; pt[1] = f.crit;

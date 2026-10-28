@@ -464,7 +464,7 @@ Roll request button
 - The result is posted as a damage card (power roll, criticals and bonus breakdown) with the Apply panel, like an attack's damage card.
 - Power Rolls can be made from the Chat input field by typing the Power Roll expression after the command.
 - You may enter commentary text after the power roll expression.
-- **Caution** You must prepare the Reference Power Table in order to use the Power roll expression.
+- Power values come from the bundled **unofficial community power table** (Power 0-100). If your world's "Reference Power Table" journal has a filled row for a Power, that row is used instead (per Power). A natural 2 is always an automatic failure with no damage.
 
 #### Format for Power Roll Expressions
 - Replace <x> with any number in the following roll expression descriptions.

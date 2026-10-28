@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## Unreleased
+- Bundled **unofficial community power table** (Power 0-100, `module/data/power-table.mjs`) is now the default for every power lookup: chat commands, attack/damage cards and item rolls with blank table rows. A filled row in the world's "Reference Power Table" journal still wins for that Power; the "no power table row" warning only appears when neither has the row. A natural 2 is still an automatic failure with no damage (and no longer triggers the warning).
 - Power-roll chat commands are built in (no "Chat Commander" needed): `/rp k10@9+3 Sword`, `/r p10 @9 +3`, `/gmr k20`, aliases /powerroll /powroll /powr /rollpower /rollpow /rpow /pow. The result is the new damage card with the Apply panel, posted as a roll message. Plain `/r 2d6` is unchanged.
 - Multi-part monsters: the Evasion button asks which part dodges; the damage card Apply panel has a part picker (Defense, HP and heal go to that part).
 
