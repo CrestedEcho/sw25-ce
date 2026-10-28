@@ -302,3 +302,16 @@ form.sw25v2-lite .sheet-body,form.sw25v2-lite .tab{height:auto!important;overflo
 .sw25v2 .sw25-wc-empty{font-size:12px;color:var(--muted);padding:6px}
 .sw25v2.theme-dark .sw25-wc{background:rgba(0,0,0,.25)}
 .sw25v2.theme-dark .sw25-wc-btns button{color:#f3e6c8!important}.sw25v2.theme-dark .sw25-wc-btns button.alt{color:#7a1f1f!important}
+/* ce.17: item-sheet label boxes (Popularity, Shape, Category, Summary, Create, Effects, ...) are black boxes with white
+   text in sw25.css, but the themed "lite" sheet sets div/label color:inherit, so the text became dark ink on black.
+   Parchment: tan label, dark ink. Dark: deep leather label, parchment text. Edit-mode column labels follow the ink. */
+form.sw25v2-lite .overview{border:1px solid var(--line)!important;background:var(--panel)}
+form.sw25v2-lite .overview--label{background:#d9c39a!important;color:#2b1c10!important;border-right:1px solid var(--gold);font-variant:small-caps;text-shadow:none!important}
+form.sw25v2-lite.theme-dark .overview--label{background:rgba(0,0,0,.5)!important;color:#eadcc0!important}
+form.sw25v2-lite .overview--label *{color:inherit!important}
+form.sw25v2-lite .property--label-col,form.sw25v2-lite .property--label{color:var(--ink)!important;text-shadow:none!important}
+form.sw25v2-lite .pt-label{background:#d9c39a!important;color:#2b1c10!important}
+form.sw25v2-lite.theme-dark .pt-label{background:rgba(0,0,0,.5)!important;color:#eadcc0!important}
+form.sw25v2-lite .fairyearth{color:rgb(var(--fairy-earth-color))!important}form.sw25v2-lite .fairyice{color:rgb(var(--fairy-ice-color))!important}
+form.sw25v2-lite .fairyfire{color:rgb(var(--fairy-fire-color))!important}form.sw25v2-lite .fairywind{color:rgb(var(--fairy-wind-color))!important}
+form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.sw25v2-lite .fairydark{color:rgb(var(--fairy-dark-color))!important}
