@@ -233,7 +233,7 @@ Each item can be configured in detail. This is done mainly from the Details tab.
 - The bonus from Personal Items are automatically reflected if an Effect is set. The checkbox to Personal Items only changes the list display.
 - Equipment checkboxes and Active Effect enable/disable are linked, but can also be toggled manually.
 
-### Accessories
+### Equippable Gear
 - Equipment checks, part to be equipped on, and specializations can be set up.
 - Both the check and the power of the item are basically not used.
 - Please manage manually as we have not implemented any restrictions on equipping the same part of the body.
@@ -388,7 +388,7 @@ Each item can be configured in detail. This is done mainly from the Details tab.
 
 #### Passive Effects
 - Effects that are active and have no duration.
-- It is useful for accessories, racial traits, and the effects of any Personal Items.
+- It is useful for equippable gear, racial traits, and the effects of any Personal Items.
 - It can be toggled on and off.
 - You can change the classification to temporary by entering a duration.
 
@@ -505,7 +505,7 @@ Settings for Monsters
   - Only PCs and monsters are supported.
   - Items and magic, except for equipment, are not imported.
   - Some races will not have their initial learned languages automatically imported, and must be manually added.
-  - Additional parts of accessories are not supported.
+  - Additional parts of equippable gear are not supported.
   - Monster abilities can be imported as a list or as individual items (beta).
   - If importing monster abilities as individual items does not work, please uncheck the box before importing.
   - Newly created items without a matching item name will need to be set manually.
