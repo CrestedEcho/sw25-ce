@@ -12,6 +12,7 @@ import { buildMagicContext, magicBlocks, migrateMagic, newMagicEntry, schoolLabe
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { fixedToDice, parseSbDamage, applyVital, lootFor, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
+import { skillEditorData, skillFromForm, skillCardHtml, RESIST_CHECKS, RESIST_RESULTS } from "../rules/sb-skill.mjs";
 import { beltContext, bindBeltListeners, dropOnBelt, beltFlags } from "../ce7/equipcard.mjs";
 import { usesOf, stackLabel } from "../ce7/belt-logic.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
@@ -35,7 +36,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const base = await super.getData(options);
     const sys = this.actor.system; const raw = this.actor._source.system?.sb ?? {};
     const view = sys.sbView ?? game.sw25.statblock.prepareStatBlock(raw, sys, this.actor.type);
-    const ctx = buildStatBlockContext({ type: this.actor.type, view, raw, isGM: game.user.isGM, img: this.actor.img });
+    const ctx = buildStatBlockContext({ type: this.actor.type, view, raw, isGM: game.user.isGM, img: this.actor.img, skillGmMap: this.actor.getFlag("sw25-ce", "sbSkillGmOnly") ?? {} });
     const TE = foundry.applications.ux.TextEditor.implementation;
     const enrich = (h) => TE.enrichHTML(h ?? "", { secrets: this.actor.isOwner, relativeTo: this.actor });
     Object.assign(base, ctx, {
@@ -47,6 +48,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       notesHTML: await enrich(raw.notes), secretsHTML: game.user.isGM ? await enrich(raw.secrets) : "",
       descriptionHTML: await enrich(raw.description || view.description),
     });
+    for (const sk of base.skills ?? []) sk.description = await enrich(sk.description);
     for (const s of base.skills) s.description = await enrich(s.description);
     // Play/Edit lock: Play is the default; inputs only show in Edit mode.
     this._sbEdit ??= false;
@@ -194,12 +196,9 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (a === "sb-loot") return this._sbLoot();
     if (a.startsWith("sb-mg-")) return this._sbMagicAction(a, el, raw);
     if (a === "sb-gmonly") { const k = el.dataset.key; const cur = spellGmOnly(this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {}, k); return this.actor.setFlag("sw25-ce", "sbSpellGmOnly", { [k]: !cur }); }
-    if (a === "skill-desc") {
-      const i = Number(el.dataset.index); const rows = arr("uniqueSkills");
-      const content = `<textarea name="d" rows="8" style="width:100%">${foundry.utils.escapeHTML(rows[i]?.description ?? "")}</textarea>`;
-      const d = await foundry.applications.api.DialogV2.prompt({ window: { title: rows[i]?.name ?? "Skill" }, content, ok: { callback: (_e, b) => b.form.elements.d.value } });
-      if (d == null) return; rows[i].description = d; return this.actor.update({ "system.sb.uniqueSkills": rows });
-    }
+    if (a === "skill-edit" || a === "skill-desc") return this._sbSkillEdit(Number(el.dataset.index ?? -1));
+    if (a === "sb-skill-post") return this._sbSkillPost(Number(el.dataset.index));
+    if (a === "sb-skill-gm") { const k = el.dataset.key; const cur = spellGmOnly(this.actor.getFlag("sw25-ce", "sbSkillGmOnly") ?? {}, k); return this.actor.setFlag("sw25-ce", "sbSkillGmOnly", { [k]: !cur }); }
     const id = el.closest("[data-item-id]")?.dataset.itemId; const item = id && this.actor.items.get(id);
     if (a === "item-edit") return item?.sheet.render(true);
     if (a === "item-del") return item?.delete();
@@ -207,6 +206,53 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (a === "item-show") return this._sbShowItem(item);
   }
 }
+
+/** Unique Skill editor (new: index < 0). Title, part, symbol toggles, check (fixed = value + 7), resist, ProseMirror description. */
+SW25StatBlockSheet.prototype._sbSkillEdit = async function (index) {
+  const raw = this.actor._source.system?.sb ?? {};
+  const rows = structuredClone(Array.isArray(raw.uniqueSkills) ? raw.uniqueSkills : Object.values(raw.uniqueSkills ?? {}));
+  const isNew = !(index >= 0 && rows[index]); const prev = isNew ? { tags: [] } : rows[index];
+  const L = (map, root) => Object.fromEntries(Object.entries(map).map(([k, v]) => [k, game.i18n.has?.(`${root}.${k}`) ? game.i18n.localize(`${root}.${k}`) : v]));
+  const checks = L(RESIST_CHECKS, "SW25.Resist.Check"); const results = L(RESIST_RESULTS, "SW25.Resist.Result");
+  const data = skillEditorData(prev, this.actor.system.sbView?.parts ?? [], { checks, results });
+  const content = await foundry.applications.handlebars.renderTemplate(`${T}/sb/sb-skill-editor.hbs`, data);
+  const PM = foundry.applications.elements.HTMLProseMirrorElement;
+  const out = await foundry.applications.api.DialogV2.wait({
+    window: { title: isNew ? "New Unique Skill" : `Edit Unique Skill: ${prev.name ?? ""}`, icon: "fas fa-star" },
+    classes: ["sw25-sb-skill-editor"], position: { width: 560 }, content, rejectClose: false,
+    buttons: [
+      { action: "save", label: "Save", icon: "fas fa-check", default: true, callback: (_e, b) => {
+        const f = b.form; const fd = Object.fromEntries(new FormData(f).entries());
+        fd.description = f.querySelector("prose-mirror")?.value ?? prev.description ?? ""; return fd;
+      } },
+      { action: "cancel", label: "Cancel", icon: "fas fa-times" },
+    ],
+    render: (_e, dialog) => {
+      const root = dialog.element ?? _e?.target?.element;
+      const slot = root?.querySelector(".sb-ske-desc");
+      if (slot && PM) slot.append(PM.create({ name: "description", value: prev.description ?? "", toggled: false, documentUUID: this.actor.uuid }));
+      const v = root?.querySelector("[name=checkValue]"); const fx = root?.querySelector(".sb-ske-fixed b");
+      v?.addEventListener("input", () => { const n = Number(v.value); fx.textContent = v.value !== "" && Number.isFinite(n) ? String(n + 7) : "—"; });
+    },
+  });
+  if (!out || out === "cancel" || typeof out !== "object") return;
+  const skill = skillFromForm(out, prev);
+  if (isNew) rows.push(skill); else rows[index] = skill;
+  return this.actor.update({ "system.sb.uniqueSkills": rows });
+};
+
+/** Post a Unique Skill card (icons, title, part, check buttons, description); GM-only toggle whispers it to the GMs. */
+SW25StatBlockSheet.prototype._sbSkillPost = async function (index) {
+  const view = this.actor.system.sbView ?? {}; const s = (view.uniqueSkills ?? [])[index]; if (!s) return;
+  const gmOnly = spellGmOnly(this.actor.getFlag("sw25-ce", "sbSkillGmOnly") ?? {}, s.name);
+  const TE = foundry.applications.ux.TextEditor.implementation;
+  const description = await TE.enrichHTML(s.description ?? "", { secrets: gmOnly, relativeTo: this.actor });
+  const L = (map, root) => Object.fromEntries(Object.entries(map).map(([k, v]) => [k, game.i18n.has?.(`${root}.${k}`) ? game.i18n.localize(`${root}.${k}`) : v]));
+  const content = skillCardHtml(s, { actorName: this.actor.name, description, gmOnly, checkLabels: L(RESIST_CHECKS, "SW25.Resist.Check"), resultLabels: L(RESIST_RESULTS, "SW25.Resist.Result") });
+  const msg = { speaker: ChatMessage.getSpeaker({ actor: this.actor }), content };
+  if (gmOnly) msg.whisper = ChatMessage.getWhisperRecipients("GM").map((u) => u.id);
+  return ChatMessage.create(msg);
+};
 
 /** NPC/monster casting: pick a spell for "<School> Magic N", confirm cost, deduct current MP/HP of the chosen part, post chat. */
 SW25StatBlockSheet.prototype._sbCast = async function (index, spellName = null) {

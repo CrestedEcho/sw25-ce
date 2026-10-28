@@ -14,6 +14,7 @@ import { registerStatBlockUI } from "./rules/statblock-ui.mjs";
 import { registerCombatUI } from "./rules/combat-ui.mjs";
 import * as StatBlock from "./rules/statblock.mjs";
 import { shardFollowUpdate } from "./rules/sb-shards.mjs";
+import { registerSkillCardHooks } from "./rules/sb-skill.mjs";
 import { SW25Item } from "./documents/item.mjs";
 import { SW25ActiveEffect } from "./documents/active-effect.mjs";
 import { SW25Combat } from "./documents/combat.mjs";
@@ -1093,6 +1094,8 @@ Hooks.once("ready", async function () {
       }
     }
   });
+
+  registerSkillCardHooks(); // Unique Skill chat card check buttons
 
   // Sword Shards: when the shard count changes, current HP/MP at full follow the new max (CRB I p.384).
   Hooks.on("preUpdateActor", (actor, changes) => {

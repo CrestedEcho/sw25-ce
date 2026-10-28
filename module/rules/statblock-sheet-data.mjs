@@ -7,7 +7,8 @@ export const ICON_ROOT = `systems/${SYS}/assets/icons`;
 export const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
 import { parseMagicSkill } from "./sb-cast.mjs";
 import { shardTip } from "./sb-shards.mjs";
-import { fixedToDice, pairFixed, parseSbDamage } from "./sb-play.mjs";
+import { resistLabel, resultLabel } from "./sb-skill.mjs";
+import { fixedToDice, pairFixed, parseSbDamage, spellGmOnly, slugKey } from "./sb-play.mjs";
 export const ARRAY_FIELDS = ["parts", "uniqueSkills", "loot", "classLevels", "relationships", "services"];
 
 /** monsterType (book category, any case/spelling) -> `_type-<slug>` icon slug. */
@@ -18,13 +19,13 @@ export function monsterTypeIcon(t) {
   return slug ? `${ICON_ROOT}/monsters/_type-${slug}.webp` : null;
 }
 
-/** Unique-skill tag glyphs (CR I p393); icon where the Artist set has one. */
+/** Unique-skill tag glyphs (CR I p393); icon where the Artist set has one. Key "passive" kept for data; label is "Constant". */
 export const SKILL_TAGS = {
-  passive: { glyph: "◯", label: "Passive", icon: `${ICON_ROOT}/ui/tag-passive.webp` },
-  major: { glyph: "►", label: "Major action", icon: `${ICON_ROOT}/ui/tag-major.webp` },
-  minor: { glyph: "⏩", label: "Minor action", icon: `${ICON_ROOT}/ui/tag-minor.webp` },
-  prep: { glyph: "△", label: "Preparation", icon: `${ICON_ROOT}/ui/tag-prep.webp` },
-  declared: { glyph: "🗨", label: "Declared", icon: `${ICON_ROOT}/ui/tag-declared.webp` },
+  passive: { glyph: "◯", label: "Constant", tip: "Constant (always active)", icon: `${ICON_ROOT}/ui/tag-passive.webp` },
+  major: { glyph: "►", label: "Major action", tip: "Major action", icon: `${ICON_ROOT}/ui/tag-major.webp` },
+  minor: { glyph: "⏩", label: "Minor action", tip: "Minor action", icon: `${ICON_ROOT}/ui/tag-minor.webp` },
+  prep: { glyph: "△", label: "Preparation", tip: "Preparation (before combat)", icon: `${ICON_ROOT}/ui/tag-prep.webp` },
+  declared: { glyph: "🗨", label: "Declaration", tip: "Declaration (declared at turn start)", icon: `${ICON_ROOT}/ui/tag-declared.webp` },
 };
 
 const list = (v) => (Array.isArray(v) ? v.filter((x) => x !== "" && x != null).join(", ") : String(v ?? ""));
@@ -46,7 +47,7 @@ export function roleLine(type, sb) {
 }
 
 /** Build the template context. view = system.sbView, raw = system.sb source. */
-export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false, img = "", classNames = {} }) {
+export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false, img = "", classNames = {}, skillGmMap = {} }) {
   const hostile = type === "npc" && !!view.hostile;
   const locked = new Set(view.locked ?? []);
   const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
@@ -69,9 +70,10 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
   const skills = (view.uniqueSkills ?? []).map((u, i) => ({
     i, name: u.name, part: u.part, description: u.description ?? "", castable: !!parseMagicSkill(u),
     inMagic: !!parseMagicSkill(u) && (!u.magicMoved || movedFrom.has(u.name)),
-    tags: (u.tags ?? []).map((t) => ({ key: t, ...(SKILL_TAGS[t] ?? { glyph: "·", label: t }) })),
-    check: u.check ? `${u.check.value}(${u.check.fixed ?? u.check.value + 7})` : "",
-    resist: u.resist ? `${u.resist}${u.resistResult ? ` / ${u.resistResult}` : ""}` : "",
+    tags: (u.tags ?? []).map((t) => ({ key: t, ...(SKILL_TAGS[t] ?? { glyph: "·", label: t, tip: t }) })),
+    check: u.check && u.check.value != null && u.check.value !== "" ? `${u.check.value}(${u.check.fixed ?? Number(u.check.value) + 7})` : "",
+    resist: u.resist ? `${resistLabel(u.resist)}${u.resistResult ? ` / ${resultLabel(u.resistResult)}` : ""}` : "",
+    key: slugKey(u.name), gmOnly: spellGmOnly(skillGmMap, u.name),
   }));
   const loot = (view.loot ?? []).map((l, i) => ({ i, roll: l.always ? "Always" : l.roll, item: l.item, price: l.price, materialCard: l.materialCard ?? "", always: l.always }));
   const tabs = sheetTabs(type, hostile);

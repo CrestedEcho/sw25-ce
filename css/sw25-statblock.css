@@ -210,3 +210,54 @@
   color: #5b2489; background: linear-gradient(180deg, rgba(185, 140, 230, .22), rgba(140, 80, 200, .14)); border: 1px solid rgba(122, 63, 176, .5); border-radius: 10px; box-shadow: 0 0 8px rgba(150, 90, 210, .35); cursor: help; vertical-align: middle; }
 .sb-header.sw25-shard-glow { box-shadow: inset 0 -2px 0 rgba(122, 63, 176, .35), 0 0 14px rgba(150, 90, 210, .22); }
 .sb-header.sw25-shard-glow .sb-por-img { filter: drop-shadow(0 0 5px rgba(150, 90, 210, .55)); }
+
+/* ---- Unique skills: sheet rows ---- */
+.sb-skill { padding:3px 0 4px; border-bottom:1px dotted #3a251233; }
+.sb-sk-line { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.sb-sk-tags { display:inline-flex; gap:2px; }
+.sb-sk-name { font:bold 13px Georgia,serif; color:#3a2512; }
+a.sb-sk-name:hover { text-decoration:underline; color:#8a3b12; }
+.sb-sk-part { font-size:10.5px; padding:0 6px; border-radius:8px; background:#3a251214; border:1px solid #3a251240; color:#5a3b22; }
+.sb-sk-check { color:#6b4a2b; }
+.sb-sk-acts { margin-left:auto; display:inline-flex; gap:4px; align-items:center; }
+.sb-sk-post { font-size:10.5px; padding:1px 7px; }
+.sb-sk-gm { font-size:10px; padding:2px 7px; }
+.sb-skill .sb-desc { margin:1px 0 0 2px; font-size:12px; line-height:1.35; }
+.sb-skill .sb-desc p { display:block; margin:0 0 2px; }
+
+/* ---- Unique Skill editor dialog ---- */
+.sw25-sb-skill-editor .sb-ske { display:flex; flex-direction:column; gap:8px; }
+.sw25-sb-skill-editor .sb-ske-row { display:grid; grid-template-columns:110px 1fr; align-items:center; gap:8px; }
+.sw25-sb-skill-editor .sb-ske-row > label { font-weight:bold; }
+.sw25-sb-skill-editor .sb-ske-row > label small { font-weight:normal; opacity:.7; }
+.sw25-sb-skill-editor .sb-ske-name { font-size:15px; font-weight:bold; }
+.sw25-sb-skill-editor .sb-ske-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.sw25-sb-skill-editor .sb-ske-tag { display:inline-flex; align-items:center; gap:5px; padding:3px 9px 3px 5px; border-radius:14px; cursor:pointer; user-select:none;
+  border:1px solid #8a6a4a88; background:#0000000a; opacity:.72; transition:all .12s; }
+.sw25-sb-skill-editor .sb-ske-tag input { display:none; }
+.sw25-sb-skill-editor .sb-ske-tag img { width:20px; height:20px; border:none; }
+.sw25-sb-skill-editor .sb-ske-glyph { width:20px; text-align:center; font-size:15px; }
+.sw25-sb-skill-editor .sb-ske-tag:hover { opacity:1; }
+.sw25-sb-skill-editor .sb-ske-tag:has(input:checked) { opacity:1; background:#8a3b12; border-color:#5a2208; color:#fff4e0; box-shadow:0 0 0 1px #5a220855, 0 1px 3px #0005; }
+.sw25-sb-skill-editor .sb-ske-pair { display:flex; gap:8px; align-items:center; }
+.sw25-sb-skill-editor .sb-ske-pair input[type=number] { width:70px; }
+.sw25-sb-skill-editor .sb-ske-fixed { opacity:.85; }
+.sw25-sb-skill-editor .sb-ske-descrow { align-items:start; }
+.sw25-sb-skill-editor .sb-ske-desc prose-mirror { display:block; min-height:170px; max-height:320px; border:1px solid #8a6a4a88; border-radius:4px; }
+
+/* ---- Unique Skill chat card ---- */
+.sw25-skill-card { border:1px solid #8a6a4a; border-radius:6px; padding:5px 7px; background:#f6ecd6; color:#2b1d12; }
+.sw25-skill-card.is-gm { border-style:dashed; }
+.sw25-sk-head { display:flex; align-items:center; gap:3px; border-bottom:1px solid #8a6a4a66; padding-bottom:3px; margin-bottom:3px; }
+.sw25-sk-head h3 { margin:0 0 0 4px; font:bold 15px Georgia,serif; border:none; }
+.sw25-sk-tag { width:20px; height:20px; border:none; }
+.sw25-sk-glyph { width:18px; text-align:center; }
+.sw25-sk-meta { display:flex; gap:6px; flex-wrap:wrap; font-size:11px; color:#5a3b22; }
+.sw25-sk-part { padding:0 6px; border-radius:8px; background:#3a251214; border:1px solid #3a251240; }
+.sw25-sk-gm { margin-left:auto; font-style:italic; }
+.sw25-sk-check { display:flex; gap:4px; align-items:center; margin:4px 0 2px; }
+.sw25-sk-check span { flex:1; }
+.sw25-sk-check button { flex:0 0 auto; width:auto; line-height:20px; padding:0 8px; font-size:12px; }
+.sw25-sk-resist { font-size:12px; margin:2px 0; }
+.sw25-sk-desc { font-size:12.5px; margin-top:3px; }
+.sw25-sk-desc p { margin:0 0 3px; }

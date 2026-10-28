@@ -1,0 +1,13 @@
+{{!-- Unique Skill editor (DialogV2 content). The ProseMirror editor is mounted into .sb-ske-desc on render. --}}
+<div class="sb-ske">
+  <div class="sb-ske-row"><label for="sb-ske-name">Title</label><input id="sb-ske-name" class="sb-ske-name" type="text" name="name" value="{{name}}" placeholder="e.g. Fire Breath" autofocus></div>
+  <div class="sb-ske-row"><label>Part <small>(optional)</small></label><select name="part">{{#each parts}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select></div>
+  <div class="sb-ske-row"><label>Symbols <small>(pick any)</small></label>
+    <div class="sb-ske-tags">{{#each tags}}<label class="sb-ske-tag" title="{{tip}}" data-tooltip="{{tip}}"><input type="checkbox" name="tag.{{key}}"{{#if on}} checked{{/if}}>{{#if icon}}<img src="{{icon}}" alt="{{glyph}}">{{else}}<span class="sb-ske-glyph">{{glyph}}</span>{{/if}}<span>{{label}}</span></label>{{/each}}</div></div>
+  <div class="sb-ske-row sb-ske-check"><label>Check <small>(optional)</small></label>
+    <span class="sb-ske-pair"><input type="number" name="checkValue" value="{{checkValue}}" placeholder="—" step="1"> <span class="sb-ske-fixed" title="Fixed value = check + 7">fixed <b>{{#if checkFixed}}{{checkFixed}}{{else}}—{{/if}}</b></span></span></div>
+  <div class="sb-ske-row"><label>Resist <small>(optional)</small></label>
+    <span class="sb-ske-pair"><select name="resist"><option value="">—</option>{{#each resists}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select>
+    <select name="resistResult"><option value="">—</option>{{#each results}}<option value="{{value}}"{{#if selected}} selected{{/if}}>{{label}}</option>{{/each}}</select></span></div>
+  <div class="sb-ske-row sb-ske-descrow"><label>Description</label><div class="sb-ske-desc"></div></div>
+</div>

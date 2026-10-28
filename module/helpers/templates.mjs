@@ -15,6 +15,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/sb/sb-spells.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-magic.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-magic-card.hbs",
+    "systems/sw25-ce/templates/actor/sb/sb-skill-editor.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-skills.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-checks.hbs",
