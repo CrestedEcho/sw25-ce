@@ -1212,8 +1212,6 @@ Hooks.once("ready", async function () {
     let resmnd = false;
     let init = false;
     let mknow = false;
-    let monres = false;
-    let monwp = false;
     if (actor.type == "character") {
       actor.items.forEach((item) => {
         if (item.name == game.i18n.localize("SW25.Config.ResVit"))
@@ -1272,59 +1270,12 @@ Hooks.once("ready", async function () {
         });
       }
     }
-    if (actor.type == "monster") {
-      actor.items.forEach((item) => {
-        if (item.name == game.i18n.localize("SW25.Config.MonRes"))
-          monres = true;
-        if (
-          item.system.label1 == game.i18n.localize("SW25.Config.MonHit") &&
-          item.system.label2 == game.i18n.localize("SW25.Config.MonDmg") &&
-          item.system.label3 == game.i18n.localize("SW25.Config.MonDge")
-        )
-          monwp = true;
-      });
-      if (!monres) {
-        itemData.push({
-          name: game.i18n.localize("SW25.Config.MonRes"),
-          type: "monsterability",
-          system: {
-            description: "",
-            usedice1: true,
-            label1: game.i18n.localize("SW25.Config.MonResVit"),
-            usefix1: true,
-            applycheck1: "-",
-            usedice2: true,
-            label2: game.i18n.localize("SW25.Config.MonResMnd"),
-            usefix2: true,
-            applycheck2: "-",
-          },
-        });
-      }
-      if (!monwp) {
-        itemData.push({
-          name: game.i18n.localize("SW25.Config.MonWp"),
-          type: "monsterability",
-          system: {
-            description: "",
-            usedice1: true,
-            label1: game.i18n.localize("SW25.Config.MonHit"),
-            usefix1: true,
-            applycheck1: "-",
-            usedice2: true,
-            label2: game.i18n.localize("SW25.Config.MonDmg"),
-            usefix2: false,
-            applycheck2: "on",
-            usedice3: true,
-            label3: game.i18n.localize("SW25.Config.MonDge"),
-            usefix3: true,
-            applycheck3: "-",
-          },
-        });
-      }
-    }
+    // Monsters/NPCs: no default "Resist"/"Attack" monsterability items any more. The stat block has its own
+    // Accuracy/Damage/Evasion/Fortitude/Willpower buttons, and resist requests read the stat block (rules/sb-resist.mjs).
+    // Existing actors keep any legacy items they already have.
 
     // Set default item
-    let item = await Item.create(itemData, { parent: actor });
+    if (itemData.length) await Item.create(itemData, { parent: actor });
   });
 
   // Power-roll chat commands (/rp, /powerroll, /r p10 ...) are handled natively in rules/attack-flow.mjs
