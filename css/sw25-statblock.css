@@ -156,3 +156,46 @@
 .sb-belt-wrap .ce7-belt-slot:not(.filled) { cursor:pointer; }
 /* ce.16: opaque tab bar so scrolled content never shows through */
 .sb-tabs { position:sticky; top:0; z-index:60; background:#efe1c1 url(../assets/textures/parchment.webp) 0 0/512px repeat; }
+
+/* Magic section (approved mockup 2026-10-27): MP bar + paying part, one block per magic skill, aligned spell cards. */
+.sb-magic .hint { font-size:11px; opacity:.65; }
+.sb-mg-mp { display:flex; align-items:center; gap:8px; margin:6px 0 2px; font-size:12px; }
+.sb-mg-bar { flex:1; height:12px; border:1px solid #2a4f7a; border-radius:6px; background:#fff6; overflow:hidden; }
+.sb-mg-bar i { display:block; height:100%; background:linear-gradient(#5b8fd0,#2a5a9a); }
+.sb-magic select, .sb-magic input { font:12px Georgia,serif; background:#fff8; border:1px solid #3a251266; border-radius:3px; color:var(--sb-ink); height:auto; }
+.sb-magic input[type=number] { width:5ch; text-align:center; padding:1px 2px; }
+.sb-mg-skill { border:1px solid color-mix(in srgb,var(--acc) 45%,transparent); border-radius:6px; margin:10px 0; background:#fff3; }
+.sb-mg-skill > header { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:6px 10px; border-bottom:1px solid #3a251222; background:color-mix(in srgb,var(--acc) 10%,transparent); border-radius:6px 6px 0 0; }
+.sb-mg-school { font-weight:bold; font-size:15px; color:var(--acc); }
+.sb-mg-chip { font-size:12px; border:1px solid #3a251244; border-radius:10px; padding:1px 8px; background:#fff8; white-space:nowrap; }
+.sb-mg-chip b { font-size:13px; }
+.sb-mg-note { font-size:11px; opacity:.6; font-style:italic; }
+.sb-mg-roll { margin-left:auto; font:bold 12px Georgia,serif; border-radius:4px; padding:3px 10px; border:1px solid var(--acc); background:var(--acc); color:#f3e6c8 !important; cursor:pointer; white-space:nowrap; }
+.sb-mg-tools { display:flex; gap:8px; opacity:.6; font-size:12px; } .sb-mg-tools a:hover { opacity:1; color:var(--acc); }
+.sb-mg-fpick { padding:5px 10px; font-size:12px; border-bottom:1px dashed #3a251233; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.sb-mg-el { border:1px solid #3a251255; border-radius:10px; padding:1px 8px; background:#fff6; }
+.sb-mg-el[data-action] { cursor:pointer; }
+.sb-mg-el.on { background:#3f6b2f; color:#fff; border-color:#3f6b2f; }
+.sb-mg-cards { display:grid; gap:4px; padding:6px 8px; }
+.sb-mg-card, .sb-mg-hdr { display:grid; grid-template-columns:34px 1fr 46px 70px 84px 80px; gap:8px; align-items:center; }
+.sb-mg-hdr { font-size:10px; text-transform:uppercase; opacity:.6; padding:2px 16px 0; }
+.sb-mg-card { background:#fffa; border:1px solid #3a251226; border-radius:5px; padding:4px 8px; font-size:12px; }
+.sb-mg-ic { width:30px; height:30px; border-radius:4px; border:none; background:#c9b48a; object-fit:cover; }
+.sb-mg-nm b { font-size:13px; } .sb-mg-nm div { font-size:10.5px; opacity:.65; }
+.sb-mg-lv { text-align:center; opacity:.8; }
+.sb-mg-cost { text-align:center; font-weight:bold; color:#2a5a9a; }
+.sb-mg-pw { font-size:11px; text-align:center; color:#8a2a2a; font-weight:bold; }
+.sb-mg-gm { font:bold 10.5px Georgia,serif; padding:2px 0; border-radius:9px; background:#3a2512; color:#f3e6c8 !important; text-align:center; cursor:pointer; }
+.sb-mg-gm.pub { background:none; color:#3a2512 !important; border:1px solid #3a251288; }
+.sb-mg-cast { font:bold 12px Georgia,serif; border-radius:4px; padding:3px 0; border:1px solid var(--acc); background:#fff8; color:var(--sb-ink); text-align:center; cursor:pointer; }
+.sb-mg-cast:hover { background:var(--acc); color:#f3e6c8; }
+.sb-mg-more { font-size:11px; padding:0 4px 6px; } .sb-mg-more > summary { cursor:pointer; opacity:.7; padding:0 8px; }
+.sb-mg-none { padding:2px 8px; font-size:12px; }
+.sb-mg-add { display:flex; gap:8px; align-items:center; flex-wrap:wrap; border:1.5px dashed var(--acc); border-radius:6px; padding:8px 10px; font-size:12px; background:#fff4; margin-top:8px; }
+.sb-mg-go { font:bold 12px Georgia,serif; background:#3f6b2f; color:#fff !important; border-radius:4px; padding:3px 12px; cursor:pointer; }
+.sb-moved { font-size:11px; color:var(--acc); font-style:italic; }
+.sb-mg-own { font-size:10px; color:#3f6b2f; border:1px solid #3f6b2f88; border-radius:8px; padding:0 5px; }
+.sb-mg-above { font-size:10px; color:#8a2a2a; font-style:italic; }
+.sb-mg-itool { font-size:10px; opacity:.55; cursor:pointer; } .sb-mg-itool:hover { opacity:1; }
+.sb-mg-unassigned { border-style:dashed; }
+.sb-mg-unassigned .sb-mg-addschool { margin-left:auto; }

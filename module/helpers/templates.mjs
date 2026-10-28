@@ -13,6 +13,8 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/sb/sb-btns.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-play.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-spells.hbs",
+    "systems/sw25-ce/templates/actor/sb/sb-magic.hbs",
+    "systems/sw25-ce/templates/actor/sb/sb-magic-card.hbs",
     "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-skills.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-checks.hbs",

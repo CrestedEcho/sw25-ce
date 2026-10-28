@@ -8,6 +8,7 @@ import { postAttackCard } from "../rules/attack-flow.mjs";
 import { parseMagicSkill, spellsForSkill } from "../rules/sb-cast.mjs";
 import { castSpellFlow } from "../rules/spell-flow.mjs";
 import { usesSbPool } from "../rules/sb-spell.mjs";
+import { buildMagicContext, magicBlocks, migrateMagic, newMagicEntry, schoolLabel } from "../rules/sb-magic.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { fixedToDice, parseSbDamage, applyVital, lootFor, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
@@ -41,7 +42,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       tokenDispositionKey: String(DISPOSITION_LABELS[this.actor.prototypeToken?.disposition] ?? "").toLowerCase(),
       tokenDisposition: DISPOSITION_LABELS[this.actor.prototypeToken?.disposition] ?? "—",
       fellowOn: !!this.actor.system.fellow?.enabled, attitudes: ATTITUDES, editable: this.isEditable, owner: this.actor.isOwner,
-      items: this.actor.items.contents.map((i) => ({ _id: i.id, name: i.name, img: i.img, type: i.type })),
+      // Spell items live in the Magic section (not Inventory).
+      items: this.actor.items.contents.filter((i) => i.type !== "spell").map((i) => ({ _id: i.id, name: i.name, img: i.img, type: i.type })),
       notesHTML: await enrich(raw.notes), secretsHTML: game.user.isGM ? await enrich(raw.secrets) : "",
       descriptionHTML: await enrich(raw.description || view.description),
     });
@@ -57,28 +59,27 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
       else if (it.type === "item") it.showable = true;
     }
     base.ce7belt = beltContext(this.actor);
-    // Spellcasting: each castable skill lists its spells with a Cast button (and GM-only toggle when there is no Power).
+    // Magic section (approved mockup): one block per magic skill, aligned spell cards, shared MP bar (paying part).
     const gmMap = this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {};
-    if (base.casters.length) {
-      const docs = await this._sbSpellDocs();
-      for (const c of base.casters) {
-        c.spells = spellsForSkill({ schools: c.schools, level: c.level }, docs).map((m) => {
-          const d = docs.find((x) => x.name === m.name) ?? {};
-          return { name: m.name, level: m.level, cost: m.cost.raw || (m.cost.base != null ? `MP${m.cost.base}` : "—"),
-            target: [d.system?.target, d.flags?.["sw25-ce"]?.data?.range].filter(Boolean).join(" · ") || "—",
-            power: m.power ? (typeof m.power === "object" ? (m.power.rate ?? m.power.value ?? "") : m.power) : null,
-            key: slugKey(m.name), gmOnly: !m.power && spellGmOnly(gmMap, m.name) };
-        });
-      }
-    }
+    const hasMagic = magicBlocks(raw).length > 0;
+    base.magic = buildMagicContext({ rawSb: raw, viewParts: view.parts ?? [], docs: hasMagic ? await this._sbPackSpells() : [], owned: this._sbOwnedSpells(), gmMap,
+      partIndex: this.actor.getFlag("sw25-ce", "sbMagicPart") ?? null });
+    this._sbMigrateMagic(raw);
     return base;
   }
 
   /** Spell documents for casting: sw25-spells compendium (cached) + embedded spell items. */
   async _sbSpellDocs() {
+    return [...(await this._sbPackSpells()), ...this._sbOwnedSpells()];
+  }
+  async _sbPackSpells() {
     const pack = game.packs.get("sw25-ce.sw25-spells");
     SW25StatBlockSheet._spellCache ??= pack ? (await pack.getDocuments()).map((d) => Object.assign(d.toObject(), { uuid: d.uuid })) : [];
-    return [...SW25StatBlockSheet._spellCache, ...this.actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid }))];
+    return SW25StatBlockSheet._spellCache;
+  }
+  /** Spell items on this stat block (dropped spells): shown in the Magic section under their school. */
+  _sbOwnedSpells() {
+    return this.actor.items.filter((i) => i.type === "spell").map((d) => Object.assign(d.toObject(), { uuid: d.uuid }));
   }
 
   /** Belt drops reuse the PC sheet's belt logic; everything else is the normal item drop (Inventory). */
@@ -87,6 +88,15 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (target && this.isEditable) {
       const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
       if (data?.type === "Item") return dropOnBelt(this.actor, target, data);
+    }
+    // Spell drops go to the Magic section (owned spell item); skip a second copy of the same spell.
+    if (this.isEditable) {
+      const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+      if (data?.type === "Item" && data.uuid && !data.uuid.startsWith(this.actor.uuid)) {
+        const it = await fromUuid(data.uuid).catch(() => null);
+        if (it?.type === "spell" && this.actor.items.some((i) => i.type === "spell" && i.name === it.name))
+          return ui.notifications.info(game.i18n.format("SW25.SB.SpellOwned", { name: it.name }));
+      }
     }
     return super._onDrop(event);
   }
@@ -142,6 +152,17 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     root.querySelectorAll(".sb-vamt").forEach((el) => { el.addEventListener("change", (ev) => ev.stopPropagation()); el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); } }); });
     bindBeltListeners(this, root);
     root.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", (ev) => this._onAction(ev, el)));
+    // Magic section inputs have no form name (they write system.sb.magic through the handlers below).
+    const stop = (el, fn) => el.addEventListener("change", (ev) => { ev.stopPropagation(); fn(ev); });
+    root.querySelectorAll(".sb-magic input, .sb-magic select").forEach((el) => el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); ev.stopPropagation(); } }));
+    root.querySelectorAll(".sb-mg-part").forEach((el) => stop(el, () => this.actor.setFlag("sw25-ce", "sbMagicPart", Number(el.value))));
+    root.querySelectorAll(".sb-mg-set").forEach((el) => stop(el, () => this._sbMagicSet(Number(el.dataset.pos), el.dataset.field, el.value)));
+    root.querySelectorAll(".sb-mg-new-power").forEach((el) => {
+      const hint = el.closest(".sb-mg-add")?.querySelector(".sb-mg-fixed");
+      const upd = () => { const v = Number(el.value); if (hint) hint.textContent = Number.isFinite(v) ? `(fixed ${v + 7})` : ""; };
+      upd(); el.addEventListener("input", upd); el.addEventListener("change", (ev) => ev.stopPropagation());
+    });
+    root.querySelectorAll(".sb-mg-new-school, .sb-mg-new-level").forEach((el) => el.addEventListener("change", (ev) => ev.stopPropagation()));
   }
 
   async _onAction(ev, el) {
@@ -170,6 +191,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (a === "sb-dmg") return this._sbDamage(el.dataset.label, el.dataset.text, el.dataset.mode);
     if (a === "sb-vital") return this._sbVital(Number(el.dataset.part), el.dataset.kind, el.dataset.mode, el.closest(".sb-vbox")?.querySelector(".sb-vamt"));
     if (a === "sb-loot") return this._sbLoot();
+    if (a.startsWith("sb-mg-")) return this._sbMagicAction(a, el, raw);
     if (a === "sb-gmonly") { const k = el.dataset.key; const cur = spellGmOnly(this.actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {}, k); return this.actor.setFlag("sw25-ce", "sbSpellGmOnly", { [k]: !cur }); }
     if (a === "skill-desc") {
       const i = Number(el.dataset.index); const rows = arr("uniqueSkills");
@@ -276,3 +298,72 @@ Hooks.on("renderChatMessageHTML", (_msg, el) => {
   }));
 });
 export { ARRAY_FIELDS };
+
+/** One-time, non-destructive move of magic Unique skills into system.sb.magic (skills are only marked magicMoved). */
+SW25StatBlockSheet.prototype._sbMigrateMagic = function (raw) {
+  if (this._sbMagicMigrating || !this.isEditable || this.actor.pack) return;
+  const gm = game.users?.activeGM; if (gm ? gm !== game.user : !this.actor.isOwner) return;
+  const m = migrateMagic(raw); if (!m.changed) return;
+  this._sbMagicMigrating = true;
+  this.actor.update({ "system.sb.magic": m.magic, "system.sb.uniqueSkills": m.uniqueSkills })
+    .catch((err) => console.error("sw25 | magic migration", err)).finally(() => { this._sbMagicMigrating = false; });
+};
+
+/** Saved entry index for a block position (legacy blocks have none until migrated). */
+SW25StatBlockSheet.prototype._sbMagicEntry = function (pos) {
+  const raw = this.actor._source.system?.sb ?? {}; const b = magicBlocks(raw)[pos];
+  return b && !b.legacy ? b.i : null;
+};
+SW25StatBlockSheet.prototype._sbMagicRows = function () {
+  const raw = this.actor._source.system?.sb ?? {};
+  return structuredClone(Array.isArray(raw.magic) ? raw.magic : Object.values(raw.magic ?? {}));
+};
+
+/** Edit-mode Level / Magic Power (value; stored as fixed = value + 7). */
+SW25StatBlockSheet.prototype._sbMagicSet = async function (pos, field, value) {
+  const i = this._sbMagicEntry(pos); const n = Number(value); if (i == null || value === "" || !Number.isFinite(n)) return this.render(false);
+  const rows = this._sbMagicRows();
+  if (field === "level") rows[i].level = Math.max(1, Math.min(20, Math.trunc(n)));
+  else if (field === "power") rows[i].power = { ...(rows[i].power ?? {}), fixed: n + 7 };
+  else return;
+  return this.actor.update({ "system.sb.magic": rows });
+};
+
+SW25StatBlockSheet.prototype._sbMagicAction = async function (a, el, raw) {
+  const pos = Number(el.dataset.pos);
+  if (a === "sb-mg-cast") {
+    const b = magicBlocks(raw)[pos]; if (!b) return;
+    if (!usesSbPool(this.actor)) return ui.notifications.warn("This stat block has no parts to pay MP from.");
+    const docs = await this._sbSpellDocs(); const uuid = el.dataset.uuid;
+    const doc = docs.find((x) => uuid && x.uuid === uuid) ?? docs.find((x) => x.name === el.dataset.spell);
+    if (!doc) return ui.notifications.warn(`Spell "${el.dataset.spell}" not found.`);
+    const partIndex = this.actor.getFlag("sw25-ce", "sbMagicPart") ?? null;
+    return castSpellFlow(this.actor, doc, { sb: { skill: b.skill, spellDoc: doc, partIndex } });
+  }
+  if (a === "sb-mg-addschool") {
+    const school = el.dataset.school; const label = schoolLabel(school);
+    const lv = Number(el.dataset.level) || 1; const mp = Number(this.actor.system.sbView?.level) || lv;
+    const content = `<p>${foundry.utils.escapeHTML(game.i18n.format("SW25.SB.AddSchoolTitle", { school: label }))}</p>
+      <label>${game.i18n.localize("SW25.SB.Level")} <input type="number" name="lv" min="1" max="20" value="${lv}"></label>
+      <label>${game.i18n.localize("SW25.SB.MagicPower")} <input type="number" name="mp" value="${mp}"></label>`;
+    const r = await foundry.applications.api.DialogV2.prompt({ window: { title: game.i18n.format("SW25.SB.AddSchoolTitle", { school: label }) }, content,
+      ok: { label: game.i18n.localize("SW25.SB.Add"), callback: (_e, b) => ({ level: b.form.elements.lv.value, power: b.form.elements.mp.value }) } }).catch(() => null);
+    if (!r) return;
+    const e = newMagicEntry({ school, ...r }); if (!e) return;
+    return this.actor.update({ "system.sb.magic": [...this._sbMagicRows(), e] });
+  }
+  if (a === "sb-mg-add") {
+    const box = el.closest(".sb-mg-add");
+    const e = newMagicEntry({ school: box?.querySelector(".sb-mg-new-school")?.value, level: box?.querySelector(".sb-mg-new-level")?.value, power: box?.querySelector(".sb-mg-new-power")?.value });
+    if (!e) return ui.notifications.warn(game.i18n.localize("SW25.SB.PickSchool"));
+    return this.actor.update({ "system.sb.magic": [...this._sbMagicRows(), e] });
+  }
+  const i = this._sbMagicEntry(pos); if (i == null) return;
+  const rows = this._sbMagicRows();
+  if (a === "sb-mg-del") { rows.splice(i, 1); return this.actor.update({ "system.sb.magic": rows }); }
+  if (a === "sb-mg-fairy") {
+    const k = el.dataset.el; const set = new Set(rows[i].fairies ?? []);
+    if (set.has(k)) set.delete(k); else set.add(k);
+    rows[i].fairies = [...set]; return this.actor.update({ "system.sb.magic": rows });
+  }
+};

@@ -1,0 +1,9 @@
+<div class="sb-mg-card{{#if s.owned}} owned{{/if}}"{{#if s.itemId}} data-item-id="{{s.itemId}}"{{/if}}>
+  <img class="sb-mg-ic" src="{{#if s.img}}{{s.img}}{{else}}{{s.fallback}}{{/if}}" alt="">
+  <span class="sb-mg-nm"><b>{{s.name}}</b>{{#if s.owned}} <small class="sb-mg-own" title="{{localize 'SW25.SB.OwnedHint'}}">{{localize "SW25.SB.Owned"}}</small>{{#if @root.editable}} <a class="sb-mg-itool" data-action="item-edit" title="{{localize 'SW25.SB.Edit'}}"><i class="fas fa-pen"></i></a>{{#if @root.editMode}} <a class="sb-mg-itool" data-action="item-del" title="{{localize 'SW25.SB.RemoveSpell'}}"><i class="fas fa-trash"></i></a>{{/if}}{{/if}}{{/if}}{{#if s.aboveLevel}} <small class="sb-mg-above" title="{{localize 'SW25.SB.AboveHint'}}">{{localize "SW25.SB.Above"}}</small>{{/if}}<div>{{s.sub}}</div></span>
+  <span class="sb-mg-lv">Lv{{s.level}}</span>
+  <span class="sb-mg-cost">{{s.cost}}</span>
+  {{#if s.hasPower}}<span class="sb-mg-pw">{{localize "SW25.SB.Power"}} {{s.power}}</span>
+  {{else}}{{#if @root.editable}}<a class="sb-mg-gm{{#unless s.gmOnly}} pub{{/unless}}" data-action="sb-gmonly" data-key="{{s.key}}" title="{{localize 'SW25.SB.GmOnlyHint'}}"><i class="fas {{#if s.gmOnly}}fa-eye-slash{{else}}fa-eye{{/if}}"></i> {{#if s.gmOnly}}{{localize "SW25.SB.GmOnly"}}{{else}}{{localize "SW25.SB.Public"}}{{/if}}</a>{{else}}<span></span>{{/if}}{{/if}}
+  {{#if (and @root.editable (not (eq s.castable false)))}}<a class="sb-mg-cast" data-action="sb-mg-cast" data-pos="{{pos}}" data-spell="{{s.name}}" data-uuid="{{s.uuid}}">✦ {{localize "SW25.SB.Cast"}}</a>{{else}}<span></span>{{/if}}
+</div>

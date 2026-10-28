@@ -9,7 +9,7 @@ export const STAT_DEFAULTS = () => ({
   level: null, reputation: 0, weakness: 0, weakPoint: "", weakPointData: null, weaknessRevealed: false, reputationReached: false, initiative: 0,
   movement: { ground: null, groundMode: "", other: null, otherMode: "" }, movementSpeed: null,
   fortitude: { value: 0, fixed: 7 }, willpower: { value: 0, fixed: 7 }, useFixed: true,
-  parts: [], partCount: 1, coreParts: "", uniqueSkills: [], loot: [], swordShards: 0, useDeathCheck: false,
+  parts: [], partCount: 1, coreParts: "", uniqueSkills: [], magic: [], loot: [], swordShards: 0, useDeathCheck: false,
   description: "", source: "",
   // monster-only (NPCs keep intelligence/perception/soulscars optional)
   monsterType: "", intelligence: "", perception: "", disposition: "", soulscars: 0, languages: [], habitat: [],

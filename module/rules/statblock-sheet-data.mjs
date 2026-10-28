@@ -60,8 +60,11 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
     mp: num(`parts.${i}.mp`, p.mp, rawParts[i]?.mp), mpValue: p.mpValue,
     dead: p.hp > 0 && Number(p.hpValue) <= 0,
   }));
+  // Magic Unique skills live in the Magic section (system.sb.magic); moved ones stay here for reference (Edit mode).
+  const movedFrom = new Set((Array.isArray(raw.magic) ? raw.magic : Object.values(raw.magic ?? {})).map((e) => e?.from).filter(Boolean));
   const skills = (view.uniqueSkills ?? []).map((u, i) => ({
     i, name: u.name, part: u.part, description: u.description ?? "", castable: !!parseMagicSkill(u),
+    inMagic: !!parseMagicSkill(u) && (!u.magicMoved || movedFrom.has(u.name)),
     tags: (u.tags ?? []).map((t) => ({ key: t, ...(SKILL_TAGS[t] ?? { glyph: "·", label: t }) })),
     check: u.check ? `${u.check.value}(${u.check.fixed ?? u.check.value + 7})` : "",
     resist: u.resist ? `${u.resist}${u.resistResult ? ` / ${u.resistResult}` : ""}` : "",

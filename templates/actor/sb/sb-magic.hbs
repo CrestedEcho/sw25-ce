@@ -1,0 +1,52 @@
+{{#if (or magic.has editable)}}
+<section class="sb-magic">
+<h3>{{localize "SW25.SB.Magic"}}{{#if magic.has}} <small>({{localize "SW25.SB.MagicHint"}})</small>{{/if}}</h3>
+{{#if magic.has}}
+<div class="sb-mg-mp"><b>MP</b><div class="sb-mg-bar"><i style="width:{{magic.mp.pct}}%"></i></div><span><b>{{magic.mp.cur}}</b> / {{magic.mp.max}}</span>
+  <span class="hint">{{localize "SW25.SB.PaidBy"}}</span>{{#if magic.multiPart}}<select class="sb-mg-part" title="{{localize 'SW25.SB.PaidByHint'}}">{{#each magic.partChoices}}<option value="{{i}}"{{#if selected}} selected{{/if}}>{{name}}{{#if isCore}} ★{{/if}}</option>{{/each}}</select>{{else}}<span>{{magic.mp.name}}</span>{{/if}}</div>
+{{/if}}
+{{#each magic.blocks as |b pos|}}
+<div class="sb-mg-skill sb-mg-s-{{b.school}}">
+  <header>
+    <span class="sb-mg-school">{{b.label}}</span>
+    {{#if (and @root.editMode (not b.legacy))}}
+    <label class="sb-mg-chip">{{localize "SW25.SB.Level"}} <input class="sb-mg-set" type="number" min="1" max="20" data-pos="{{pos}}" data-field="level" value="{{b.level}}"></label>
+    <label class="sb-mg-chip">{{localize "SW25.SB.MagicPower"}} <input class="sb-mg-set" type="number" data-pos="{{pos}}" data-field="power" value="{{b.value}}"> <small>({{b.fixed}})</small></label>
+    {{else}}
+    <span class="sb-mg-chip">{{localize "SW25.SB.Level"}} <b>{{b.level}}</b></span>
+    <span class="sb-mg-chip">{{localize "SW25.SB.MagicPower"}} {{#if b.castFormula}}<b>{{b.value}}</b> ({{b.fixed}}){{else}}—{{/if}}</span>
+    {{/if}}
+    {{#if b.note}}<small class="sb-mg-note" title="{{localize 'SW25.SB.MagicFrom'}}">{{b.note}}</small>{{/if}}
+    {{#if b.castFormula}}<a class="sb-mg-roll" data-action="sb-check" data-label="{{b.castLabel}}" data-fixed="{{b.fixed}}" data-mode="dice" title="{{localize 'SW25.SB.DiceHint'}}">🎲 {{localize "SW25.SB.RollCasting"}} {{b.castFormula}}</a>{{/if}}
+    {{#if @root.editable}}{{#unless b.legacy}}<span class="sb-mg-tools"><a data-action="sb-mode" title="{{localize 'SW25.SB.Edit'}}"><i class="fas fa-pen"></i></a><a data-action="sb-mg-del" data-pos="{{pos}}" title="{{localize 'SW25.SB.MagicDelete'}}"><i class="fas fa-trash"></i></a></span>{{/unless}}{{/if}}
+  </header>
+  {{#if b.fairyTypes}}<div class="sb-mg-fpick"><b>{{localize "SW25.SB.Contracted"}}</b>{{#each b.fairyTypes}}<a class="sb-mg-el{{#if on}} on{{/if}}"{{#if @root.editable}} data-action="sb-mg-fairy" data-pos="{{pos}}" data-el="{{key}}"{{/if}}>{{label}}</a>{{/each}}<span class="hint">· {{localize "SW25.SB.FairyHint"}}</span></div>{{/if}}
+  {{#if b.count}}<div class="sb-mg-hdr"><span></span><span>{{localize "SW25.SB.Spell"}}</span><span>Lv</span><span>MP</span><span>{{localize "SW25.SB.Effect"}}</span><span></span></div>{{/if}}
+  <div class="sb-mg-cards">
+  {{#each b.shown}}{{> "systems/sw25-ce/templates/actor/sb/sb-magic-card.hbs" s=this pos=pos}}{{else}}<div class="muted sb-mg-none">{{localize "SW25.SB.NoSpells"}}</div>{{/each}}
+  </div>
+  {{#if b.more.length}}<details class="sb-mg-more"><summary>+ {{b.more.length}} {{localize "SW25.SB.MoreSpells"}}</summary><div class="sb-mg-cards">
+  {{#each b.more}}{{> "systems/sw25-ce/templates/actor/sb/sb-magic-card.hbs" s=this pos=pos}}{{/each}}
+  </div></details>{{/if}}
+</div>
+{{/each}}
+{{#each magic.unassigned as |g|}}
+<div class="sb-mg-skill sb-mg-unassigned">
+  <header>
+    <span class="sb-mg-school">{{localize "SW25.SB.Unassigned"}}</span>{{#if g.label}}<span class="sb-mg-chip">{{g.label}}</span>{{else}}<span class="hint">{{localize "SW25.SB.NoSchool"}}</span>{{/if}}
+    {{#if (and @root.editable g.canAdd)}}<a class="sb-mg-go sb-mg-addschool" data-action="sb-mg-addschool" data-school="{{g.school}}" data-level="{{g.level}}">＋ {{localize "SW25.SB.AddMagic"}}: {{g.label}}</a>{{/if}}
+    <span class="hint">{{localize "SW25.SB.UnassignedHint"}}</span>
+  </header>
+  <div class="sb-mg-cards">{{#each g.cards}}{{> "systems/sw25-ce/templates/actor/sb/sb-magic-card.hbs" s=this pos=-1}}{{/each}}</div>
+</div>
+{{/each}}
+{{#if editable}}
+<div class="sb-mg-add"><b>＋ {{localize "SW25.SB.AddMagic"}}</b>
+  <select class="sb-mg-new-school"><option value="">{{localize "SW25.SB.School"}}…</option>{{#each magic.schools}}<option value="{{key}}">{{label}}</option>{{/each}}</select>
+  <label>{{localize "SW25.SB.Level"}} <input class="sb-mg-new-level" type="number" min="1" max="20" value="1"></label>
+  <label>{{localize "SW25.SB.MagicPower"}} <input class="sb-mg-new-power" type="number" value="4"></label> <span class="hint sb-mg-fixed">(fixed 11)</span>
+  <a class="sb-mg-go" data-action="sb-mg-add">{{localize "SW25.SB.Add"}}</a>
+</div>
+{{/if}}
+</section>
+{{/if}}

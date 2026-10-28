@@ -124,7 +124,7 @@ export async function castSpellFlow(actor, item, opts = {}) {
   if (isSb && usesSbPool(actor)) {
     const raw = actor._source.system?.sb ?? {}; const view = actor.system.sbView ?? {};
     const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
-    sb = { pool: sbPoolInfo(rawParts, view.parts ?? []), meta: spellMeta(opts.sb?.spellDoc ?? item), mpow: opts.sb?.skill ? sbMagicPower(opts.sb.skill) : null };
+    sb = { pool: sbPoolInfo(rawParts, view.parts ?? [], opts.sb?.partIndex ?? null), meta: spellMeta(opts.sb?.spellDoc ?? item), mpow: opts.sb?.skill ? sbMagicPower(opts.sb.skill) : null };
     if (sb.mpow) item = sbSpellItem(item, sb.mpow);
   } else if (opts.sb?.skill) {
     const mpow = sbMagicPower(opts.sb.skill); if (mpow) item = sbSpellItem(item, mpow);

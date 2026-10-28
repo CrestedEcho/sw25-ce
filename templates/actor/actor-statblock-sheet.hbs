@@ -15,7 +15,7 @@
 </header>
 <nav class="sheet-tabs sb-tabs" data-group="primary">{{#each tabs}}<a class="item" data-tab="{{key}}">{{label}}</a>{{/each}}</nav>
 <section class="sheet-body sb-body">
-  <div class="tab" data-group="primary" data-tab="combat">{{#if showVitalsInCombat}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=vitals multi=multiPart}}{{/if}}{{#if playMode}}{{> "systems/sw25-ce/templates/actor/sb/sb-play.hbs"}}{{/if}}{{> "systems/sw25-ce/templates/actor/sb/sb-spells.hbs"}}{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}{{#unless isNPC}}<div class="sb-inv-combat">{{> "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs"}}</div>{{/unless}}</div>
+  <div class="tab" data-group="primary" data-tab="combat">{{#if showVitalsInCombat}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=vitals multi=multiPart}}{{/if}}{{#if playMode}}{{> "systems/sw25-ce/templates/actor/sb/sb-play.hbs"}}{{/if}}{{> "systems/sw25-ce/templates/actor/sb/sb-magic.hbs"}}{{> "systems/sw25-ce/templates/actor/sb/sb-combat.hbs"}}{{#unless isNPC}}<div class="sb-inv-combat">{{> "systems/sw25-ce/templates/actor/sb/sb-inventory.hbs"}}</div>{{/unless}}</div>
   {{#if isNPC}}
   <div class="tab" data-group="primary" data-tab="person">
     {{#if summary}}{{> "systems/sw25-ce/templates/actor/sb/sb-vitals.hbs" rows=summaryRows}}{{/if}}
