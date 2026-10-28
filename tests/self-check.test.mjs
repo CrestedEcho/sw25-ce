@@ -51,7 +51,7 @@ test("every check path skips the target picker and target line for self checks",
   assert.match(cb, /if \(isSelfCheckItem\(item, which\)\) return void \(await chatRoll\(\)\);\n    const targetTokens/);
   assert.match(cb, /if \(selfCheck\) targetTokens = undefined;/);
   assert.match(cb, /selfCheck: true/);
-  assert.match(src("templates/roll/roll-check.hbs"), /\{\{#unless selfCheck\}\}<div class="sw25-live-targets"/);
+  assert.match(src("templates/roll/roll-check.hbs"), /\{\{#unless selfCheck\}\}(\{\{#if [^}]*\}\})?<div class="sw25-live-targets"/);
   assert.match(src("module/helpers/target-chips.mjs"), /isSelfCheck\(msg\?\.flavor\)\) \{ stripTargetUI\(root\); return; \}/);
 });
 

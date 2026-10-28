@@ -3658,6 +3658,13 @@ button.sw-attack-apply{display:block;width:100%;margin-top:6px;font-weight:bold}
 /* ce.16: live "Applies to" line on cards (replaces the old Choose-target button) */
 .sw25-live-targets{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 4px;font-size:12px}
 .sw25-live-targets .target-empty{opacity:.75;font-style:italic}
+/* Target chips on the live line: small round token art + name (unstyled, the <img> filled the card
+   at full token size and looked like the speaker's portrait). */
+.sw25-live-targets .chat-target-label{flex:0 0 auto;font-weight:bold}
+.sw25-live-targets .targetname{display:flex;flex-wrap:wrap;gap:3px 5px;min-width:0}
+.sw25-live-targets .target-chip{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:1px 7px 1px 2px;border:1px solid #9a8a70;border-radius:11px;background:rgba(255,255,255,.45)}
+.sw25-live-targets .target-chip-name{font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw25-live-targets .target-portrait{flex:0 0 18px;width:18px;height:18px;max-width:18px;max-height:18px;border-radius:50%;object-fit:cover;border:0;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
 button.chat-target[data-buttontype="target-select"]{display:none}
 
 /* ===== Spell list rows, cast window, spell cards ===== */

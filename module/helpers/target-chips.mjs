@@ -45,6 +45,20 @@ export function resolveTargetTokensOrWarn(g = globalThis.game, c = globalThis.ca
   return tokens;
 }
 
+/** True when a check/power "apply" setting does something to targets ("on" or "custom"; "-" or empty = nothing). */
+export function appliesToTargets(apply) { return apply === "on" || apply === "custom"; }
+/**
+ * Whether a card should show the live "Applies to" line, from its flags.sw25.
+ * Plain checks (class x stat, Adventurer Level x stat, other checks with no apply/resist) only report
+ * the roller's own result: no target line. Self checks never. Cards without check flags keep the line.
+ */
+export function cardUsesTargets(f) {
+  if (!f) return true;
+  if (f.selfCheck) return false;
+  if (!("checktype" in f)) return true; // not a check card (power, attack, legacy): unchanged
+  return appliesToTargets(f.apply) || !!f.resist;
+}
+
 export const LIVE_LABEL = "Applies to:";
 export const LIVE_EMPTY = "your selected tokens (select or target tokens on the map, then click Apply)";
 /** Inner HTML of the live "Applies to" line: chips for what a click would hit right now. */
@@ -68,6 +82,9 @@ export function registerLiveTargets() {
     const root = el?.[0] ?? el;
     // Willpower / Fortitude / Evasion: the roller's own check, never any target line.
     if (msg?.flags?.sw25?.selfCheck || isSelfCheck(msg?.flavor)) { stripTargetUI(root); return; }
+    // Plain checks with nothing to apply (e.g. Artificer + Dexterity): no target line, so the
+    // current target's chip can never be mistaken for the roller.
+    if (!cardUsesTargets(msg?.flags?.sw25)) { root?.querySelectorAll?.(".sw25-live-targets").forEach((el) => el.remove()); return; }
     // Legacy cards: hide the old "choose target" button, show the live line instead.
     root?.querySelectorAll?.('button.chat-target[data-buttontype="target-select"]').forEach((b) => {
       const d = document.createElement("div"); d.className = "sw25-live-targets"; b.replaceWith(d);
