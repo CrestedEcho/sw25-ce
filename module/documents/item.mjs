@@ -5,6 +5,7 @@ import { castChatHTML } from "../rules/sb-cast.mjs";
 import { weaponCardHTML } from "../rules/weapon-card.mjs";
 import { buildPowerTable } from "../rules/power-table-row.mjs";
 import { isMonsterKnowledge, knowledgeUpdates } from "../rules/mknow.mjs";
+import { weaponRoute } from "../rules/weapon-route.mjs";
 
 /** Monster Knowledge -> flag targets whose Weakness the total meets (GM updates directly; players ask the GM via socket). */
 export function revealWeakness(targets, total) {
@@ -2597,6 +2598,11 @@ export class SW25Item extends Item {
     // Compendium spells carry power as {rate, table}: cast via the shared spell card (MP deduction, damage, apply/half).
     // Spells on an actor: the cast window (metamagic, MP / Mako Stone payment) and the spell cast card.
     if (this.type === "spell" && this.actor) return this.castSpell();
+    // sw25-ce: a character's weapon (item image / clickitem Check or Power) -> new attack / damage card.
+    if (weaponRoute(this.actor, this, this.system.clickitem)) {
+      const { attackWithWeapon } = await import("../rules/attack-flow.mjs");
+      return attackWithWeapon(this.actor, this, weaponRoute(this.actor, this, this.system.clickitem));
+    }
     if (
       this.system.clickitem == "dice" ||
       this.system.clickitem == "dice1" ||

@@ -10,6 +10,7 @@ import { applyLegacyToStatBlock } from "../rules/apply-damage.mjs";
 import { sw25CritModFor } from "../documents/actor.mjs";
 import { isSelfCheck, isSelfCheckItem } from "../rules/self-check.mjs";
 import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn, refreshLiveTargets } from "./target-chips.mjs";
+import { weaponRoute } from "../rules/weapon-route.mjs";
 
 /**
  * Execute  chat button click event and return the result.
@@ -28,6 +29,9 @@ export async function chatButton(chatMessage, buttonType) {
     buttonType == "buttoncheck3" ||
     buttonType == "buttonpower"
   ) {
+    // sw25-ce: Check / Power on a character's weapon card -> new attack / damage card.
+    const wr = weaponRoute(actor, item, buttonType);
+    if (wr) { const { attackWithWeapon } = await import("../rules/attack-flow.mjs"); return attackWithWeapon(actor, item, wr); }
     // Willpower / Fortitude / Evasion: roll for the card's actor, no target picker.
     const which = { buttoncheck: "", buttoncheck1: "1", buttoncheck2: "2", buttoncheck3: "3", buttonpower: "power" }[buttonType];
     if (isSelfCheckItem(item, which)) return void (await chatRoll());

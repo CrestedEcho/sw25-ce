@@ -18,7 +18,8 @@ import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equip
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow, postSpellDescription } from "../rules/spell-flow.mjs";
-import { postAttackCard, rollWeaponDamage } from "../rules/attack-flow.mjs";
+import { postAttackCard, rollWeaponDamage, attackWithWeapon } from "../rules/attack-flow.mjs";
+import { weaponRoute } from "../rules/weapon-route.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf } from "../rules/spell-school.mjs";
 
@@ -1020,6 +1021,17 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
    * @param {Event} event   The originating click event
    * @private
    */
+  /** Weapons list buttons (not the tiles, not the item image): route a character's weapon to the attack flow. */
+  _sw25WeaponRoute(event, kind) {
+    const ds = event.currentTarget?.dataset ?? {};
+    if (event.shiftKey || ds.needweapon !== undefined || ds.rollType) return null;
+    const id = event.currentTarget?.closest?.("[data-item-id]")?.dataset?.itemId;
+    const item = id ? this.actor.items.get(id) : null;
+    const route = weaponRoute(this.actor, item, kind);
+    if (!route) return null;
+    event.preventDefault();
+    return attackWithWeapon(this.actor, item, route);
+  }
   async _onRoll(event) {
     if (event.currentTarget?.dataset?.needweapon !== undefined && !this.actor.system.itemname) {
       ui.notifications.warn(game.i18n.localize("SW25.V2.NeedWeapon"));
@@ -1027,6 +1039,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     }
     // sw25-ce: Accuracy tile posts the attack card (Accuracy / Evasion / Damage). Shift-click = old direct roll.
     if (event.currentTarget?.dataset?.needweapon !== undefined && !event.shiftKey) { event.preventDefault(); return postAttackCard(this.actor); }
+    // sw25-ce: Weapons list Check button -> attack card for that weapon. Shift-click = old direct roll.
+    { const r = this._sw25WeaponRoute(event, "check"); if (r) return r; }
     const element = event.currentTarget;
     const dataset = element.dataset;
     // Willpower / Fortitude / Evasion: roll for this sheet's actor, no target picker.
@@ -1252,6 +1266,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     }
     // sw25-ce: Damage tile posts the new damage card (breakdown + Apply). Shift-click = old card.
     if (event.currentTarget?.dataset?.needweapon !== undefined && !event.shiftKey) { event.preventDefault(); return rollWeaponDamage(this.actor); }
+    // sw25-ce: Weapons list Power button -> damage card for that weapon. Shift-click = old card.
+    { const r = this._sw25WeaponRoute(event, "power"); if (r) return r; }
     const element = event.currentTarget;
     const dataset = element.dataset;
     const targetTokens = new Set(resolveTargetTokens());

@@ -67,6 +67,17 @@ export async function rollWeaponDamage(actor) {
   await afterWeaponDamage(actor);
   return msg;
 }
+/**
+ * Weapons list / item card click on a character's weapon: make it the Accuracy-tile weapon (system.hitweapon),
+ * then post the same card as the tiles. route: "attack" (attack card) or "damage" (damage card).
+ */
+export async function attackWithWeapon(actor, item, route) {
+  if (!actor || !item) return;
+  if (!actor.isOwner) return ui.notifications.warn(`Only the owner of ${actor.name} can attack with ${item.name}.`);
+  if (actor.system.itemid !== item.id) await actor.update({ "system.hitweapon": item.name });
+  if (actor.system.itemid !== item.id) return ui.notifications.warn(`${item.name}: another weapon has the same name. Rename one of them to attack with it.`);
+  return route === "damage" ? rollWeaponDamage(actor) : postAttackCard(actor);
+}
 /** Post the attack card for a PC's Accuracy-tile weapon, or for a stat-block part (opts.partIndex). */
 export async function postAttackCard(actor, { partIndex = null } = {}) {
   let state, damage, itemId = null;
