@@ -2,6 +2,8 @@ import { registerLiveTargets } from "./helpers/target-chips.mjs";
 import { applyDamageToTokenIds } from "./rules/apply-damage.mjs";
 import { registerSpellCards, applyStatusToTokenIds } from "./rules/spell-flow.mjs";
 import { registerConditions } from "./rules/conditions.mjs";
+import { registerAttackFlow, attackUpdateFromSocket } from "./rules/attack-flow.mjs";
+import { applyFinalRemote } from "./rules/apply-damage.mjs";
 // Import document classes.
 import { SW25Actor } from "./documents/actor.mjs";
 import { knowledgeUpdates } from "./rules/mknow.mjs";
@@ -200,6 +202,7 @@ Hooks.once("init", function () {
   registerLiveTargets();
   registerSpellCards();
   registerConditions();
+  registerAttackFlow();
 
   // Preload Handlebars templates.
   return preloadHandlebarsTemplates();
@@ -1000,6 +1003,8 @@ Hooks.once("ready", async function () {
       .sort();
     if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
 
+    if (data.method == "attackUpdate") { attackUpdateFromSocket(data); return; }
+    if (data.method == "applyFinal") { applyFinalRemote(Array.isArray(data.list) ? data.list.slice(0, 50) : []); return; }
     if (data.method == "applyStatus") { applyStatusToTokenIds(data.targetTokens, data.status); return; }
     if (data.method == "applyDamage") { applyDamageToTokenIds(data.targetTokens, data.amount, ["physical", "magic", "fixed", "heal"].includes(data.kind) ? data.kind : "magic"); return; }
     if (data.method == "revealWeakness") {

@@ -1243,8 +1243,8 @@
         "HP": "Hit Points. At 0 or less you must make death checks.",
         "MP": "Magic Points, spent to cast spells and use some abilities.",
         "MaxMod": "Bonus added to the calculated maximum.",
-        "Accuracy": "Accuracy check: 2d6 + weapon class level + Dexterity bonus + weapon accuracy modifier. Click to roll.",
-        "Damage": "Damage: roll 2d6 on the weapon's Power table (Power = which row, Crit = roll this or higher to roll again) + Bonus (weapon class level + Strength bonus). Click to roll.",
+        "Accuracy": "Accuracy check: 2d6 + weapon class level + Dexterity bonus + weapon accuracy modifier. Click to post an attack card (Accuracy, the target's Evasion, Damage). Shift-click: old direct roll.",
+        "Damage": "Damage: roll 2d6 on the weapon's Power table (Power = which row, Crit = roll this or higher to roll again) + Bonus (weapon class level + Strength bonus). Click for a damage card with the breakdown and Apply. Shift-click: old card.",
         "Evasion": "Evasion check: 2d6 + Fighter / Grappler / Fencer level + Agility bonus + armor/shield evasion. Click to roll.",
         "Defense": "Defense: subtracted from physical damage you take.",
         "MagicDefense": "Reduction applied to magical damage.",
@@ -1445,6 +1445,10 @@
       "mrTip": "Restore: adds this amount to the target's MP (up to max). Not damage.",
       "ApplyDamage": "Apply damage {n}",
       "ApplyDamageTip": "Physical damage: the target's Defense is subtracted. Applies to the tokens you have selected (or targeted, if none are selected) when you click."
+    },
+    "AttackCard": {
+      "Card": "Attack card",
+      "CardTip": "Post an attack card: roll Accuracy, the target rolls Evasion, then roll Damage."
     }
   },
   "TYPES": {

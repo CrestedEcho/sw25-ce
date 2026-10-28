@@ -3715,3 +3715,35 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 .sw25-sc-desc { font-size:12px; margin-top:4px; }
 .sw25-sc-btn.status.buff { background:#2f6f8a; }
 .sw25-sc-unrev { font-size:9px; font-weight:normal; background:#f2d06b; color:#5a4200; border-radius:6px; padding:0 4px; margin-left:4px; }
+
+/* sw25-ce attack / damage chat cards */
+.sw25-ac { font-size:13px; }
+.sw25-ac-head { display:flex; gap:6px; align-items:center; margin-bottom:4px; }
+.sw25-ac-head img { width:36px; height:36px; border:none; border-radius:4px; object-fit:cover; }
+.sw25-ac-head small { display:block; color:#666; font-size:11px; }
+.sw25-ac-desc summary, .sw25-ac-bd summary, .sw25-dc-apply summary { cursor:pointer; font-size:12px; color:#555; }
+.sw25-ac-row { display:flex; gap:6px; align-items:flex-start; margin:4px 0; }
+.sw25-ac-btn { flex:0 0 96px; min-height:30px; font-weight:bold; line-height:1.1; }
+.sw25-ac-res { flex:1; min-width:0; }
+.sw25-ac-total { font-size:18px; font-weight:bold; margin-right:4px; }
+.sw25-ac-total.big { font-size:24px; }
+.sw25-ac-dice, .sw25-ac-hint, .sw25-ac-who { color:#666; font-size:12px; }
+.sw25-ac-who { font-weight:bold; color:#333; }
+.sw25-ac-nat { font-size:11px; border-radius:6px; padding:0 4px; margin-left:4px; color:#fff; }
+.sw25-ac-nat.crit { background:#2c7a3f; } .sw25-ac-nat.fail { background:#a22; }
+.sw25-ac-bd ul { list-style:none; margin:2px 0; padding:0 0 0 6px; font-size:12px; }
+.sw25-ac-bd li { display:flex; justify-content:space-between; border-bottom:1px dotted #ccc; }
+.sw25-ac-bd li.tot { font-weight:bold; border-bottom:none; }
+.sw25-ac-outcome { text-align:center; font-size:16px; font-weight:bold; padding:3px; border-radius:4px; margin:4px 0; color:#fff; }
+.sw25-ac-outcome.hit { background:#2c7a3f; } .sw25-ac-outcome.miss { background:#7a2c2c; }
+.sw25-ac-outcome small { display:block; font-size:11px; font-weight:normal; }
+.sw25-dc-opts { font-size:11px; margin:3px 0; } .sw25-dc-opts label { margin-right:6px; }
+.sw25-dc-target { display:flex; gap:6px; align-items:center; border-top:1px solid #ddd; padding:3px 0; }
+.sw25-dc-target img { width:28px; height:28px; border:none; border-radius:50%; object-fit:cover; }
+.sw25-dc-tinfo { flex:1; min-width:0; } .sw25-dc-tinfo small { display:block; color:#555; }
+.sw25-dc-mults { display:flex; flex-wrap:wrap; gap:2px; margin-top:2px; }
+.sw25-dc-m { flex:0 0 auto; width:auto; min-width:30px; line-height:20px; padding:0 4px; font-size:11px; }
+.sw25-dc-m.on { background:#2f6f8a; color:#fff; }
+.sw25-dc-final { font-size:18px; font-weight:bold; color:#a22; min-width:34px; text-align:right; }
+.sw25-dc-final.heal { color:#2c7a3f; }
+.sw25-dc-go { margin-top:4px; min-height:30px; font-weight:bold; }

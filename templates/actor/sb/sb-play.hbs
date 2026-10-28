@@ -3,6 +3,7 @@
 {{#each playParts}}
   <div class="sb-pcard">
     <h4>{{#if ../multiPart}}{{name}}{{#if isCore}} ★{{/if}} — {{/if}}{{localize "SW25.SB.Attack"}}</h4>
+    {{#if accuracy}}<div class="sb-prow"><a class="sb-btn sb-attackcard" data-action="sb-attack" data-index="{{i}}" data-tooltip="{{localize 'SW25.AttackCard.CardTip'}}"><i class="fas fa-crosshairs"></i> {{localize "SW25.AttackCard.Card"}}</a></div>{{/if}}
     <div class="sb-prow"><label>{{localize "SW25.SB.Accuracy"}}</label>{{> "systems/sw25-ce/templates/actor/sb/sb-btns.hbs" c=accuracy}}</div>
     <div class="sb-prow"><label>{{localize "SW25.SB.Damage"}} <small>({{localize "SW25.SB.FixedAvg"}})</small></label>{{#if damage.formula}}<span class="sb-rollpair"><a class="sb-btn sb-fx" data-action="sb-dmg" data-mode="fixed" data-label="{{damage.label}}" data-text="{{damage.text}}"><i class="fas fa-square"></i> {{damage.average}}</a><a class="sb-btn sb-dice" data-action="sb-dmg" data-mode="dice" data-label="{{damage.label}}" data-text="{{damage.text}}"><i class="fas fa-dice"></i> {{damage.formula}}</a></span>{{else}}<span class="muted">{{#if damage.text}}{{damage.text}}{{else}}—{{/if}}</span>{{/if}}</div>
   </div>

@@ -4,6 +4,7 @@
  * The legacy sw25 sheet stays selectable via Sheet Configuration.
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
+import { postAttackCard } from "../rules/attack-flow.mjs";
 import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
 import { rollSpellDamage } from "../rules/spell-power.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
@@ -164,6 +165,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     if (a === "sb-cast") return this._sbCast(Number(el.dataset.index), el.dataset.spell ?? null);
     if (a === "sb-mode") { this._sbEdit = !this._sbEdit; return this.render(false); }
     if (a === "sb-check") return this._sbCheck(el.dataset.label, Number(el.dataset.fixed), el.dataset.mode);
+    if (a === "sb-attack") return postAttackCard(this.actor, { partIndex: Number(el.dataset.index) });
     if (a === "sb-dmg") return this._sbDamage(el.dataset.label, el.dataset.text, el.dataset.mode);
     if (a === "sb-vital") return this._sbVital(Number(el.dataset.part), el.dataset.kind, el.dataset.mode, el.closest(".sb-vbox")?.querySelector(".sb-vamt"));
     if (a === "sb-loot") return this._sbLoot();

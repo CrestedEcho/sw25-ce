@@ -17,6 +17,7 @@ import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equip
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow, postSpellDescription } from "../rules/spell-flow.mjs";
+import { postAttackCard, rollWeaponDamage } from "../rules/attack-flow.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf } from "../rules/spell-school.mjs";
 
@@ -1023,6 +1024,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       ui.notifications.warn(game.i18n.localize("SW25.V2.NeedWeapon"));
       return;
     }
+    // sw25-ce: Accuracy tile posts the attack card (Accuracy / Evasion / Damage). Shift-click = old direct roll.
+    if (event.currentTarget?.dataset?.needweapon !== undefined && !event.shiftKey) { event.preventDefault(); return postAttackCard(this.actor); }
     const element = event.currentTarget;
     const dataset = element.dataset;
     const targetTokens = new Set(resolveTargetTokens());
@@ -1240,6 +1243,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       ui.notifications.warn(game.i18n.localize("SW25.V2.NeedWeapon"));
       return;
     }
+    // sw25-ce: Damage tile posts the new damage card (breakdown + Apply). Shift-click = old card.
+    if (event.currentTarget?.dataset?.needweapon !== undefined && !event.shiftKey) { event.preventDefault(); return rollWeaponDamage(this.actor); }
     const element = event.currentTarget;
     const dataset = element.dataset;
     const targetTokens = new Set(resolveTargetTokens());
