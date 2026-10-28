@@ -608,12 +608,7 @@ export function registerCe7Hooks() {
     const actor = item.parent;
     if (options?.sw25Slot || !valid(actor, item)) return;
     if (item.type === "skill") return guarded(actor, () => syncAutoFeats(actor, item));
-    if (!["weapon", "armor", "accessory"].includes(item.type) || item.system.equip !== true) return;
-    return guarded(actor, async () => {
-      if (!actor.items.get(item.id)) return;
-      const slot = autoSlotFor(actor, item);
-      if (slot) await equipToSlot(actor, slot, item, { quiet: true });
-    });
+    // ce.17: new gear is never auto-slotted/equipped (players decide; see rules/no-autoequip.mjs).
   });
   Hooks.on("updateItem", async (item, changes, options, userId) => {
     if (!mine(userId) || !isPC(item.parent)) return;

@@ -38,6 +38,7 @@ import { rollreq } from "./helpers/rollrequest.mjs";
 import { targetRollDialog } from "./helpers/dialogs.mjs";
 import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
+import { registerNoAutoEquip } from "./rules/no-autoequip.mjs";
 import { registerCe7Settings, registerCe7Hooks, runCe7Migration, runBeltConsumableMigration } from "./ce7/equipcard.mjs";
 import { formatDamage, formatDamageFormula } from "./rules/damage-display.mjs";
 
@@ -197,6 +198,7 @@ Hooks.once("init", function () {
   // ce.7: Equipment Card / belt settings and data-sync hooks
   registerCe7Settings();
   registerCe7Hooks();
+  registerNoAutoEquip();
   registerRulesUI();
   registerStatBlockUI();
   registerCombatUI();

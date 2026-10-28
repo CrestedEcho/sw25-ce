@@ -821,7 +821,7 @@
         "resusequantity": 0
       },
       "battle": {
-        "equip": true,
+        "equip": false,
         "dedicated": false,
         "category": "",
         "rank": "",
