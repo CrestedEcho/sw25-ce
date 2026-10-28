@@ -163,7 +163,7 @@
               </div>
             </div>
             <div class="common-display item deffence-display" data-item-id='{{item._id}}'>
-              <span class="rollable" style="display: {{#if system.usedice3}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula3}}+{{item.system.checkbase3}}" data-label="{{item.name}} ({{item.system.label3}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck3}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice3.resist}}>
+              <span class="rollable" data-selfcheck style="display: {{#if system.usedice3}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula3}}+{{item.system.checkbase3}}" data-label="{{item.name}} ({{item.system.label3}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck3}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice3.resist}}>
                 <div class="common-label">{{item.system.label3}}</div>
                 <div class="common-value">{{item.system.checkbase3}}({{item.system.checkbasefix3}})</div>
                 <div class="common-icon icon-top"><i class="fa-solid fa-dice"></i></div>
@@ -210,7 +210,7 @@
           {{#if contentItem.monRes}}
             {{#with contentItem.monRes as |item|}}
             <div class="common-display item resist-display" data-item-id='{{item._id}}'>
-              <span class="rollable" style="display: {{#if system.usedice1}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula1}}+{{item.system.checkbase1}}" data-label="{{item.name}} ({{item.system.label1}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck1}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice1.resist}}>
+              <span class="rollable" data-selfcheck style="display: {{#if system.usedice1}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula1}}+{{item.system.checkbase1}}" data-label="{{item.name}} ({{item.system.label1}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck1}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice1.resist}}>
                 <div class="common-label">{{item.system.label1}}</div>
                 <div class="common-value">{{item.system.checkbase1}}({{item.system.checkbasefix1}})</div>
                 <div class="common-icon icon-top"><i class="fa-solid fa-dice"></i></div>
@@ -222,7 +222,7 @@
               </div>
             </div>
             <div class="common-display item resist-display" data-item-id='{{item._id}}'>
-              <span class="rollable" style="display: {{#if system.usedice2}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula2}}+{{item.system.checkbase2}}" data-label="{{item.name}} ({{item.system.label2}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck2}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice2.resist}}>
+              <span class="rollable" data-selfcheck style="display: {{#if system.usedice2}}block{{else}}none{{/if}};" data-roll="{{item.system.checkformula2}}+{{item.system.checkbase2}}" data-label="{{item.name}} ({{item.system.label2}})" data-pt="{{item.system.powertable}}" data-apply="{{system.applycheck2}}" data-checktype="{{system.checkTypesButton}}" {{resistAttributes type system.dice2.resist}}>
                 <div class="common-label">{{item.system.label2}}</div>
                 <div class="common-value">{{item.system.checkbase2}}({{item.system.checkbasefix2}})</div>
                 <div class="common-icon icon-top"><i class="fa-solid fa-dice"></i></div>

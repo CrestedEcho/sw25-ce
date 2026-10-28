@@ -3,7 +3,8 @@
  * (breakdown + Apply panel for the live selected tokens, else the user's own character).
  * Numbers and HTML come from the pure attack-card.mjs / damage-card.mjs.
  */
-import { pcAccuracy, pcEvasion, monsterCheck, readRoll, attackCardHTML } from "./attack-card.mjs";
+import { pcAccuracy, pcEvasion, monsterCheck, readRoll, attackCardHTML, checkRollHTML, contest, linkedRolls, accuracyOutcomes, outcomeLinesHTML } from "./attack-card.mjs";
+import { rollMessageData } from "./dice-fx.mjs";
 import { damageBreakdown, damageCardHTML, applyPanelHTML, applyRow, validMult } from "./damage-card.mjs";
 import { formatDamage } from "./damage-display.mjs";
 import { parseSbDamage } from "./sb-play.mjs";
@@ -17,7 +18,6 @@ const SOCKET = "system.sw25";
 const esc = (s) => foundry.utils.escapeHTML(String(s ?? ""));
 const gmOnline = () => game.users.some((u) => u.isGM && u.active);
 const diceOf = (roll) => (roll?.dice?.[0]?.results ?? []).filter((r) => r.active !== false).map((r) => r.result);
-const show3d = (roll) => { try { game.dice3d?.showForRoll?.(roll, game.user, true); } catch (_) { /* optional */ } };
 
 function corePart(actor) {
   const parts = actor?.system?.sbView?.parts ?? [];
@@ -70,30 +70,29 @@ export async function postAttackCard(actor, { partIndex = null } = {}) {
   return msg;
 }
 
-async function patchAttack(msg, patch) {
-  const f = msg.getFlag(SYS, "attack"); if (!f) return;
-  const state = { ...f.state, ...patch };
-  return msg.update({ content: attackCardHTML(state), [`flags.${SYS}.attack.state`]: state });
-}
-/** GM side of "attackUpdate": only the Evasion result may be written by another user. */
-export async function attackUpdateFromSocket(data) {
-  const msg = game.messages.get(data?.messageId); const p = data?.patch ?? {};
-  if (!msg?.getFlag(SYS, "attack") || !p.evaRoll || !Array.isArray(p.evaRoll.dice)) return;
-  const evaRoll = readRoll(p.evaRoll.dice.slice(0, 2).map((x) => Math.max(1, Math.min(6, Number(x) || 1))), Number(p.evaRoll.total) || 0);
-  const eva = p.eva && Array.isArray(p.eva.parts) ? { label: "Evasion", mod: Number(p.eva.mod) || 0, formula: String(p.eva.formula ?? ""), parts: p.eva.parts.slice(0, 12).map((x) => ({ label: String(x.label ?? ""), value: Number(x.value) || 0 })) } : null;
-  return patchAttack(msg, { evaRoll, eva, evaName: String(p.evaName ?? "") });
-}
+const rollFlag = (m) => m?.getFlag?.(SYS, "attackRoll") ?? m?.flags?.[SYS]?.attackRoll ?? null;
+const linkedFor = (cardId) => linkedRolls(game.messages.contents.map((m) => ({ id: m.id, flag: rollFlag(m) })).filter((m) => m.flag), cardId);
 
-async function roll2d6(chk) {
-  const r = await new Roll(chk.formula).evaluate(); show3d(r);
-  return readRoll(diceOf(r), r.total);
+/** Roll a 2d6 check and post it as its own roll message (dice sound + Dice So Nice + roll mode come from core). */
+async function postCheckRoll(card, kind, chk, { actor, who, outs = [], note = "", extra = {} }) {
+  const r = await new Roll(chk.formula).evaluate();
+  const roll = readRoll(diceOf(r), r.total);
+  const f = card.getFlag(SYS, "attack");
+  const html = checkRollHTML({ kind, title: f.state.name, who, chk, roll, outs: typeof outs === "function" ? outs(roll) : outs, note: typeof note === "function" ? note(roll) : note });
+  const data = rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: html, rolls: [r],
+    flags: { [SYS]: { attackRoll: { kind, cardId: card.id, roll, who, ...extra } } } });
+  return ChatMessage.create(data);
 }
 
 async function onAccuracy(msg) {
   const f = msg.getFlag(SYS, "attack"); const actor = game.actors.get(f.actorId);
   if (!actor?.isOwner || !msg.isOwner) return ui.notifications.warn("Only the attacker rolls Accuracy.");
-  if (f.resuse && !f.state.accRoll && !(await spendAmmo(actor, f.resuse))) return;
-  return patchAttack(msg, { accRoll: await roll2d6(f.state.acc) });
+  // Ammunition is spent on the first Accuracy roll of a card only (rerolls are free, as before).
+  const first = !f.accRolled && !f.state.accRoll && !linkedFor(msg.id).lastAccuracy;
+  if (f.resuse && first && !(await spendAmmo(actor, f.resuse))) return;
+  const out = await postCheckRoll(msg, "accuracy", f.state.acc, { actor, who: actor.name, note: "Waiting for Evasion…" });
+  if (first) await msg.setFlag(SYS, "attack.accRolled", true);
+  return out;
 }
 /** Ammunition / resource used by the weapon (same rule as the old Accuracy roll). False = not enough. */
 async function spendAmmo(actor, { id, n }) {
@@ -109,16 +108,27 @@ function evaderActor() {
   if (game.user.isGM) return canvas.tokens?.controlled?.[0]?.actor ?? null;
   return game.user.character ?? canvas.tokens?.controlled?.find((t) => t.actor?.isOwner)?.actor ?? null;
 }
+/** Evasion posts its own roll message, with HIT/MISS against the card's latest Accuracy roll (tie = miss, natural 2/12). */
 async function onEvasion(msg) {
   const actor = evaderActor();
   if (!actor) return ui.notifications.warn(game.user.isGM ? "Select the target's token, then click Evasion." : "You have no assigned character (User Configuration) to roll Evasion.");
   const eva = evasionFor(actor);
   if (!eva) return ui.notifications.warn(`${actor.name}: no Evasion value.`);
-  const evaRoll = await roll2d6(eva);
-  const patch = { eva, evaRoll, evaName: actor.name };
-  if (msg.isOwner) return patchAttack(msg, patch);
-  if (!gmOnline()) return ui.notifications.warn("No GM is connected to record your Evasion on this card.");
-  game.socket.emit(SOCKET, { method: "attackUpdate", messageId: msg.id, patch });
+  const accMsg = linkedFor(msg.id).lastAccuracy; const accDoc = accMsg && game.messages.get(accMsg.id);
+  const visible = !!accDoc && accDoc.isContentVisible !== false;
+  const out = await postCheckRoll(msg, "evasion", eva, {
+    actor, who: actor.name, extra: { accMsgId: accMsg?.id ?? null },
+    outs: (roll) => { if (!visible) return []; const c = contest(accMsg.flag.roll, roll); return c ? [{ vs: `${accMsg.flag.who ?? "Accuracy"} ${accMsg.flag.roll.total}`, ...c }] : []; },
+    note: () => (!accMsg ? "No Accuracy roll on this attack yet." : !visible ? "The Accuracy roll is hidden; the GM sees the result on it." : ""),
+  });
+  if (accDoc) ui.chat?.updateMessage?.(accDoc); // re-render the Accuracy message so it shows the new outcome
+  return out;
+}
+/** Accuracy message: show HIT/MISS per linked Evasion roll (computed at render time, nothing is written). */
+function annotateAccuracy(msg, root) {
+  const f = rollFlag(msg); const box = root.querySelector(".sw25-acr-out"); if (!f || !box) return;
+  const outs = accuracyOutcomes(f.roll, linkedFor(f.cardId).evasionsFor(msg.id));
+  if (outs.length) box.innerHTML = outcomeLinesHTML(outs);
 }
 async function onDamage(msg) {
   const f = msg.getFlag(SYS, "attack"); const actor = game.actors.get(f.actorId);
@@ -139,15 +149,15 @@ export async function postDamageCard(actor, f) {
     const breakdown = damageBreakdown({ rolls, bonusParts: d.bonusParts, bonus, power: r.power, crit: r.cValue, half: r.halfPow == 1, fumble: r.fumble == 1 });
     state = { name: f.state.name, img: f.state.img, total: Number(r.powerResult) || 0, label: d.label, fumble: r.fumble == 1, breakdown,
       formula: `Power ${r.power} · crit ${r.cValue >= 13 ? "—" : `${r.cValue}+`} · bonus ${bonus >= 0 ? "+" : ""}${bonus}` };
-    if (r.fakeResult) { show3d(r.fakeResult); rolls = [r.fakeResult]; }
+    if (r.fakeResult) rolls = [r.fakeResult]; // all dice incl. crit rerolls
   } else {
-    const r = await new Roll(d.formula).evaluate(); show3d(r);
+    const r = await new Roll(d.formula).evaluate();
     const dice = diceOf(r); const bonus = r.total - dice.reduce((a, x) => a + x, 0);
     const breakdown = damageBreakdown({ rolls: [{ dice, natural: dice.reduce((a, x) => a + x, 0), value: dice.reduce((a, x) => a + x, 0) }], bonusParts: [{ label: "Damage bonus", value: bonus }], bonus, rollLabel: "Damage dice" });
     state = { name: f.state.name, img: f.state.img, total: r.total, label: d.text, formula: d.formula, breakdown, fumble: false };
     rolls = [r];
   }
-  const msg = await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor.id, total: state.total, kind: "physical", pool: "hp" } } } });
+  const msg = await ChatMessage.create(rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor.id, total: state.total, kind: "physical", pool: "hp" } } } }));
   if (f.itemId) await annotateAttackCard(actor, msg?.id, "damage");
   return msg;
 }
@@ -220,6 +230,7 @@ export function registerAttackFlow() {
     const root = el?.[0] ?? el; if (!root?.querySelector) return;
     if (msg.getFlag?.(SYS, "attack") && root.querySelector("[data-sw25-ac]")) bindAttack(msg, root);
     if (msg.getFlag?.(SYS, "dmgcard")) bindDamage(msg, root);
+    if (rollFlag(msg)?.kind === "accuracy") annotateAccuracy(msg, root);
   });
   let t = null; const later = () => { clearTimeout(t); t = setTimeout(refreshPanels, 60); };
   Hooks.on("controlToken", later); Hooks.on("targetToken", later); Hooks.on("updateActor", later);

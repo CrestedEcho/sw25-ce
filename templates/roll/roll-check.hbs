@@ -19,7 +19,7 @@
         {{/each}}
     </div>
 {{/if}}{{/if}}
-<div class="sw25-live-targets" data-tooltip="{{localize "SW25.Card.LiveTargetTip"}}"></div>
+{{#unless selfCheck}}<div class="sw25-live-targets" data-tooltip="{{localize "SW25.Card.LiveTargetTip"}}"></div>{{/unless}}
 <div class="dice-roll" data-action="expandRoll">
     {{#if flavor}}<div class="dice-flavor">{{flavor}}</div>{{/if}}
     <div class="dice-result">

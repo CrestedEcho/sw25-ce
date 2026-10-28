@@ -44,6 +44,7 @@ import {
 } from "../sw25.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { resolveTargetTokens } from "../helpers/target-chips.mjs";
+import { isSelfCheck, isSelfCheckItem } from "../rules/self-check.mjs";
 
 let quantityWarn = false;
 
@@ -2594,6 +2595,9 @@ export class SW25Item extends Item {
       this.system.clickitem == "dice3" ||
       this.system.clickitem == "power"
     ) {
+      // Willpower / Fortitude / Evasion: roll for this item's actor, no target picker.
+      const which = { dice: "", dice1: "1", dice2: "2", dice3: "3", power: "power" }[this.system.clickitem];
+      if (isSelfCheckItem(this, which)) return void (await this.rollExec());
       const targetTokens = new Set(resolveTargetTokens());
 
       let apply = "-";
@@ -2854,6 +2858,8 @@ export class SW25Item extends Item {
       if (this.system.clickitem == "dice3")
         checktype = this.system.checkTypesButton3;
 
+      const selfCheck = isSelfCheck(label) || isSelfCheckItem(item, { dice: "", dice1: "1", dice2: "2", dice3: "3" }[this.system.clickitem] ?? "power");
+      if (selfCheck) targetTokens = undefined; // own check: no target line
       // when selected target
       let target = null;
       let targetName = null;
@@ -2892,6 +2898,7 @@ export class SW25Item extends Item {
           checktype: checktype,
           target,
           targetName: targetName,
+          selfCheck,
           elements: elements,
           damage: damage,
           tags: tags,
@@ -2909,6 +2916,7 @@ export class SW25Item extends Item {
           apply: chatapply,
           checktype: checktype,
           targetName: targetName,
+          selfCheck,
           tags: tags,
         }
       );

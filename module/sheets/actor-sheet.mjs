@@ -9,6 +9,7 @@ import { lootRoll } from "../helpers/lootroll.mjs";
 import { growthCheck } from "../helpers/growthcheck.mjs";
 import { actionRoll } from "../helpers/actionroll.mjs";
 import { targetRollDialog } from "../helpers/dialogs.mjs";
+import { isSelfCheckRoll } from "../rules/self-check.mjs";
 import { resolveTargetTokens, resolveTargetTokensOrWarn } from "../helpers/target-chips.mjs";
 import { SW25 } from "../helpers/config.mjs";
 import { Util } from "../helpers/utils.mjs";
@@ -1028,6 +1029,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     if (event.currentTarget?.dataset?.needweapon !== undefined && !event.shiftKey) { event.preventDefault(); return postAttackCard(this.actor); }
     const element = event.currentTarget;
     const dataset = element.dataset;
+    // Willpower / Fortitude / Evasion: roll for this sheet's actor, no target picker.
+    if (isSelfCheckRoll({ dataset })) return void (await this._onRollExec(event));
     const targetTokens = new Set(resolveTargetTokens());
     if (dataset.apply == "-" || !dataset.apply || targetTokens.size === 0) {
       await this._onRollExec(event);
@@ -1112,6 +1115,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       await roll.evaluate();
 
       let label = dataset.label ? `${dataset.label}` : "";
+      const selfCheck = isSelfCheckRoll({ dataset, label });
+      if (selfCheck) targetTokens = undefined; // own check: no target line
 
       let chatresuse;
       if (dataset.resuse) {
@@ -1199,6 +1204,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
           checktype: checktype,
           target,
           targetName: targetName,
+          selfCheck,
           resist: resistData,
           elements: elements,
           damage: damage,
@@ -1219,6 +1225,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
           checktype: checktype,
           resusetext: chatresuse,
           targetName: targetName,
+          selfCheck,
           resist: resistData,
           tags: tags,
         }

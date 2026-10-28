@@ -5,6 +5,7 @@
 import * as SC from "./spell-cast.mjs";
 import { castOptionsFor } from "./spell-ui.mjs";
 import { hasPowerObject, rollSpellDamage } from "./spell-power.mjs";
+import { rollMessageData } from "./dice-fx.mjs";
 import { usableStones, makoLimit, finalCost, payPlan, stoneAfterPay, mpLine, shortLine } from "./spell-pay.mjs";
 import { conditionFor } from "./conditions.mjs";
 import { spellInfo, descCardHTML, castCardHTML, castWindowHTML, rowData, effectData } from "./spell-card.mjs";
@@ -92,18 +93,17 @@ export async function castSpellFlow(actor, item) {
   const castRoll = await new Roll(`2d6 + ${cb}`).evaluate();
   const d = castRoll.dice?.[0]?.total ?? null;
   const cast = { total: castRoll.total, formula: `2d6 (${d ?? "?"}) + Magic Power check ${cb}`, note: d === 12 ? "Natural 12: automatic success" : d === 2 ? "Natural 2: automatic failure" : "" };
-  let damage = null;
+  let damage = null; const dmgRolls = []; // power roll + every crit reroll, attached so they show as dice
   if (hasPowerObject(item.system)) {
-    damage = await rollSpellDamage({ power: item.system.power, crit: Number(item.system.powerCrit) || 10, magicPower: Number(item.system.powerbase) || 0 }, async () => (await new Roll("2d6").evaluate()).total);
+    damage = await rollSpellDamage({ power: item.system.power, crit: Number(item.system.powerCrit) || 10, magicPower: Number(item.system.powerbase) || 0 }, async () => { const x = await new Roll("2d6").evaluate(); dmgRolls.push(x); return x.total; });
     damage.rate = item.system.power?.rate ?? "?";
   }
   const notes = [];
   if (r.targets > 1) notes.push(`${r.targets} targets`); if (r.meta > 1) notes.push(`metamagic ×${r.meta}`);
   if (r.surcharge) notes.push(`+${r.surcharge} outside influence`); if (r.adjust) notes.push(`${r.adjust > 0 ? "+" : ""}${r.adjust} by hand`);
   const card = castCardHTML(info, { cast, damage, pay: p, actorName: actor.name, costNote: `${cost} MP${notes.length ? ` (${notes.join(", ")})` : ""}` });
-  const data = { speaker: ChatMessage.getSpeaker({ actor }), content: card.html, rolls: [castRoll], flags: { "sw25-ce": { spellCast: { itemId: item.id, cost, short: p.short } } } };
-  // No damage/healing roll: keep the old default roll mode (GM whisper unless the table changed it).
-  if (card.whisperDefault) ChatMessage.applyRollMode(data, globalThis.sw25RollMode?.() ?? game.settings.get("core", "rollMode"));
+  // A real roll message: core dice sound + Dice So Nice for the cast and damage dice, roll mode respected.
+  const data = rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: card.html, rolls: [castRoll, ...dmgRolls], flags: { "sw25-ce": { spellCast: { itemId: item.id, cost, short: p.short } } } });
   return ChatMessage.create(data);
 }
 

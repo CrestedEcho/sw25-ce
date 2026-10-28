@@ -1,3 +1,4 @@
+import { isSelfCheck, stripTargetUI } from "../rules/self-check.mjs";
 // Target picker markup for chat cards: one chip per target (small token portrait + name).
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -65,6 +66,8 @@ export function registerLiveTargets() {
   const H = globalThis.Hooks;
   H.on("renderChatMessageHTML", (msg, el) => {
     const root = el?.[0] ?? el;
+    // Willpower / Fortitude / Evasion: the roller's own check, never any target line.
+    if (msg?.flags?.sw25?.selfCheck || isSelfCheck(msg?.flavor)) { stripTargetUI(root); return; }
     // Legacy cards: hide the old "choose target" button, show the live line instead.
     root?.querySelectorAll?.('button.chat-target[data-buttontype="target-select"]').forEach((b) => {
       const d = document.createElement("div"); d.className = "sw25-live-targets"; b.replaceWith(d);

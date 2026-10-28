@@ -8,6 +8,7 @@ import { Util } from "./utils.mjs";
 import { weaponCritValue } from "../rules/crit-value.mjs";
 import { applyLegacyToStatBlock } from "../rules/apply-damage.mjs";
 import { sw25CritModFor } from "../documents/actor.mjs";
+import { isSelfCheck, isSelfCheckItem } from "../rules/self-check.mjs";
 import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn, refreshLiveTargets } from "./target-chips.mjs";
 
 /**
@@ -27,6 +28,9 @@ export async function chatButton(chatMessage, buttonType) {
     buttonType == "buttoncheck3" ||
     buttonType == "buttonpower"
   ) {
+    // Willpower / Fortitude / Evasion: roll for the card's actor, no target picker.
+    const which = { buttoncheck: "", buttoncheck1: "1", buttoncheck2: "2", buttoncheck3: "3", buttonpower: "power" }[buttonType];
+    if (isSelfCheckItem(item, which)) return void (await chatRoll());
     const targetTokens = new Set(resolveTargetTokens());
     let apply = "-";
     if (buttonType == "buttoncheck") apply = item.system.applycheck;
@@ -343,6 +347,8 @@ export async function chatButton(chatMessage, buttonType) {
       let chatTotal = roll.total;
       if (roll.terms[0].total == 12) chatCritical = 1;
       if (roll.terms[0].total == 2) chatFumble = 1;
+      const selfCheck = isSelfCheck(label) || isSelfCheckItem(item, { buttoncheck: "", buttoncheck1: "1", buttoncheck2: "2", buttoncheck3: "3" }[buttonType] ?? "power");
+      if (selfCheck) targetTokens = undefined; // own check: no target line
       // when selected target
       let target = null;
       let targetName = null;
@@ -360,6 +366,7 @@ export async function chatButton(chatMessage, buttonType) {
           checktype: checktype,
           target,
           targetName: targetName,
+          selfCheck,
           dohalf: false,
           orgtotal: chatTotal,
         },
@@ -377,6 +384,7 @@ export async function chatButton(chatMessage, buttonType) {
           checktype: checktype,
           resusetext: chatresuse,
           targetName: targetName,
+          selfCheck,
         }
       );
 
@@ -566,6 +574,7 @@ export async function chatButton(chatMessage, buttonType) {
             aftermod: aftermod,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -594,6 +603,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             tags: chatMessage.flags.sw25.tags,
           }
         ),
@@ -626,6 +636,7 @@ export async function chatButton(chatMessage, buttonType) {
             aftermod: aftermod,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -654,6 +665,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             tags: chatMessage.flags.sw25.tags,
           }
         ),
@@ -698,6 +710,7 @@ export async function chatButton(chatMessage, buttonType) {
             aftermod: aftermod,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -726,6 +739,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             tags: chatMessage.flags.sw25.tags,
           }
         ),
@@ -754,6 +768,7 @@ export async function chatButton(chatMessage, buttonType) {
             aftermod: aftermod,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -782,6 +797,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             tags: chatMessage.flags.sw25.tags,
           }
         ),
@@ -820,6 +836,7 @@ export async function chatButton(chatMessage, buttonType) {
             aftermod: aftermod,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -848,6 +865,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             powertype: chatMessage.flags.sw25.powertype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             tags: chatMessage.flags.sw25.tags,
           }
         ),
@@ -960,6 +978,7 @@ export async function chatButton(chatMessage, buttonType) {
           aftermod: aftermod,
           powertype: chatMessage.flags.sw25.powertype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           elements: chatMessage.flags.sw25.elements,
           damage: chatMessage.flags.sw25.damage,
           tags: chatMessage.flags.sw25.tags,
@@ -989,6 +1008,7 @@ export async function chatButton(chatMessage, buttonType) {
           apply: chatMessage.flags.sw25.apply,
           powertype: chatMessage.flags.sw25.powertype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           tags: chatMessage.flags.sw25.tags,
         }
       ),
@@ -1050,6 +1070,7 @@ export async function chatButton(chatMessage, buttonType) {
           aftermod: aftermod,
           powertype: chatMessage.flags.sw25.powertype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           elements: chatMessage.flags.sw25.elements,
           damage: chatMessage.flags.sw25.damage,
           tags: chatMessage.flags.sw25.tags,
@@ -1079,6 +1100,7 @@ export async function chatButton(chatMessage, buttonType) {
           apply: chatMessage.flags.sw25.apply,
           powertype: chatMessage.flags.sw25.powertype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           tags: chatMessage.flags.sw25.tags,
         }
       ),
@@ -1125,6 +1147,7 @@ export async function chatButton(chatMessage, buttonType) {
             fumble: chatFumble,
             checktype: chatMessage.flags.sw25.checktype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -1143,6 +1166,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             checktype: chatMessage.flags.sw25.checktype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             resist: chatMessage.flags.sw25.resist,
             tags: chatMessage.flags.sw25.tags,
           }
@@ -1176,6 +1200,7 @@ export async function chatButton(chatMessage, buttonType) {
             fumble: chatFumble,
             checktype: chatMessage.flags.sw25.checktype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             elements: chatMessage.flags.sw25.elements,
             damage: chatMessage.flags.sw25.damage,
             tags: chatMessage.flags.sw25.tags,
@@ -1194,6 +1219,7 @@ export async function chatButton(chatMessage, buttonType) {
             apply: chatMessage.flags.sw25.apply,
             checktype: chatMessage.flags.sw25.checktype,
             targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
             resist: chatMessage.flags.sw25.resist,
             tags: chatMessage.flags.sw25.tags,
           }
@@ -1295,6 +1321,7 @@ export async function chatButton(chatMessage, buttonType) {
           aftermod: aftermod,
           checktype: chatMessage.flags.sw25.checktype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           elements: chatMessage.flags.sw25.elements,
           damage: chatMessage.flags.sw25.damage,
           tags: chatMessage.flags.sw25.tags,
@@ -1314,6 +1341,7 @@ export async function chatButton(chatMessage, buttonType) {
           spell: chatMessage.flags.sw25.spell,
           checktype: chatMessage.flags.sw25.checktype,
           targetName: chatMessage.flags.sw25.targetName,
+            selfCheck: chatMessage.flags.sw25.selfCheck ?? isSelfCheck(chatMessage.flavor),
           resist: chatMessage.flags.sw25.resist,
           tags: chatMessage.flags.sw25.tags,
         }
@@ -2126,6 +2154,9 @@ export async function chatButton(chatMessage, buttonType) {
           roll.total + 5
         )} <span style="font-size:0.7em;"> ( ${roll.total} + 5 )</span>`;
 
+      // Willpower / Fortitude / Evasion results: the roller's own check, no target line.
+      const selfCheck = isSelfCheck(checkName) || isSelfCheck(label);
+      if (selfCheck) chatData.flags = { ...(chatData.flags ?? {}), sw25: { ...(chatData.flags?.sw25 ?? {}), selfCheck: true } };
       chatData.content = await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ce/templates/roll/roll-check.hbs",
         {
@@ -2134,6 +2165,7 @@ export async function chatButton(chatMessage, buttonType) {
           tooltip: await roll.getTooltip(),
           total: chatTotal,
           resultText,
+          selfCheck,
         }
       );
 

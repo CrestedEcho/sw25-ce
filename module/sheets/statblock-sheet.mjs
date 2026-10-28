@@ -7,6 +7,7 @@ import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { postAttackCard } from "../rules/attack-flow.mjs";
 import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
 import { rollSpellDamage } from "../rules/spell-power.mjs";
+import { rollMessageData } from "../rules/dice-fx.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
 import { fixedToDice, parseSbDamage, applyVital, lootFor, castIsWhisper, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
@@ -221,8 +222,9 @@ SW25StatBlockSheet.prototype._sbCast = async function (index, spellName = null) 
   if (out.index < 0) return ui.notifications.warn("This stat block has no parts to pay MP from.");
   if (out.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${out.mpBefore}) — cast anyway.`);
   await actor.update({ "system.sb.parts": out.parts });
+  const dmgRolls = []; // power roll + crit rerolls, attached to the card as dice
   if (meta.power) {
-    out.damage = await rollSpellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: skill.magicPower ?? 0 }, async () => (await new Roll("2d6").evaluate()).total);
+    out.damage = await rollSpellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: skill.magicPower ?? 0 }, async () => { const x = await new Roll("2d6").evaluate(); dmgRolls.push(x); return x.total; });
   }
   const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
   // Casting check (2d6 + magic power) on the same card as the damage.
@@ -241,9 +243,11 @@ SW25StatBlockSheet.prototype._sbCast = async function (index, spellName = null) 
     desc = (tgt ? `<div><small>${esc(tgt)}</small></div>` : "") + `<div class="sw25-sbcast-desc">${await TE.enrichHTML(d?.system?.description ?? "", { relativeTo: actor })}</div>`;
   }
   const head = whisper ? `<div class="sw25-gmonly"><i class="fas fa-eye-slash"></i> Whisper · GM only</div>` : "";
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), rolls,
-    ...(whisper ? { whisper: ChatMessage.getWhisperRecipients("GM").map((u) => u.id) } : {}),
+  rolls.push(...dmgRolls);
+  const data = rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), rolls,
     content: head + castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out, castLine + desc) });
+  if (whisper) { data.whisper = ChatMessage.getWhisperRecipients("GM").map((u) => u.id); delete data.blind; }
+  return ChatMessage.create(data);
 };
 
 /** Fixed button posts the value; dice button rolls 2d6 + (fixed - 7). */

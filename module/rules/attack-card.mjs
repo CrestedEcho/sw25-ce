@@ -122,3 +122,37 @@ export function attackCardHTML(s) {
     + `<header class="sw25-ac-head">${s.img ? `<img src="${esc(s.img)}" alt="">` : ""}<div><b>${esc(s.name)}</b>${s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div></header>`
     + desc + accRow + evaRow + outcome + dmgRow + `</div>`;
 }
+
+/** Outcome line(s) for a result message. outs = [{ vs, result, why }] (vs = other side's name, optional). */
+export function outcomeLinesHTML(outs) {
+  return (outs ?? []).filter(Boolean).map((o) => `<div class="sw25-ac-outcome ${o.result}" data-tooltip="${esc(o.why)}">${o.result === "hit" ? "HIT" : "MISS"}${o.vs ? ` <span class="sw25-ac-who">vs ${esc(o.vs)}</span>` : ""} <small>${esc(o.why)}</small></div>`).join("");
+}
+
+/**
+ * Accuracy / Evasion result message (a real roll message; the attack card itself is not changed).
+ * r = { kind: "accuracy"|"evasion", title, who, chk, roll, outs, note }.
+ */
+export function checkRollHTML(r) {
+  const label = r.kind === "evasion" ? "Evasion" : "Accuracy";
+  return `<div class="sw25-ac sw25-acr" data-sw25-acr="${r.kind === "evasion" ? "evasion" : "accuracy"}">`
+    + `<header class="sw25-ac-head"><div><b>${esc(label)}${r.who ? `: ${esc(r.who)}` : ""}</b>${r.title ? `<small>${esc(r.title)}</small>` : ""}</div></header>`
+    + `<div class="sw25-ac-row"><div class="sw25-ac-res">${rollHTML(r.roll)}${breakdownHTML(r.chk, r.roll)}</div></div>`
+    + `<div class="sw25-acr-out">${outcomeLinesHTML(r.outs)}${r.note ? `<div class="sw25-ac-hint">${esc(r.note)}</div>` : ""}</div></div>`;
+}
+
+/**
+ * Pure: the result messages linked to one attack card. msgs = [{ id, flag }] in chat order, flag = flags["sw25-ce"].attackRoll.
+ * Returns { lastAccuracy, evasionsFor(accId) }.
+ */
+export function linkedRolls(msgs, cardId) {
+  const mine = (msgs ?? []).filter((m) => m?.flag?.cardId === cardId);
+  const accs = mine.filter((m) => m.flag.kind === "accuracy");
+  return {
+    lastAccuracy: accs.at(-1) ?? null,
+    evasionsFor: (accId) => mine.filter((m) => m.flag.kind === "evasion" && m.flag.accMsgId === accId),
+  };
+}
+/** Pure: outcome lines for an Accuracy message from its linked Evasion messages. */
+export function accuracyOutcomes(accRoll, evasions) {
+  return (evasions ?? []).map((e) => { const c = contest(accRoll, e.flag.roll); return c && { vs: e.flag.who, ...c }; }).filter(Boolean);
+}
