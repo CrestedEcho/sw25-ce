@@ -23,6 +23,7 @@ import { weaponRoute } from "../rules/weapon-route.mjs";
 import { weaponCardRow, pcWeaponBattle } from "../rules/weapon-battle.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf } from "../rules/spell-school.mjs";
+import { buildClassCard } from "../rules/class-card.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -677,6 +678,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // Assign and return
     context.skills = skills;
     context.checks = checks;
+    // sw25-ce: Classes card (Classes & Feats tab): die-button cells with breakdown tooltips.
+    context.classCard = buildClassCard({ system: context.system, skills, checks, localize: (k) => game.i18n.localize(k) });
     context.battlechecks = battlechecks;
     context.resources = resources;
     context.weapons = weapons;

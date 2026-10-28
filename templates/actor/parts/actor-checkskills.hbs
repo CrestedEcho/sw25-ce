@@ -1,133 +1,73 @@
-<div class="grid grid-3col nogapmargin">
-  <div class="grid-span-3 flex-group-right" style="display: flex; align-items: flex-end;">
-    {{localize "SW25.Attributes.Exp"}} [ {{localize "SW25.Attributes.Useexp"}}: {{#if (gt system.attributes.useexp system.attributes.totalexp)}}<span class="warning-text">{{/if}}{{system.attributes.useexp}}{{#if (gt system.attributes.useexp system.attributes.totalexp)}}</span>{{/if}}<span> / {{localize "SW25.Attributes.Totalexp"}}: 
-      {{#if system.isEdit}}
-      {{!-- <div class="character-experience"> --}}
-      <input id="{{actor._id}}exp" style="width:100px;" type="number" name="system.attributes.totalexp" value="{{system.attributes.totalexp}}" data-dtype="Number"/>
-      {{!-- </div> --}}
-      {{else}}
-      {{system.attributes.totalexp}}
-      {{/if}} ]
-      </span>
+{{!-- sw25-ce: Classes card (Classes & Feats tab). View model: module/rules/class-card.mjs (context.classCard).
+     Every number is a die button (.rollable, same data-roll/data-label as before) with a breakdown tooltip. --}}
+{{#*inline "ccD6"}}<svg class="d6" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/><circle cx="16" cy="16" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>{{/inline}}
+{{#*inline "ccTip"}}<span class="cc-tip" role="tooltip"><span class="sum">{{#each cell.parts}}{{#if op}} {{op}} {{/if}}{{label}} <b>{{abs}}</b>{{/each}} = <b>{{cell.total}}</b></span><br><span class="sub">{{localize "SW25.V2.ClassCard.ClickRoll"}} {{cell.formula}}</span></span>{{/inline}}
+{{#*inline "ccCheck"}}{{#if chk.power}}<span class='item small-checkitem powerrollable sc' data-item-id='{{chk.id}}' data-roll="{{chk.formula}}" data-label="{{chk.name}}" data-pt="{{chk.powertable}}" data-apply="{{chk.applypower}}" data-powertype="{{chk.powerTypesButton}}">{{else}}<span class='item small-checkitem rollable sc' data-item-id='{{chk.id}}' data-roll="{{chk.formula}}+{{chk.checkbase}}" data-label="{{chk.name}}" data-pt="{{chk.powertable}}" data-apply="{{chk.applycheck}}" data-checktype="{{chk.checkTypesButton}}">{{/if}}{{> ccD6}}{{chk.name}} <b>{{chk.checkbase}}</b></span>{{/inline}}
+<div class="cc{{#if system.isEdit}} is-edit{{/if}}">
+  <div class="cc-top">
+    <div class="cc-hint"><span class="mini">{{> ccD6}}5</span><span>{{localize "SW25.V2.ClassCard.HintClick"}} <b class="cc-hint-f">{{localize "SW25.V2.ClassCard.HintFormula"}}</b>&nbsp;·&nbsp;{{localize "SW25.V2.ClassCard.HintHover"}}</span></div>
+    <div class="cc-exp">{{localize "SW25.Attributes.Exp"}}
+      <span class="pill" data-tooltip="{{localize "SW25.Attributes.Useexp"}} / {{localize "SW25.Attributes.Totalexp"}}"><span class="{{#if classCard.exp.over}}warning-text{{/if}}">{{system.attributes.useexp}}</span> / {{#if system.isEdit}}<input id="{{actor._id}}exp" class="cc-exp-in" type="number" name="system.attributes.totalexp" value="{{system.attributes.totalexp}}" data-dtype="Number"/>{{else}}{{system.attributes.totalexp}}{{/if}}</span>
+      <span class="bar{{#if classCard.exp.over}} over{{/if}}"><i style="width:{{classCard.exp.pct}}%"></i></span>
+    </div>
   </div>
-</div>
 
-<ol class='items-list'>
-  <li class='item flexrow items-header'>
-    <div class='item-name'  style="flex: 3;">{{localize "SW25.Skillname"}}</div>
-    <div class='item-checklabel item-element' style="flex-basis:60px;">Lv</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Dex.abbr"}}</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Agi.abbr"}}</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Str.abbr"}}</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Vit.abbr"}}</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Int.abbr"}}</div>
-    <div class='item-checklabel item-element'>{{localize "SW25.Ability.Mnd.abbr"}}</div>
-    <div class='item-scmod'>{{localize "SW25.Modifier"}}</div>
-    {{#if system.isEdit}}
-    <div class='item-controls'>
-      <a class='item-control item-create' title='{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.skill")}}' data-type='skill'>
-        <i class='fas fa-plus'></i>
-        {{localize 'DOCUMENT.New' type=''}}
-      </a>
-    </div>
-    {{/if}}
-  </li>
-  <li class='item flexrow'>
-    <div class='item-name item-label'  style="flex: 3;"><h4>{{localize "SW25.Attributes.Advlevel"}}</h4></div>
-    <span class='item-checklabel align-center resource-label item-element' style="flex-basis: 60px;">{{system.attributes.advlevel.value}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.dex.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Dex.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.dex.advbase}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.agi.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Agi.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.agi.advbase}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.str.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Str.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.str.advbase}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.vit.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Vit.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.vit.advbase}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.int.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Int.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.int.advbase}}</span>
-    <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+@abilities.mnd.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{localize "SW25.Ability.Mnd.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{system.abilities.mnd.advbase}}</span>
-    <div class='item-scmod item-prop input'><input type="text" name="system.attributes.advlevel.mod" value="{{system.attributes.advlevel.mod}}" data-dtype="Number"/></div>
-    {{#if system.isEdit}}
-      <div class='item-controls'></div>
-    {{/if}}
-    <div class="item-description">
-      <div class="flexrow">
-        <div style="flex: 0 0 20px;"></div>
-        <div class="flexrow small-checklist">
-          {{#each checks as |advcheck advcheckid|}}
-            {{#if (eq advcheck.system.checkskill "adv")}}
-              {{#if (eq advcheck.system.checkmethod "power")}}
-              <span class='item small-checkitem powerrollable' data-item-id='{{advcheck._id}}' data-roll="{{advcheck.system.formula}}" data-label="{{advcheck.name}}" data-pt="{{advcheck.system.powertable}}" data-apply="{{advcheck.system.applypower}}" data-powertype="{{advcheck.system.powerTypesButton}}">
-              {{else}}
-              <span class='item small-checkitem rollable' data-item-id='{{advcheck._id}}' data-roll="{{advcheck.system.formula}}+{{advcheck.system.checkbase}}" data-label="{{advcheck.name}}" data-pt="{{advcheck.system.powertable}}" data-apply="{{advcheck.system.applycheck}}" data-checktype="{{advcheck.system.checkTypesButton}}">
-              {{/if}}
-                &nbsp;{{advcheck.name}}({{advcheck.system.checkbase}})&nbsp;&nbsp;
-              </span>
-            {{/if}}
-          {{/each}}
-        </div>
+  <ol class="cc-list">
+    <li class="cc-grid cc-head">
+      <div>{{localize "SW25.Skillname"}}</div>
+      <div data-tooltip="{{localize "SW25.V2.ClassCard.LvTip"}}">Lv</div>
+      {{#each classCard.stats as |st|}}
+      <div class="cc-st" data-stat="{{st.key}}" data-tooltip="{{st.longLabel}}"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/{{st.icon}}.svg)"></span><span class="st st-full">{{st.longLabel}}</span><span class="st st-abbr">{{st.abbrLabel}}</span></div>
+      {{/each}}
+      <div data-tooltip="{{localize "SW25.V2.ClassCard.ModTip"}}">{{localize "SW25.V2.ClassCard.Mod"}}</div>
+      <div></div>
+    </li>
+
+    {{!-- Adventurer Level --}}
+    <li class="item cc-row cc-adv">
+      <div class="cc-grid">
+        <div class="cc-advname"><span class="star">★</span><span class="nm">{{localize "SW25.Attributes.Advlevel"}}</span></div>
+        <div class="cc-lv" data-tooltip="{{localize "SW25.Attributes.Advlevel"}}">{{system.attributes.advlevel.value}}</div>
+        {{#each classCard.adv.cells as |cell|}}
+        <span class="cc-roll rollable" data-stat="{{cell.key}}" data-roll="2d6+@abilities.{{cell.key}}.advbase" data-label="{{localize "SW25.Attributes.Advlevel"}}+{{cell.statLong}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{> ccD6}}{{cell.value}}{{> ccTip cell=cell}}</span>
+        {{/each}}
+        <div class="cc-modcell"><input class="cc-mod{{#if classCard.adv.modSet}} set{{/if}}" type="text" name="system.attributes.advlevel.mod" value="{{system.attributes.advlevel.mod}}" placeholder="±0" data-dtype="Number" data-tooltip="{{localize "SW25.V2.ClassCard.ModTip"}}"/></div>
+        <div></div>
       </div>
-    </div>
-  </li>
-  {{#each skills as |item id|}}
-    <li class='item flexrow sw25-class-row' data-item-id='{{item._id}}'>
-      <div class='item-name item-label skill-open' style="flex: 3; cursor: pointer;" data-tooltip="Open (Shift+click: show details)"><h4>{{item.name}}</h4></div>
-      <span class='item-checklevel align-center resource-label item-element' style="flex-basis:60px;{{#if ../system.isEdit}} font-size:0.8em{{/if}}">
-        {{#if ../system.isEdit}}
-          <a class="changesl-button" data-action="decrease" data-property="item.system.skilllevel">
-            <i class="fas fa-minus"></i>
-          </a>
-          <input class="sl-change" style="width: 3em;" type="text" name="skilllevelInput" value="{{item.system.skilllevel}}" data-dtype="Number"/>
-          <a class="changesl-button" data-action="increase" data-property="item.system.skilllevel">
-            <i class="fas fa-plus"></i>
-          </a>
-        {{else}}
-        {{item.system.skilllevel}}
-        {{/if}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.dex}}" data-label="{{item.name}}+{{localize "SW25.Ability.Dex.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.dex}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.agi}}" data-label="{{item.name}}+{{localize "SW25.Ability.Agi.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.agi}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.str}}" data-label="{{item.name}}+{{localize "SW25.Ability.Str.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.str}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.vit}}" data-label="{{item.name}}+{{localize "SW25.Ability.Vit.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.vit}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.int}}" data-label="{{item.name}}+{{localize "SW25.Ability.Int.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.int}}
-      </span>
-      <span class='item-checklabel align-center rollable resource-label item-element' data-roll="2d6+{{item.system.skillbase.mnd}}" data-label="{{item.name}}+{{localize "SW25.Ability.Mnd.long"}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">
-        {{item.system.skillbase.mnd}}
-      </span>
-      <div class='item-scmod item-prop input'><input class="sc-change" type="text" name="skillModInput" value="{{item.system.skillmod}}" data-dtype="Number"/></div>
-        {{#if ../system.isEdit}}
-          <div class='item-controls'>
-            <a class='item-control item-edit' title='{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.skill")}}'>
-              <i class='fas fa-edit'></i>
-            </a>
-            <a class='item-control item-delete' title='{{localize "DOCUMENT.Delete" type=(localize "TYPES.Item.skill")}}'>
-              <i class='fas fa-trash'></i>
-            </a>
-          </div>
-        {{/if}}
+      {{#if classCard.adv.checks.length}}
+      <div class="cc-checks small-checklist"><span class="cc-checks-lbl">{{localize "SW25.V2.ClassCard.AdvChecks"}}</span>
+        {{#each classCard.adv.checks as |chk|}}{{> ccCheck chk=chk}}{{/each}}
+      </div>
+      {{/if}}
+    </li>
 
-      <div class="item-description">
-        <div class="flexrow">
-          <div style="flex: 0 0 20px;"></div>
-          <div class="flexrow small-checklist">
-            {{#each @root.checks as |checkitem checkid|}}
-              {{#if (eq checkitem.system.checkskill item.name)}}
-                {{#if (eq checkitem.system.checkmethod "power")}}
-                <span class='item small-checkitem powerrollable' data-item-id='{{checkitem._id}}' data-roll="{{checkitem.system.formula}}" data-label="{{checkitem.name}}" data-pt="{{checkitem.system.powertable}}" data-apply="{{checkitem.system.applypower}}" data-powertype="{{checkitem.system.powerTypesButton}}">
-                {{else}}
-                <span class='item small-checkitem rollable' data-item-id='{{checkitem._id}}' data-roll="{{checkitem.system.formula}}+{{checkitem.system.checkbase}}" data-label="{{checkitem.name}}" data-pt="{{checkitem.system.powertable}}" data-apply="{{checkitem.system.applycheck}}" data-checktype="{{checkitem.system.checkTypesButton}}">
-                {{/if}}
-                  &nbsp;{{checkitem.name}}({{checkitem.system.checkbase}})&nbsp;&nbsp;
-                </span>
-              {{/if}}
-            {{/each}}
-          </div>
+    {{#each classCard.rows as |row|}}
+    <li class="item cc-row cls sw25-class-row" data-item-id="{{row.id}}">
+      <div class="cc-grid">
+        <div class="cc-name"><span class="cc-chip item-label skill-open" data-tooltip="{{localize "SW25.V2.ClassCard.OpenTip"}}"><span class="ci"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/{{row.icon}}.svg)"></span></span><span class="nm">{{row.name}}</span></span></div>
+        {{#if @root.system.isEdit}}
+        <div class="cc-step"><a class="changesl-button" data-action="decrease" data-property="item.system.skilllevel">−</a><input class="sl-change" type="text" name="skilllevelInput" value="{{row.level}}" data-dtype="Number"/><a class="changesl-button" data-action="increase" data-property="item.system.skilllevel">+</a></div>
+        {{else}}
+        <div class="cc-lv">{{row.level}}</div>
+        {{/if}}
+        {{#each row.cells as |cell|}}
+        <span class="cc-roll rollable" data-stat="{{cell.key}}" data-roll="2d6+{{cell.value}}" data-label="{{row.name}}+{{cell.statLong}}{{localize "SW25.Ability.Bonus"}}" data-checktype="">{{> ccD6}}{{cell.value}}{{> ccTip cell=cell}}</span>
+        {{/each}}
+        <div class="cc-modcell"><input class="cc-mod sc-change{{#if row.modSet}} set{{/if}}" type="text" name="skillModInput" value="{{row.modText}}" placeholder="±0" data-dtype="Number" data-tooltip="{{localize "SW25.V2.ClassCard.ModTip"}}"/></div>
+        {{#if @root.system.isEdit}}
+        <div class="cc-ctrl item-controls">
+          <a class="item-control item-edit" data-tooltip="{{localize "DOCUMENT.Update" type=(localize "TYPES.Item.skill")}}"><i class="fas fa-pen"></i></a>
+          <a class="item-control item-delete" data-tooltip="{{localize "DOCUMENT.Delete" type=(localize "TYPES.Item.skill")}}"><i class="fas fa-trash"></i></a>
         </div>
+        {{else}}<div></div>{{/if}}
+      </div>
+      <div class="item-description">
+        <div class="cc-checks small-checklist">{{#each row.checks as |chk|}}{{> ccCheck chk=chk}}{{/each}}</div>
       </div>
     </li>
-  {{/each}}
-</ol>
+    {{/each}}
+  </ol>
+  {{#if system.isEdit}}
+  <div class="cc-add"><a class="item-control item-create" data-type="skill" data-tooltip="{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.skill")}}">+ {{localize "SW25.V2.ClassCard.AddClass"}}</a></div>
+  {{/if}}
+</div>

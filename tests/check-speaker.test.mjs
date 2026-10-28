@@ -23,8 +23,9 @@ test("no check-roll path takes its speaker from a target token", () => {
 
 test("class table / Adventurer Level / skill checks have no apply, so their cards list no targets", () => {
   const t = read("templates/actor/parts/actor-checkskills.hbs");
-  const stat = t.split("\n").filter((l) => /rollable/.test(l) && /Ability\.\w+\.long/.test(l));
-  assert.ok(stat.length >= 12, "class x stat and Adventurer Level x stat cells");
+  // one looped die-button line per table (Adventurer Level x 6 stats, each class x 6 stats)
+  const stat = t.split("\n").filter((l) => /cc-roll rollable/.test(l) && /data-roll="2d6\+/.test(l));
+  assert.equal(stat.length, 2, "class x stat and Adventurer Level x stat cells");
   for (const l of stat) assert.doesNotMatch(l, /data-apply="(on|custom)"/);
   // flags as stored for such a card (undefined apply is dropped by JSON)
   assert.equal(cardUsesTargets({ checktype: "", total: 9 }), false);
