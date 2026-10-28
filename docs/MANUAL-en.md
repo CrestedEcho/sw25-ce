@@ -75,7 +75,7 @@ This tab displays race characteristics and combat skills, as well as Techniques,
 - The behavior when clicking on icons can be configured from Details. The default selection is "All", which displays the description, "Check", "Power", and "Effects" (if applicable) button in chat. (Techniques have the additional field of MP Cost)
 - Some items can be checked in "Use Dice Roll" and "Use Power Table" in the details. When checked, "Dice Roll" and "Power" are displayed in the list, and the corresponding roll can be performed by clicking on the checkbox. Please use this function when necessary, for example, for checks on the usage of spellsongs, etc., or for power rolls.
 - If you have set up "Effects" in the item's details, "Effects" will appear beside the item in your character sheet.
-- Action types are automatically displayed in front of the name. The following types are displayed: Always (○), Major (▶), Minor (≫), Combat Preparation (△), and Declaration (□).
+- Action types are automatically displayed in front of the name. The following types are displayed: Constant/Always Active (○), Major Action (►), Minor Action (⏩), Combat Preparation (△), and Declaration (🗨).
 - In the Techniques list, MP Cost can be performed by selecting the character and clicking on "MP Cost" in the character sheet.
 
 #### Spells Tab
@@ -91,7 +91,7 @@ This tab displays information about magic.
 - If a character is selected, MP Cost can be performed by clicking on the "MP Cost" button
 - If you check the "Show All Spell" checkbox, a list of all the magic items in your possession will be displayed, regardless of the system. You can also click on icons and roll from "Spellcasting" and "Power".
 - New creation, editing, and deletion can only be done from the "Show All Spell" list.
-- The magic operation type is automatically displayed before the name. The following types of magic are displayed: Always (○), Major (▶), Minor (≫), Combat Ready (△), and Declared (□).
+- Spells do not display these timing icons. Spellcasting normally uses a Major Action (►); any exceptions are stated in the spell description.
 
 #### Effects Tab
 This tab displays information about effects on the character, such as buffs and debuffs.
@@ -158,7 +158,7 @@ This is the area where the monster summary is displayed.
 This tab displays the various abilities of monsters.
 - Use this item for Fortitude and Willpower. It is automatically added when the monster is created, but must still be manually set.
 - The behavior when clicking on the icon can be set from Details. The default selection is "All", which displays the description, "Check", "Power", and "Effects" (if applicable) button in chat.
-- The ability's behavior type is automatically displayed before its name. The following types are available: Always "○", Major Action "▶", Minor Action "≫", Combat Preparation "△", and Declaration "□".
+- The ability's behavior type is automatically displayed before its name. The following types are available: Constant/Always Active (○), Major Action (►), Minor Action (⏩), Combat Preparation (△), and Declaration (🗨).
 - By checking the "Check 1-3" and "Power Table" checkboxes in the details, the respective label names are displayed, and the corresponding roll can be performed by clicking on them. Use as necessary.
 - If you have set up “Effects” in the ability's Details, “Effects” will appear in the list next to the ability and you can apply those effects to the monster.
 - By checking the "Fixed Value" checkbox under Details for each check, the dice result is automatically fixed at "7" and the roll result is displayed as a fixed value.

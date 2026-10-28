@@ -6,7 +6,7 @@ import { prepareStatBlock } from "../module/rules/statblock.mjs";
 
 test("tag labels/tooltips: passive key shown as Constant", () => {
   assert.equal(SKILL_TAGS.passive.label, "Constant"); assert.equal(SKILL_TAGS.passive.tip, "Constant (always active)");
-  assert.equal(SKILL_TAGS.prep.tip, "Preparation (before combat)"); assert.equal(SKILL_TAGS.declared.tip, "Declaration (declared at turn start)");
+  assert.equal(SKILL_TAGS.prep.tip, "Preparation (before combat)"); assert.equal(SKILL_TAGS.declared.tip, "Declaration (declared as part of the attack or action it modifies)");
   assert.deepEqual(TAG_ORDER, ["passive", "major", "minor", "prep", "declared"]);
   assert.deepEqual(tagInfo(["declared", "bogus", "passive", "passive"]).map((t) => t.key), ["passive", "declared"]);
 });

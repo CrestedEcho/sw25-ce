@@ -25,7 +25,7 @@ export const SKILL_TAGS = {
   major: { glyph: "►", label: "Major action", tip: "Major action", icon: `${ICON_ROOT}/ui/tag-major.webp` },
   minor: { glyph: "⏩", label: "Minor action", tip: "Minor action", icon: `${ICON_ROOT}/ui/tag-minor.webp` },
   prep: { glyph: "△", label: "Preparation", tip: "Preparation (before combat)", icon: `${ICON_ROOT}/ui/tag-prep.webp` },
-  declared: { glyph: "🗨", label: "Declaration", tip: "Declaration (declared at turn start)", icon: `${ICON_ROOT}/ui/tag-declared.webp` },
+  declared: { glyph: "🗨", label: "Declaration", tip: "Declaration (declared as part of the attack or action it modifies)", icon: `${ICON_ROOT}/ui/tag-declared.webp` },
 };
 
 const list = (v) => (Array.isArray(v) ? v.filter((x) => x !== "" && x != null).join(", ") : String(v ?? ""));
