@@ -65,7 +65,9 @@ test("card buttons post new roll messages; no in-place roll writes, no manual 3D
   assert.match(src, /async function postCheckRoll[\s\S]*?ChatMessage\.create\(data\)/);
   assert.match(src, /rolls: \[r\]/);
   assert.match(src, /rollMessageData\(\{ speaker: ChatMessage\.getSpeaker\(\{ actor \}\), content: damageCardHTML/);
-  for (const f of ["../module/rules/spell-flow.mjs", "../module/sheets/statblock-sheet.mjs"]) {
+  // Stat-block casting goes through spell-flow's castSpellFlow (same roll message path as PCs).
+  assert.match(fs.readFileSync(new URL("../module/sheets/statblock-sheet.mjs", import.meta.url), "utf8"), /castSpellFlow\(actor, doc, \{ sb:/);
+  for (const f of ["../module/rules/spell-flow.mjs"]) {
     const s = fs.readFileSync(new URL(f, import.meta.url), "utf8");
     assert.match(s, /rollMessageData\(/); assert.match(s, /dmgRolls\.push\(x\)/);
   }

@@ -5,12 +5,12 @@
  */
 import { DISPOSITION_LABELS } from "../rules/statblock.mjs";
 import { postAttackCard } from "../rules/attack-flow.mjs";
-import { parseMagicSkill, spellMeta, spellsForSkill, defaultCost, applySbCost, castChatHTML } from "../rules/sb-cast.mjs";
-import { rollSpellDamage } from "../rules/spell-power.mjs";
-import { rollMessageData } from "../rules/dice-fx.mjs";
+import { parseMagicSkill, spellsForSkill } from "../rules/sb-cast.mjs";
+import { castSpellFlow } from "../rules/spell-flow.mjs";
+import { usesSbPool } from "../rules/sb-spell.mjs";
 import { applyDamageToTargets } from "../rules/apply-damage.mjs";
 import { SW25FellowSheet } from "./fellow-sheet.mjs";
-import { fixedToDice, parseSbDamage, applyVital, lootFor, castIsWhisper, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
+import { fixedToDice, parseSbDamage, applyVital, lootFor, spellGmOnly, slugKey } from "../rules/sb-play.mjs";
 import { beltContext, bindBeltListeners, dropOnBelt, beltFlags } from "../ce7/equipcard.mjs";
 import { usesOf, stackLabel } from "../ce7/belt-logic.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
@@ -203,51 +203,11 @@ SW25StatBlockSheet.prototype._sbCast = async function (index, spellName = null) 
   if (pick == null) return;
   if (pick === "") return ui.notifications.warn("Pick a spell first.");
   const meta = spells[Number(pick)];
-  const viewParts = view.parts ?? []; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
-  const core = Math.max(0, viewParts.findIndex((p) => p.isCore));
-  let mp = defaultCost(meta), hp = meta.cost.hp, rank = null, partIndex = core;
-  if (meta.needsDialog || viewParts.length > 1) {
-    const ranks = meta.ranks ? Object.keys(meta.ranks) : [];
-    const content = `<p><b>${esc(meta.name)}</b> — listed cost: ${esc(meta.cost.raw || `MP${meta.cost.base}`)}</p>`
-      + (ranks.length ? `<label>Deity rank <select name="rank">${ranks.map((r) => `<option value="${esc(r)}">${esc(r)} (MP${meta.ranks[r]})</option>`).join("")}</select></label><br>` : "")
-      + (meta.ritual ? `<p class="notes"><i>Ritual casting:</i> ${esc(String(meta.ritual))}</p>` : "")
-      + `<label>MP <input type="number" name="mp" value="${mp}" min="0"></label> <label>HP <input type="number" name="hp" value="${hp}" min="0"></label>`
-      + (viewParts.length > 1 ? `<br><label>Paid by <select name="part">${viewParts.map((p, n) => `<option value="${n}" ${n === core ? "selected" : ""}>${esc(p.name)}${p.isCore ? " ★" : ""} (MP ${p.mpValue ?? p.mp ?? 0})</option>`).join("")}</select></label>` : "");
-    const res = await foundry.applications.api.DialogV2.prompt({ window: { title: "Spell cost" }, content,
-      render: (_e, dlg) => { const f = dlg.element.querySelector("form"); f?.elements.rank?.addEventListener("change", (ev) => { f.elements.mp.value = defaultCost(meta, ev.target.value); }); if (f?.elements.rank) f.elements.mp.value = defaultCost(meta, f.elements.rank.value); },
-      ok: { label: "Cast", callback: (_e, b) => { const f = b.form.elements; return { mp: Number(f.mp.value) || 0, hp: Number(f.hp.value) || 0, rank: f.rank?.value ?? null, part: f.part ? Number(f.part.value) : core }; } } }).catch((err) => { if (err) console.error("sw25 | cast cost dialog", err); return null; });
-    if (!res) return; ({ mp, hp, rank } = res); partIndex = res.part;
-  }
-  const out = applySbCost(rawParts, viewParts, { mp, hp, partIndex });
-  if (out.index < 0) return ui.notifications.warn("This stat block has no parts to pay MP from.");
-  if (out.mpShort) ui.notifications.warn(`${actor.name}: not enough MP (${out.mpBefore}) — cast anyway.`);
-  await actor.update({ "system.sb.parts": out.parts });
-  const dmgRolls = []; // power roll + crit rerolls, attached to the card as dice
-  if (meta.power) {
-    out.damage = await rollSpellDamage({ power: meta.power, crit: meta.powerCrit, magicPower: skill.magicPower ?? 0 }, async () => { const x = await new Roll("2d6").evaluate(); dmgRolls.push(x); return x.total; });
-  }
-  const partName = viewParts.length > 1 ? viewParts[out.index]?.name : null;
-  // Casting check (2d6 + magic power) on the same card as the damage.
-  const sk = skills[index]; const ck = sk?.check ?? (sk?.magic?.power != null ? sk.magic.power : null);
-  const fixed = ck == null ? null : typeof ck === "object" ? (ck.fixed ?? (Number(ck.value) + 7)) : Number(ck) + 7;
-  const fd = fixedToDice(fixed); const rolls = [];
-  let castLine = "";
-  if (fd) { const r = await new Roll(fd.formula).evaluate(); rolls.push(r);
-    castLine = `<div class="sw25-sbcast-check">Casting Power <small>(fixed ${fd.fixed})</small> 🎲 ${fd.formula} = <b>${r.total}</b></div>`; }
-  const whisper = castIsWhisper(meta, actor.getFlag("sw25-ce", "sbSpellGmOnly") ?? {});
-  let desc = "";
-  if (!meta.power) {
-    const d = docs.find((x) => x.name === meta.name);
-    const TE = foundry.applications.ux.TextEditor.implementation;
-    const tgt = [d?.system?.target, d?.flags?.["sw25-ce"]?.data?.range, d?.system?.resist ? `Resist: ${d.system.resist}` : ""].filter(Boolean).join(" · ");
-    desc = (tgt ? `<div><small>${esc(tgt)}</small></div>` : "") + `<div class="sw25-sbcast-desc">${await TE.enrichHTML(d?.system?.description ?? "", { relativeTo: actor })}</div>`;
-  }
-  const head = whisper ? `<div class="sw25-gmonly"><i class="fas fa-eye-slash"></i> Whisper · GM only</div>` : "";
-  rolls.push(...dmgRolls);
-  const data = rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), rolls,
-    content: head + castChatHTML(actor.name, meta, { mp, hp, rank, ritual: !!meta.ritual, partName }, out, castLine + desc) });
-  if (whisper) { data.whisper = ChatMessage.getWhisperRecipients("GM").map((u) => u.id); delete data.blind; }
-  return ChatMessage.create(data);
+  if (!usesSbPool(actor)) return ui.notifications.warn("This stat block has no parts to pay MP from.");
+  // Same cast window / card as the character sheet (metamagic, Spend MP, Power roll + crit, Apply panel, Apply Effect);
+  // MP comes from the stat block part, casting check and Power use the skill's Magic Power (fixed − 7).
+  const doc = docs.find((x) => (meta.uuid && x.uuid === meta.uuid) || x.name === meta.name);
+  return castSpellFlow(actor, doc, { sb: { skill: skills[index], spellDoc: doc } });
 };
 
 /** Fixed button posts the value; dice button rolls 2d6 + (fixed - 7). */

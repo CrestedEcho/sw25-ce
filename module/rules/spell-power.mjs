@@ -56,10 +56,10 @@ export const healedHP = (before, amount, max) => Math.max(Number(before) || 0, M
 /** True when a spell carries the compendium {rate, table} power object (vs the legacy numeric power + pt3..pt12). */
 export const hasPowerObject = (sys) => !!sys && typeof sys.power === "object" && sys.power !== null && Array.isArray(sys.power.table);
 /** Roll damage with an async 2d6 roller (returns a total). Rerolls on crit; shared by monster and PC casting. */
-export async function rollSpellDamage({ power, crit = 10, magicPower = 0 }, roll2d6) {
+export async function rollSpellDamage({ power, crit = 10, magicPower = 0, fallbackRow = null }, roll2d6) {
   const c = Math.max(8, Number(crit) || 10); const rolls = [];
   for (let n = 0; n < 20; n++) { const r = Number(await roll2d6()); rolls.push(r); if (n === 0 && r <= 2) break; if (r < c) break; }
-  return { ...spellDamage({ power, crit: c, magicPower, rolls }), magicPower: Number(magicPower) || 0 };
+  return { ...spellDamage({ power, crit: c, magicPower, rolls, fallbackRow }), magicPower: Number(magicPower) || 0 };
 }
 /** PC cast plan: meta for castChatHTML + MP deduction from the actor's current MP (prepared mpcost, reductions applied). */
 export function planPcCast(itemName, sys, mpValue) {

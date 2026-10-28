@@ -132,18 +132,19 @@ export function statusButtonHTML(st) {
 
 /** Cast window body. ctx = { info, base, mp, mpMax, targets:{source,multiplier}|null, sur:{label,mp}|null, stones:makoInfo[], limit, nTargets }. */
 export function castWindowHTML(ctx) {
-  const { info, base = 0, mp = 0, mpMax = 0, targets = null, sur = null, stones = [], limit = 1, nTargets = 1 } = ctx;
+  const { info, base = 0, mp = 0, mpMax = 0, targets = null, sur = null, stones = [], limit = 1, nTargets = 1, poolLabel = "Your MP", spendLabel = "Spend my MP", allowNoMP = false, extraHTML = "" } = ctx;
   const step = (name, label, hint, value, min, tip) => `<div class="sw25-cw-row" data-tooltip="${esc(tip)}"><div><b>${esc(label)}</b><div class="sw25-cw-hint">${esc(hint)}</div></div>`
     + `<button type="button" class="sw25-cw-step" data-step="${name}" data-d="-1" aria-label="Less">−</button><input type="number" name="${name}" value="${value}" min="${min}" class="sw25-cw-num"><button type="button" class="sw25-cw-step" data-step="${name}" data-d="1" aria-label="More">+</button></div>`;
-  const noMP = Number(mpMax) <= 0;
+  const noMP = !allowNoMP && Number(mpMax) <= 0;
   let h = `<div class="sw25-castwin"><div class="sw25-cw-title">${info.img ? `<img src="${esc(info.img)}" width="32" height="32">` : ""}<div><b>Cast ${esc(info.name)}</b><div class="sw25-cw-hint">Listed cost ${esc(info.mpText || `${base} MP`)} · ${esc(info.target)} · ${esc(info.range)}</div></div></div>`;
   if (targets) h += step("targets", "Number of targets", `${targets.source ?? "Metamagic: Targets"}: ×${base} MP per target`, Math.max(1, nTargets), 1, "Cast on more than one target. Each target costs the full MP again.");
   h += step("meta", "Metamagic (cost ×)", "Distance, time, etc.: each step multiplies the cost", 1, 1, "Metamagic makes the spell bigger. Set how many times the MP cost is paid (1 = normal).");
   if (sur) h += `<label class="sw25-cw-row" data-tooltip="Divine magic outside your god's area costs extra."><div><b>Outside the god's influence</b><div class="sw25-cw-hint">${esc(sur.label)}: +${sur.mp} MP</div></div><input type="checkbox" name="out"></label>`;
+  h += extraHTML;
   h += step("adjust", "Adjust cost by hand", "For GM rulings, discounts or extra costs", 0, -999, "Add or remove MP from the final cost.");
-  h += `<div class="sw25-cw-total"><span>Final cost: <b class="sw25-cw-cost">${base}</b> MP</span><span>Your MP: <b>${mp} / ${mpMax}</b></span></div>`;
+  h += `<div class="sw25-cw-total"><span>Final cost: <b class="sw25-cw-cost">${base}</b> MP</span><span>${esc(poolLabel)}: <b class="sw25-cw-pool">${mp} / ${mpMax}</b></span></div>`;
   h += `<div class="sw25-cw-pay"><div class="sw25-cw-paytitle">Pay with</div>`;
-  h += `<label class="sw25-cw-opt" data-tooltip="${noMP ? "This character has no MP of their own (e.g. Grassrunner): use Mako Stones." : "MP is only taken when you press Cast."}"><input type="checkbox" name="spendMP" ${noMP ? "disabled" : "checked"}> Spend my MP${noMP ? " (no MP: stones only)" : ""}</label>`;
+  h += `<label class="sw25-cw-opt" data-tooltip="${noMP ? "This character has no MP of their own (e.g. Grassrunner): use Mako Stones." : "MP is only taken when you press Cast."}"><input type="checkbox" name="spendMP" ${noMP ? "disabled" : "checked"}> ${esc(spendLabel)}${noMP ? " (no MP: stones only)" : ""}</label>`;
   if (stones.length) {
     h += `<div class="sw25-cw-hint">Mako Stones: pick up to ${limit} (a stone pays first, your MP pays the rest)</div>`;
     h += stones.map((s, i) => `<label class="sw25-cw-opt" data-tooltip="${esc(s.name)}: ${s.value}/${s.max} points left${s.qty > 1 ? ` · ×${s.qty} in the stack` : ""}${s.daily ? " · refills daily" : ""}"><input type="checkbox" name="stone" value="${esc(s.id)}" ${noMP && i === 0 ? "checked" : ""}> ${esc(s.name)} <span class="sw25-cw-hint">${s.value}/${s.max} pts${s.qty > 1 ? ` ×${s.qty}` : ""}${s.daily ? " · daily" : ""}</span></label>`).join("");
