@@ -60,7 +60,7 @@ export async function annotateAttackCard(actor, messageId, phase, item = null) {
   if (!data || (!data.lines.length && !data.buttons.length && data.applyDamage == null)) return;
   await msg.setFlag(SYS, "attackCard", data);
 }
-function renderAttackCard(msg, el) {
+export function renderAttackCard(msg, el, applyFn = applyDamageToTargets) {
   const d = msg.getFlag?.(SYS, "attackCard");
   if (!d || el.querySelector(".sw-attack-extras")) return;
   const lines = (d.lines ?? []).map((l) => `<div>${esc(l)}</div>`).join("");
@@ -68,8 +68,9 @@ function renderAttackCard(msg, el) {
   const links = (d.links ?? []).map((l) => `<div><a class="content-link" draggable="true" data-link data-uuid="${esc(l.uuid)}" data-type="JournalEntry"><i class="fas fa-book-open"></i> ${esc(l.label)}</a></div>`).join("");
   const apply = d.applyDamage != null ? `<button type="button" class="sw-attack-apply" data-tooltip="${esc(loc("SW25.Card.ApplyDamageTip", "Physical damage: the target's Defense is subtracted. Applies to the tokens you have targeted when you click."))}">${esc(loc("SW25.Card.ApplyDamage", "Apply damage {n}", { n: Number(d.applyDamage) }))}</button>` : "";
   const box = `<div class="sw-attack-extras" style="border-top:1px dashed #999;margin-top:4px;padding-top:2px;font-size:0.85em">${lines}${links}${btns}${apply}</div>`;
-  el.querySelector(".sw-attack-apply")?.addEventListener("click", (ev) => { ev.preventDefault(); applyDamageToTargets(d.applyDamage, "physical"); });
   (el.querySelector(".message-content") ?? el).insertAdjacentHTML("beforeend", box);
+  // Bind AFTER the box is in the DOM (binding before insert found no button: Apply damage did nothing).
+  el.querySelector(".sw-attack-apply")?.addEventListener("click", (ev) => { ev.preventDefault(); applyFn(d.applyDamage, "physical"); });
   el.querySelectorAll(".sw-attack-btn").forEach((b) => b.addEventListener("click", (ev) => { ev.preventDefault(); onAttackButton(msg, d, Number(b.dataset.i)); }));
 }
 /** Cover I (defense.coverAlly): text only. Lists other combatants whose cover declaration is still running. */

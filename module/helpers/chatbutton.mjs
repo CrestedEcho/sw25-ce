@@ -6,6 +6,7 @@ import { targetRollDialog } from "../helpers/dialogs.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { Util } from "./utils.mjs";
 import { weaponCritValue } from "../rules/crit-value.mjs";
+import { applyLegacyToStatBlock } from "../rules/apply-damage.mjs";
 import { sw25CritModFor } from "../documents/actor.mjs";
 import { targetChipsHtml, tokenTargetInfo, targetButtonInner, resolveTargetTokens, resolveTargetTokensOrWarn, refreshLiveTargets } from "./target-chips.mjs";
 
@@ -1339,11 +1340,17 @@ export async function chatButton(chatMessage, buttonType) {
     // ce.16: always the tokens selected/targeted right now (never a target stored at roll time).
     const targetTokens = resolveTargetTokensOrWarn();
     if (!targetTokens.length) return;
-    for (const token of targetTokens) await applyExec(token.id);
+    for (const token of targetTokens) {
+      try { await applyExec(token.id); }
+      catch (err) { console.error("sw25-ce | apply failed", err); ui.notifications.error(`Could not apply to ${token.name ?? "the target"}: ${err?.message ?? err}`); }
+    }
 
     async function applyExec(targetTokenId) {
       const targetToken = canvas.tokens.get(targetTokenId);
-      const targetActor = targetToken.actor;
+      const targetActor = targetToken?.actor;
+      if (!targetActor) return ui.notifications.warn("That token is not on this scene (or has no actor).");
+      // Stat-block monsters/NPCs keep HP in their parts: use the shared Apply path (was writing system.hp.value, which they don't show).
+      if (targetActor.type !== "character" && targetActor.system?.sb) return applyLegacyToStatBlock(targetToken, Number(chatMessage.flags?.sw25?.total) || 0, buttonType);
       let targetHP = targetActor.system.hp.value;
       let targetMP = targetActor.system.mp.value;
       let targetMaxHP = targetActor.system.hp.max;

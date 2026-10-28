@@ -1001,7 +1001,7 @@ Hooks.once("ready", async function () {
     if (activeGMs.length > 1 && game.user.id !== activeGMs[0]) return;
 
     if (data.method == "applyStatus") { applyStatusToTokenIds(data.targetTokens, data.status); return; }
-    if (data.method == "applyDamage") { applyDamageToTokenIds(data.targetTokens, data.amount, ["physical", "magic", "heal"].includes(data.kind) ? data.kind : "magic"); return; }
+    if (data.method == "applyDamage") { applyDamageToTokenIds(data.targetTokens, data.amount, ["physical", "magic", "fixed", "heal"].includes(data.kind) ? data.kind : "magic"); return; }
     if (data.method == "revealWeakness") {
       const a = canvas.tokens.get(data.targetToken)?.actor; if (!a) return;
       const upd = knowledgeUpdates(data.total, a.system?.sb); if (Object.keys(upd).length) a.update(upd);

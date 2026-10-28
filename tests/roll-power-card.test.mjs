@@ -14,7 +14,7 @@ test("power card: no k@ formula line, every localize key exists in en.json", () 
   const keys = [...tpl.matchAll(/localize "([^"]+)"/g)].map((m) => m[1]);
   for (const k of keys) assert.equal(typeof get(k), "string", `missing ${k}`);
   for (const t of ["pd", "md", "cd", "hr", "mr"]) { assert.equal(typeof get(`SW25.Card.${t}`), "string"); assert.equal(typeof get(`SW25.Card.${t}Tip`), "string"); }
-  assert.deepEqual(["pd", "md", "cd", "hr", "mr"].map((t) => get(`SW25.Card.${t}`)), ["Physical", "Magic", "Fixed", "Hits HP", "Hits MP"]);
+  assert.deepEqual(["pd", "md", "cd", "hr", "mr"].map((t) => get(`SW25.Card.${t}`)), ["Physical", "Magic", "Fixed", "Heal HP", "Restore MP"]);
 });
 test("power card: every button has a tooltip", () => {
   for (const m of tpl.matchAll(/<button[^>]*>/g)) assert.match(m[0], /data-tooltip=/, m[0]);
@@ -27,6 +27,6 @@ test("power card renders labelled rows and spelled-out buttons", { skip: !Handle
   H.registerHelper("sw25dmgf", () => "17 / 10 / +4");
   const html = H.compile(tpl)({ formula: "k17@10+4", tooltip: "<div class='dice-tooltip'>6 3</div>", power: 17, result: [6], results: 6, mod: 4, total: 10, showhalf: true, apply: "on" });
   assert.ok(!html.includes("k17@10"));
-  for (const s of ["Dice", "Table result", "Bonus", "Crits", "Power 17", "Physical", "Magic", "Fixed", "Hits HP", "Hits MP", "Half"]) assert.ok(html.includes(s), s);
+  for (const s of ["Dice", "Table result", "Bonus", "Crits", "Power 17", "Physical", "Magic", "Fixed", "Heal HP", "Restore MP", "Half"]) assert.ok(html.includes(s), s);
   assert.ok(!/>\s*(PD|MD|FD|HPR|MPR)\s*</.test(html));
 });
