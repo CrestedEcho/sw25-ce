@@ -15,6 +15,7 @@ export function revealWeakness(targets, total) {
   }
 }
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
+import { baseMpCost, clampMpCost } from "../rules/spell-mp.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow } from "../rules/spell-flow.mjs";
@@ -145,6 +146,12 @@ export class SW25Item extends Item {
     // after import/creation, compendium actors) and picked the base actor for unlinked tokens, so skill and
     // check values stayed 0 until the next update re-prepared the sheet.
     const actor = itemData.actor ?? null;
+    if (itemData.type === "spell") {
+      // Owned or not: show the imported cost as the base (in memory; saving the sheet stores it).
+      const b = baseMpCost(systemData, itemData._source?.system);
+      if (b != null && !(Number(systemData.basempcost) > 0)) systemData.basempcost = b;
+      if (!actor && b != null && (systemData.mpcost == null || systemData.mpcost === "" || Number(systemData.mpcost) === 0)) systemData.mpcost = b;
+    }
     if (actor) {
       this._prepareSkillData(itemData, actor);
       this._prepareCheckData(itemData, actor);
@@ -1285,6 +1292,8 @@ export class SW25Item extends Item {
     }
 
     if (itemData.type == "spell") {
+      // Imported spells may only store mpcost (no basempcost): use that as the base instead of wiping it.
+      const spellBaseMp = baseMpCost(systemData, itemData._source?.system);
       if (!actorData.effect) systemData.efallmgpmod = 0;
       else if (actorData.effect.allmgp)
         systemData.efallmgpmod = Number(actorData.effect.allmgp);
@@ -1310,10 +1319,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efscpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpsc) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "conjurer":
           systemData.checkbase =
@@ -1329,10 +1338,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efcnpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpcn) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "wizard":
           systemData.checkbase =
@@ -1348,10 +1357,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efwzpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpwz) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "priest":
           systemData.checkbase =
@@ -1367,10 +1376,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efprpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmppr) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "magitech":
           systemData.checkbase =
@@ -1386,10 +1395,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efmtpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpmt) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "fairy":
           systemData.checkbase =
@@ -1405,10 +1414,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.effrpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpfr) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "druid":
           systemData.checkbase =
@@ -1424,10 +1433,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efdrpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpdr) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "daemon":
           systemData.checkbase =
@@ -1443,10 +1452,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efdmpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpdm) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "abyssal":
           systemData.checkbase =
@@ -1462,10 +1471,10 @@ export class SW25Item extends Item {
             Number(actorData.attributes.efabpwmod) +
             Number(actorData.attributes.efmpwall);
           systemData.mpcost =
-            Number(systemData.basempcost) -
+            (Number(spellBaseMp) || 0) -
             Number(actorData.attributes.efmpab) -
             Number(actorData.attributes.efmpall);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         case "bibliomancer":
           systemData.checkbase =
@@ -1481,10 +1490,10 @@ export class SW25Item extends Item {
             (Number(actorData.attributes.efbmpwmod) || 0) +
             (Number(actorData.attributes.efmpwall) || 0);
           systemData.mpcost =
-            (Number(systemData.basempcost) || 0) -
+            (Number(spellBaseMp) || 0) -
             (Number(actorData.attributes.efmpbm) || 0) -
             (Number(actorData.attributes.efmpall) || 0);
-          if (systemData.mpcost < 1) systemData.mpcost = 1;
+          systemData.mpcost = clampMpCost(spellBaseMp, systemData.mpcost);
           break;
         default:
           break;

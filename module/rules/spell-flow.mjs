@@ -2,6 +2,7 @@
  * Name click -> description card (never touches MP). Cast -> cast window (metamagic, cost, pay with MP / Mako Stone)
  * -> pay on confirm -> casting roll + damage/healing -> cast card with Apply buttons (live targets) and Apply Effect.
  */
+import { spellMpValue } from "./spell-mp.mjs";
 import * as SC from "./spell-cast.mjs";
 import { castOptionsFor } from "./spell-ui.mjs";
 import { hasPowerObject, rollSpellDamage } from "./spell-power.mjs";
@@ -24,7 +25,7 @@ export async function postSpellDescription(actor, item) {
 /** Cast window. Resolves { base, targets, meta, surcharge, adjust, spendMP, stoneIds } or null (Cancel). */
 export async function openCastWindow(actor, item) {
   const info = spellInfo(item);
-  const base = Math.max(0, Number(item.system?.mpcost ?? item.system?.basempcost) || 0);
+  const base = Math.max(0, Number(spellMpValue(item.system ?? {})) || 0);
   const opt = await castOptionsFor(actor, item);
   const sur = opt.surcharges?.[0] ? { label: opt.surcharges[0].source ?? "", mp: opt.surcharges[0].mp } : null;
   const stones = usableStones(actor.items);

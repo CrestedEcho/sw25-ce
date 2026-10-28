@@ -2,6 +2,7 @@
  * Buttons on the cast card read the tokens selected/targeted at click time (live "Applies to:" line):
  *   data-sw25-magic-dmg / data-sw25-heal (existing handlers), data-sw25-status (Apply Effect, from spell data).
  */
+import { spellMpValue, isVariableMpText } from "./spell-mp.mjs";
 import { isHealSpell, hasPowerObject } from "./spell-power.mjs";
 import { mpLine, shortLine } from "./spell-pay.mjs";
 import { conditionFor } from "./conditions.mjs";
@@ -63,7 +64,7 @@ export function tagsOf(sys = {}) {
 /** Plain-word spell facts used by the list row, description card and cast card. */
 export function spellInfo(item = {}) {
   const sys = item.system ?? {}; const data = item.flags?.["sw25-ce"]?.data ?? {};
-  const mp = sys.mpcost ?? sys.basempcost;
+  const mp = spellMpValue(sys);
   return {
     id: item.id ?? item._id, name: item.name ?? "", img: item.img ?? "",
     school: txt(sys.typename) || txt(sys.type), level: txt(sys.level ?? data.level),
@@ -154,5 +155,5 @@ export function castWindowHTML(ctx) {
 /** Spell list row helper for the sheet (precomputed, so the template stays simple). */
 export function rowData(item) {
   const i = spellInfo(item);
-  return { sub: subLine(i), mp: i.mp === "" ? (i.mpText || "—") : `${i.mp} MP`, target: i.target, range: i.range, duration: i.duration, hasStatus: !!i.status };
+  return { sub: subLine(i), mp: isVariableMpText(i.mpText) ? i.mpText : i.mp === "" ? (i.mpText || "—") : `${i.mp} MP`, target: i.target, range: i.range, duration: i.duration, hasStatus: !!i.status };
 }

@@ -3,6 +3,7 @@
  * rating table), add Magic Power. 2 (1+1) = automatic failure, 0 damage. Roll >= crit -> roll again and add
  * (repeat). Magic damage ignores Defense. Resisted ("Half") = half, rounded UP.
  */
+import { spellMpValue } from "./spell-mp.mjs";
 /** Table value for a 2d6 total (3..12) from the spell's own table, else fallbackRow (rpt[rate], also 3..12). */
 export function tableValue(power, total, fallbackRow = null) {
   if (total <= 2) return 0;
@@ -62,7 +63,7 @@ export async function rollSpellDamage({ power, crit = 10, magicPower = 0 }, roll
 }
 /** PC cast plan: meta for castChatHTML + MP deduction from the actor's current MP (prepared mpcost, reductions applied). */
 export function planPcCast(itemName, sys, mpValue) {
-  const mp = Math.max(0, Number(sys.mpcost ?? sys.basempcost) || 0); const before = Number(mpValue) || 0;
+  const mp = Math.max(0, Number(spellMpValue(sys)) || 0); const before = Number(mpValue) || 0;
   const meta = { name: itemName, school: sys.typename || sys.type || "", level: sys.level ?? sys.flagsLevel ?? "?", power: sys.power, powerCrit: Number(sys.powerCrit) || 10,
     resist: sys.resist ?? "", heal: isHealSpell({ name: itemName, summary: sys.summary, description: sys.description }), cost: { raw: sys.mpcostText ? String(sys.mpcostText) : "", hp: 0 } };
   return { meta, mp, magicPower: Number(sys.powerbase) || 0, res: { mpBefore: before, mpAfter: before - mp, hpBefore: 0, hpAfter: 0, mpShort: before < mp, hpShort: false } };
