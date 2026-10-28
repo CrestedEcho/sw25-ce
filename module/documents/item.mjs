@@ -17,6 +17,7 @@ export function revealWeakness(targets, total) {
 }
 import { mpCost, hpCost } from "../helpers/mpcost.mjs";
 import { baseMpCost, clampMpCost } from "../rules/spell-mp.mjs";
+import { schoolSkillName } from "../rules/school-class.mjs";
 import { resistLabel } from "../rules/resist-label.mjs";
 
 /** Localize a built key when it exists; otherwise show the stored text (or "-" when empty) instead of a raw key. */
@@ -2400,106 +2401,14 @@ export class SW25Item extends Item {
       const actorData = itemData.actor.system;
       const actoritemData = itemData.actor.items;
 
-      // Set default skill and ability
-      if (systemData.type == "sorcerer") {
-        if (actorData.scskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.scskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.scskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "conjurer") {
-        if (actorData.cnskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.cnskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.cnskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "wizard") {
-        if (actorData.wzskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.wzskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.wzskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "priest") {
-        if (actorData.prskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.prskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.prskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "magitech") {
-        if (actorData.mtskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.mtskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.mtskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "fairy") {
-        if (actorData.frskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.frskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.frskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "druid") {
-        if (actorData.drskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.drskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.drskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "daemon") {
-        if (actorData.dmskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.dmskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.dmskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "abyssal") {
-        if (actorData.abskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.abskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.abskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
-      }
-      if (systemData.type == "bibliomancer") {
-        if (actorData.bmskill != "") {
-          if (systemData.checkskill == "")
-            systemData.checkskill = actorData.bmskill;
-          if (systemData.checkabi == "") systemData.checkabi = "int";
-          if (systemData.powerskill == "")
-            systemData.powerskill = actorData.bmskill;
-          if (systemData.powerabi == "") systemData.powerabi = "int";
-        }
+      // Set default skill and ability: the school's drop-down class, or (empty) the actor's class that casts the school.
+      const schoolCode = { sorcerer: "sc", conjurer: "cn", wizard: "wz", priest: "pr", magitech: "mt", fairy: "fr", druid: "dr", daemon: "dm", abyssal: "ab", bibliomancer: "bm" }[systemData.type];
+      const schoolSkill = schoolCode ? schoolSkillName(actorData, actoritemData, schoolCode) : "";
+      if (schoolSkill) {
+        if (!systemData.checkskill) systemData.checkskill = schoolSkill;
+        if (!systemData.checkabi) systemData.checkabi = "int";
+        if (!systemData.powerskill) systemData.powerskill = schoolSkill;
+        if (!systemData.powerabi) systemData.powerabi = "int";
       }
     }
   }

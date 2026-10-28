@@ -6,6 +6,7 @@ import { weaponCritValue } from "../rules/crit-value.mjs";
 import * as CS from "../rules/combat-state.mjs";
 import { prepareStatBlock } from "../rules/statblock.mjs";
 import { bestClass, EVASION_CLASSES } from "../rules/class-pick.mjs";
+import { schoolSkillName, SCHOOLS as MAGIC_SCHOOL_CODES } from "../rules/school-class.mjs";
 import { pcWeaponBattle } from "../rules/weapon-battle.mjs";
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
@@ -306,9 +307,11 @@ export class SW25Actor extends Actor {
       systemData.efallmgpacmod = Number(systemData.effect.allmgp);
     else systemData.efallmgpacmod = 0;
 
+    // Each school uses the class picked in its drop-down, or (when empty) the actor's class that casts it.
+    for (const s of MAGIC_SCHOOL_CODES) systemData[`${s}skillUsed`] = schoolSkillName(systemData, this.items, s);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.scskill) {
+        if (systemData.scskillUsed && item.name == systemData.scskillUsed) {
           systemData.scbase = item.system.skillbase.invoke;
         }
       }
@@ -324,7 +327,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.cnskill) {
+        if (systemData.cnskillUsed && item.name == systemData.cnskillUsed) {
           systemData.cnbase = item.system.skillbase.invoke;
         }
       }
@@ -340,7 +343,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.wzskill) {
+        if (systemData.wzskillUsed && item.name == systemData.wzskillUsed) {
           systemData.wzbase = item.system.skillbase.invoke;
         }
       }
@@ -356,7 +359,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.prskill) {
+        if (systemData.prskillUsed && item.name == systemData.prskillUsed) {
           systemData.prbase = item.system.skillbase.invoke;
         }
       }
@@ -372,7 +375,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.mtskill) {
+        if (systemData.mtskillUsed && item.name == systemData.mtskillUsed) {
           systemData.mtbase = item.system.skillbase.invoke;
         }
       }
@@ -388,7 +391,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.frskill) {
+        if (systemData.frskillUsed && item.name == systemData.frskillUsed) {
           systemData.frbase = item.system.skillbase.invoke;
           let skillLevel = item.system.skilllevel ? item.system.skilllevel : 0;
 
@@ -441,7 +444,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.drskill) {
+        if (systemData.drskillUsed && item.name == systemData.drskillUsed) {
           systemData.drbase = item.system.skillbase.invoke;
         }
       }
@@ -457,7 +460,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.dmskill) {
+        if (systemData.dmskillUsed && item.name == systemData.dmskillUsed) {
           systemData.dmbase = item.system.skillbase.invoke;
         }
       }
@@ -473,7 +476,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.abskill) {
+        if (systemData.abskillUsed && item.name == systemData.abskillUsed) {
           systemData.abbase = item.system.skillbase.invoke;
         }
       }
@@ -489,7 +492,7 @@ export class SW25Actor extends Actor {
       (Number(systemData.attributes.efmckall) || 0);
     this.items.forEach((item) => {
       if (item.type == "skill") {
-        if (item.name == systemData.bmskill) {
+        if (systemData.bmskillUsed && item.name == systemData.bmskillUsed) {
           systemData.bmbase = item.system.skillbase.invoke;
           systemData.bmlv = item.system.skilllevel;
         }
@@ -1474,7 +1477,7 @@ function sw25ApplyCastPenalties(actor, systemData) {
   if (!cp || !Object.keys(cp).length) return;
   const armors = actor.items.filter((i) => i.type === "armor" && i.system.equip === true);
   for (const school of ["sc", "cn", "wz", "pr", "mt", "fr", "dr", "dm", "ab", "bm"]) {
-    const pen = cp[systemData[`${school}skill`]];
+    const pen = cp[systemData[`${school}skillUsed`] || systemData[`${school}skill`]];
     if (!pen) continue;
     let total = 0;
     for (const a of armors) {

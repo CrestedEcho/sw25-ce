@@ -291,7 +291,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.sccast}}" data-label="{{localize "SW25.Item.Spell.Sorcerer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "sc"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.scskill">{{selectOptions skills selected=system.scskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.scskill">{{selectOptions skills selected=system.scskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "sc")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.scmod" value="{{system.attributes.scmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-sorcerer.hbs"}}</div>
@@ -304,7 +304,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.cncast}}" data-label="{{localize "SW25.Item.Spell.Conjurer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "cn"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.cnskill">{{selectOptions skills selected=system.cnskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.cnskill">{{selectOptions skills selected=system.cnskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "cn")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.cnmod" value="{{system.attributes.cnmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-conjurer.hbs"}}</div>
@@ -317,7 +317,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.wzcast}}" data-label="{{localize "SW25.Item.Spell.Wizard"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "wz"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.wzskill">{{selectOptions skills selected=system.wzskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.wzskill">{{selectOptions skills selected=system.wzskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "wz")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.wzmod" value="{{system.attributes.wzmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-wizard.hbs"}}</div>
@@ -330,7 +330,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.prcast}}" data-label="{{localize "SW25.Item.Spell.Priest"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "pr"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.prskill">{{selectOptions skills selected=system.prskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.prskill">{{selectOptions skills selected=system.prskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "pr")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.prmod" value="{{system.attributes.prmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-priest.hbs"}}</div>
@@ -343,7 +343,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.mtcast}}" data-label="{{localize "SW25.Item.Spell.Magitech"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "mt"}}</span>
           <span class="rollable chip" data-resusequantity={{system.resusequantity}} data-resuse="{{system.resuse}}" data-roll="{{system.itemhitformula}}+{{system.itemhitbase}}" data-label="{{system.itemname}} ({{localize "SW25.Item.Weapon.Hit"}})" data-pt="{{system.itempowertable}}" data-apply="{{system.itemapplycheck}}" data-checktype="{{system.itemchecktype}}" data-resist="{{localize "SW25.Resist.Check.Dodge"}}" data-resistresult="disappear">{{localize "SW25.Item.Weapon.Hit"}} {{system.itemhitbase}}</span>
           <span class="spacer"></span>
-          <select name="system.mtskill">{{selectOptions skills selected=system.mtskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.mtskill">{{selectOptions skills selected=system.mtskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "mt")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.mtmod" value="{{system.attributes.mtmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-magitech.hbs"}}</div>
@@ -356,7 +356,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.frcast}}" data-label="{{localize "SW25.Item.Spell.Fairy"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "fr"}}</span>
           <span class="fairy-checkbox"><label class="fairy-contract f-earth {{#if system.attributes.fairy.earth}}checked{{/if}}" data-path="system.attributes.fairy.earth">{{localize "SW25.Item.Spell.FairyContract.Earth"}}</label><label class="fairy-contract f-water {{#if system.attributes.fairy.water}}checked{{/if}}" data-path="system.attributes.fairy.water">{{localize "SW25.Item.Spell.FairyContract.Water"}}</label><label class="fairy-contract f-fire {{#if system.attributes.fairy.fire}}checked{{/if}}" data-path="system.attributes.fairy.fire">{{localize "SW25.Item.Spell.FairyContract.Fire"}}</label><label class="fairy-contract f-wind {{#if system.attributes.fairy.wind}}checked{{/if}}" data-path="system.attributes.fairy.wind">{{localize "SW25.Item.Spell.FairyContract.Wind"}}</label><label class="fairy-contract f-light {{#if system.attributes.fairy.light}}checked{{/if}}" data-path="system.attributes.fairy.light">{{localize "SW25.Item.Spell.FairyContract.Light"}}</label><label class="fairy-contract f-dark {{#if system.attributes.fairy.dark}}checked{{/if}}" data-path="system.attributes.fairy.dark">{{localize "SW25.Item.Spell.FairyContract.Dark"}}</label></span><span class="fairy-rank">{{localize "SW25.Item.Spell.FairyContract.Rank"}}: {{system.frRank}}</span>
           <span class="spacer"></span>
-          <select name="system.frskill">{{selectOptions skills selected=system.frskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.frskill">{{selectOptions skills selected=system.frskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "fr")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.frmod" value="{{system.attributes.frmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-fairy.hbs"}}</div>
@@ -369,7 +369,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.drcast}}" data-label="{{localize "SW25.Item.Spell.Druid"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "dr"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.drskill">{{selectOptions skills selected=system.drskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.drskill">{{selectOptions skills selected=system.drskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "dr")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.drmod" value="{{system.attributes.drmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-druid.hbs"}}</div>
@@ -382,7 +382,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.dmcast}}" data-label="{{localize "SW25.Item.Spell.Daemon"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "dm"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.dmskill">{{selectOptions skills selected=system.dmskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.dmskill">{{selectOptions skills selected=system.dmskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "dm")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.dmmod" value="{{system.attributes.dmmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-daemon.hbs"}}</div>
@@ -395,7 +395,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.abcast}}" data-label="{{localize "SW25.Item.Spell.Abyssal"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "ab"}}</span>
           
           <span class="spacer"></span>
-          <select name="system.abskill">{{selectOptions skills selected=system.abskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.abskill">{{selectOptions skills selected=system.abskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "ab")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.abmod" value="{{system.attributes.abmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-abyssal.hbs"}}</div>
@@ -408,7 +408,7 @@
           <span class="rollable chip" data-roll="2d6+{{system.attributes.bmcast}}" data-label="{{localize "SW25.Item.Spell.Bibliomancer"}}" data-pt="" data-spell="on" data-apply="-" data-checktype="" data-tooltip="{{localize 'SW25.V2.Tip.MagicPower'}}"><i class="fa-solid fa-dice"></i> {{localize "SW25.Attributes.Magicpower"}} {{sw25MagicPower system "bm"}}</span>
           {{#if system.attributes.bibRankEquip}}<span class="biblio-ready"><label class="biblio-rank">R1 {{lookup system.attributes.bibRankEquip 1}}/{{lookup system.attributes.bibRankMax 1}}</label><label class="biblio-rank">R2 {{lookup system.attributes.bibRankEquip 2}}/{{lookup system.attributes.bibRankMax 2}}</label><label class="biblio-rank">R3 {{lookup system.attributes.bibRankEquip 3}}/{{lookup system.attributes.bibRankMax 3}}</label><label class="biblio-rank">R4 {{lookup system.attributes.bibRankEquip 4}}/{{lookup system.attributes.bibRankMax 4}}</label><label class="biblio-rank">R5 {{lookup system.attributes.bibRankEquip 5}}/{{lookup system.attributes.bibRankMax 5}}</label></span>{{/if}}
           <span class="spacer"></span>
-          <select name="system.bmskill">{{selectOptions skills selected=system.bmskill valueAttr="name" labelAttr="name" blank="-"}}</select>
+          <select name="system.bmskill">{{selectOptions skills selected=system.bmskill valueAttr="name" labelAttr="name" blank=(sw25SchoolBlank system "bm")}}</select>
           <label class="mod" data-tooltip="{{localize 'SW25.V2.Tip.SchoolMod'}}"><i class="fa-solid fa-angles-up"></i><input type="text" name="system.attributes.bmmod" value="{{system.attributes.bmmod}}" data-dtype="Number"/></label>
         </div>
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-bibliomancer.hbs"}}</div>
