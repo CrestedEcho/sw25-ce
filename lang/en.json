@@ -222,7 +222,7 @@
         "abbr": "MDEF"
       },
       "Showfeature": "Show Empty Groups",
-      "Showspell": "Show All Spell",
+      "Showspell": "Show All Spells",
       "Showaction": "Show All Action",
       "Magicpower": "Magic Power",
       "Honer": {
@@ -1173,6 +1173,8 @@
       }
     },
     "V2": {
+      "AllSpells": "All Spells",
+      "NoSpells": "No spells yet. Drag a spell here or press + New.",
       "SettingTheme": "Sheet theme",
       "SettingThemeHint": "Look of Sword World 2.5 sheets for you only (each player picks their own).",
       "ThemeParchment": "Parchment",
