@@ -1,9 +1,12 @@
-  <li class='items-header sw25-spellrow sw25-spellrow-head'>
-    <div></div>
-    <div class="sw25-sr-name">{{title}}</div>
-    <div class="sw25-sr-cell">MP</div>
-    <div class="sw25-sr-cell sidebar-hidden">{{localize "SW25.Target"}}</div>
-    <div class="sw25-sr-cell sidebar-hidden">Range</div>
-    <div class="sw25-sr-cell sidebar-hidden">Duration</div>
-    <div></div>
+  {{!-- Same .sw25-spellrow grid as actor-spell-item.hbs (one column set, fixed widths), so headers sit over their cells. --}}
+  <li class='items-header sw25-spellrow-li sw25-spellrow-headli'>
+    <div class="sw25-spellrow sw25-spellrow-head">
+      <div class="sw25-sr-icon"></div>
+      <div class="sw25-sr-name">{{title}}</div>
+      <div class="sw25-sr-cell">MP</div>
+      <div class="sw25-sr-cell sidebar-hidden">{{localize "SW25.Target"}}</div>
+      <div class="sw25-sr-cell sidebar-hidden">Range</div>
+      <div class="sw25-sr-cell sidebar-hidden">Duration</div>
+      <div class="sw25-sr-actions"></div>
+    </div>
   </li>

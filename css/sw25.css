@@ -3661,8 +3661,13 @@ button.sw-attack-apply{display:block;width:100%;margin-top:6px;font-weight:bold}
 button.chat-target[data-buttontype="target-select"]{display:none}
 
 /* ===== Spell list rows, cast window, spell cards ===== */
-.sw25-spellrow { display:grid; grid-template-columns:40px minmax(120px,1fr) 52px 80px 70px 80px auto; align-items:center; gap:6px; padding:3px 4px; }
-.sw25-spellrow-head { font-weight:bold; font-size:12px; border-bottom:1px solid #7a6a4a; }
+/* One column set for the header and every row: icon | name | MP | Target | Range | Duration | actions.
+   All tracks except the name are fixed, so a header (no buttons) and a row (Cast + icons) get identical columns. */
+.sw25-spellrow { --sw25-sr-cols:40px minmax(120px,1fr) 64px 96px 96px 96px 150px; display:grid; grid-template-columns:var(--sw25-sr-cols); align-items:center; gap:6px; padding:3px 4px; box-sizing:border-box; width:100%; }
+.sw25-spellrow > * { min-width:0; overflow-wrap:anywhere; }
+.sw25-spellrow-head { font-weight:bold; font-size:12px; }
+.sw25 .items-list .sw25-spellrow-headli { height:auto; padding:0; border:none; border-bottom:1px solid #7a6a4a; display:block; }
+.sw25 .items-list .sw25-spellrow-headli .sw25-sr-name { text-align:left; }
 .sw25-spellrow-li { border-bottom:1px solid rgba(0,0,0,.12); list-style:none; }
 .sw25-spellrow-li:hover { background:rgba(120,90,40,.07); }
 .sw25-sr-icon img { border:0; border-radius:6px; display:block; }
@@ -3748,3 +3753,19 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 .sw25-dc-final { font-size:18px; font-weight:bold; color:#a22; min-width:34px; text-align:right; }
 .sw25-dc-final.heal { color:#2c7a3f; }
 .sw25-dc-go { margin-top:4px; min-height:30px; font-weight:bold; }
+
+/* Monster/NPC spell list: header labels and row cells use the same fixed
+   flex-basis widths; never let a long label ("Range/Area", "Resistance")
+   grow its header cell past the row cell below it. */
+.sw25 .items-list.sw25-monsterspells .item-element,
+.sw25 .items-list.sw25-monsterspells .item-prop {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.15;
+}
+.sw25 .items-list.sw25-monsterspells .items-header { height: auto; min-height: 28px; padding: 0 2px; border-width: 0 0 2px 0; }
+.sw25 .items-list.sw25-monsterspells .item-name { min-width: 0; }
+.sw25 .items-list.sw25-monsterspells .items-header .item-element { overflow-wrap: normal; text-overflow: ellipsis; }

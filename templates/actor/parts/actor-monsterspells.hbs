@@ -1,12 +1,14 @@
-<ol class='items-list'>
+<ol class='items-list sw25-monsterspells'>
+  {{!-- Header cells mirror the row cells below (same order and widths): equip | name | HP | MP | Target | Range | Time | Resist | Type | controls --}}
   <li class='item flexrow items-header'>
+    <div class="item-equip"></div>
     <div class='item-name'>{{localize "TYPES.Item.spell"}}</div>
     <div class='item-element' style="flex: 0 0 30px;">HP</div>
     <div class='item-element' style="flex: 0 0 30px;">MP</div>
     <div class='item-element' style="flex: 0 0 60px;">{{localize "SW25.Target"}}</div>
-    <div class='item-element' style="flex: 0 0 60px;">{{localize "SW25.Rangeshape"}}</div>
+    <div class='item-element' style="flex: 0 0 76px;">{{localize "SW25.Rangeshape"}}</div>
     <div class='item-element' style="flex: 0 0 100px;">{{localize "SW25.Time"}}</div>
-    <div class='item-element' style="flex: 0 0 40px;">{{localize "SW25.Item.Resist"}}</div>
+    <div class='item-element' style="flex: 0 0 66px;">{{localize "SW25.Item.Resist"}}</div>
     <div class='item-element' style="flex: 0 0 80px;">{{localize "SW25.Item.Prop"}}</div>
     <div class='item-controls' style="flex: 0 0 50px;">
       <a class='item-control item-create' title='{{localize "DOCUMENT.Create" type=(localize "TYPES.Item.spell")}}' data-type='spell'>
@@ -33,8 +35,9 @@
           </div>
           {{> "systems/sw25-ce/templates/helper/action-marks.hbs"}}
           <h4 class="item-label">{{item.name}}</h4>
+          {{!-- roll buttons vary per spell, so they live inside the name cell instead of adding row-only columns --}}
+          {{> "systems/sw25-ce/templates/actor/parts/actor-useitems.hbs" item=item}}
         </div>
-        {{> "systems/sw25-ce/templates/actor/parts/actor-useitems.hbs" item=item}}
         <div class='hpcost item-prop flexrow flex-group-center' style="flex: 0 0 30px;" data-cost="{{item.system.hpcost}}" data-max="{{item.system.maxhpcost}}" data-label="{{item.name}}" data-type="{{item.type}}">
           {{system.hpcost}}
         </div>
@@ -44,13 +47,15 @@
         <div class='item-prop flexrow flex-group-center' style="flex: 0 0 60px;">
           {{system.target}}
         </div>
-        <div class='item-prop flexrow flex-group-center' style="flex: 0 0 60px;">
-          {{system.rangeshape}}
+        {{#with (sw25SpellRow item) as |row|}}
+        <div class='item-prop flexrow flex-group-center' style="flex: 0 0 76px;">
+          {{row.range}}
         </div>
         <div class='item-prop flexrow flex-group-center' style="flex: 0 0 100px;">
-          {{system.time}} 
+          {{row.duration}}
         </div>
-        <div class='item-prop flexrow flex-group-center' style="flex: 0 0 40px;">
+        {{/with}}
+        <div class='item-prop flexrow flex-group-center' style="flex: 0 0 66px;">
           {{system.resistname}}
         </div>
         <div class='item-prop flexrow flex-group-center' style="flex: 0 0 80px;">

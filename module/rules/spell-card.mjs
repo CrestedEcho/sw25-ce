@@ -6,9 +6,12 @@ import { spellMpValue, isVariableMpText } from "./spell-mp.mjs";
 import { isHealSpell, hasPowerObject } from "./spell-power.mjs";
 import { mpLine, shortLine } from "./spell-pay.mjs";
 import { conditionFor } from "./conditions.mjs";
+import { resistLabel } from "./resist-label.mjs";
 
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const txt = (v) => (v == null || v === 0 || v === "0" ? "" : String(v).trim());
+/** "-" / "—" are "nothing set" placeholders from prepareData, not values. */
+const val = (v) => { const t = txt(v); return t === "-" || t === "—" ? "" : t; };
 
 /** Friendly stat keys for spell effects -> ActiveEffect change keys (mode ADD). Unknown keys pass through as-is. */
 export const EFFECT_KEYS = {
@@ -61,6 +64,7 @@ export function tagsOf(sys = {}) {
   return (Array.isArray(sys?.tags) ? sys.tags : []).map((t) => txt(t)).filter(Boolean);
 }
 
+const RESIST_EN = { "SW25.Item.Decide": "Can't", "SW25.Item.Any": "Optional", "SW25.Item.None": "None", "SW25.Item.Disappear": "Negated", "SW25.Item.Halving": "Half", "SW25.Item.Shortening": "Temporary", "SW25.Resist.Check.Vitres": "Fortitude", "SW25.Resist.Check.Mndres": "Willpower", "SW25.Resist.Check.Dodge": "Evasion" };
 /** Plain-word spell facts used by the list row, description card and cast card. */
 export function spellInfo(item = {}) {
   const sys = item.system ?? {}; const data = item.flags?.["sw25-ce"]?.data ?? {};
@@ -69,8 +73,12 @@ export function spellInfo(item = {}) {
     id: item.id ?? item._id, name: item.name ?? "", img: item.img ?? "",
     school: txt(sys.typename) || txt(sys.type), level: txt(sys.level ?? data.level),
     mp: mp == null || mp === "" ? "" : Number(mp), mpText: txt(sys.mpcostText),
-    target: txt(sys.target) || "—", range: txt(sys.range) || txt(sys.rangeshape) || "—", duration: txt(sys.time) || "—",
-    resist: txt(sys.resistname) || txt(sys.resist), element: txt(sys.propname) || txt(sys.element),
+    // Imported spells keep their range only in flags.sw25-ce.data.rangeArea (system.range/rangeshape are empty).
+    target: val(sys.target) || val(data.target) || "—",
+    range: val(sys.range) || val(sys.rangeshape) || val(data.rangeArea) || val(data.range) || "—",
+    duration: val(sys.time) || val(data.duration) || "—",
+    // resistname is localized in prepareData; outside Foundry (tests, raw data) fall back to the English word map.
+    resist: val(sys.resistname) || resistLabel(sys.resist, (k) => RESIST_EN[k] ?? k), element: val(sys.propname) || val(sys.element),
     description: sys.description ?? "", damage: hasPowerObject(sys),
     heal: isHealSpell({ name: item.name, summary: data.summary ?? sys.summary, description: sys.description }),
     status: statusOf(sys), tags: tagsOf(sys), tagsReview: !!sys.tagsReview,
