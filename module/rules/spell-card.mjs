@@ -162,7 +162,18 @@ export function castWindowHTML(ctx) {
 }
 
 /** Spell list row helper for the sheet (precomputed, so the template stays simple). */
+/** Spell has Active Effects to hand out (sheet context gives an array, a live Item a Collection). */
+export function hasSpellEffects(item) {
+  const e = item?.effects;
+  return !!e && (Array.isArray(e) ? e.length : (e.size ?? 0)) > 0;
+}
+/** Spell carries an Item Macro (Item Macro module: flags.itemacro.macro.command). */
+export function hasItemMacro(item) {
+  return !!String(item?.flags?.itemacro?.macro?.command ?? "").trim();
+}
+
 export function rowData(item) {
   const i = spellInfo(item);
-  return { sub: subLine(i), mp: isVariableMpText(i.mpText) ? i.mpText : i.mp === "" ? (i.mpText || "—") : `${i.mp} MP`, target: i.target, range: i.range, duration: i.duration, hasStatus: !!i.status };
+  return { sub: subLine(i), mp: isVariableMpText(i.mpText) ? i.mpText : i.mp === "" ? (i.mpText || "—") : `${i.mp} MP`, target: i.target, range: i.range, duration: i.duration, hasStatus: !!i.status,
+    hasEffects: hasSpellEffects(item), hasMacro: hasItemMacro(item) };
 }

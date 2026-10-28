@@ -3670,7 +3670,7 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 /* ===== Spell list rows, cast window, spell cards ===== */
 /* One column set for the header and every row: icon | name | MP | Target | Range | Duration | actions.
    All tracks except the name are fixed, so a header (no buttons) and a row (Cast + icons) get identical columns. */
-.sw25-spellrow { --sw25-sr-cols:40px minmax(120px,1fr) 64px 96px 96px 96px 150px; display:grid; grid-template-columns:var(--sw25-sr-cols); align-items:center; gap:6px; padding:3px 4px; box-sizing:border-box; width:100%; }
+.sw25-spellrow { --sw25-sr-cols:40px minmax(120px,1fr) 64px 96px 96px 96px 190px; display:grid; grid-template-columns:var(--sw25-sr-cols); align-items:center; gap:6px; padding:3px 4px; box-sizing:border-box; width:100%; }
 .sw25-spellrow > * { min-width:0; overflow-wrap:anywhere; }
 .sw25-spellrow-head { font-weight:bold; font-size:12px; }
 .sw25 .items-list .sw25-spellrow-headli { height:auto; padding:0; border:none; border-bottom:1px solid #7a6a4a; display:block; }
@@ -3687,6 +3687,13 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 .sw25-sr-actions { display:flex; gap:6px; align-items:center; justify-content:flex-end; }
 .sw25-sr-cast, .sw25-castwin button, .sw25-sc-btn { min-height:28px; padding:2px 12px; border-radius:6px; font-weight:bold; cursor:pointer; }
 .sw25-sr-cast { background:#3c5fa8; color:#fff; border:1px solid #29467f; line-height:1; width:auto; }
+/* Effect / item-macro buttons: only on spells that have them; small square buttons left of Cast. */
+.sw25-sr-xbtn { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:0 0 26px; border-radius:6px; cursor:pointer; box-sizing:border-box; font-size:13px; }
+.sw25-sr-effect, .sw25-sr-effect:hover, .sw25-sr-effect:focus { background:#f3e6fb; color:#7a2ea0; border:1px solid #b47fd6; }
+.sw25-sr-macro, .sw25-sr-macro:hover, .sw25-sr-macro:focus { background:#ece8f6; color:#4e3f8a; border:1px solid #9d8fd0; }
+.sw25-sr-xbtn:hover, .sw25-sr-xbtn:focus { filter:brightness(1.08); box-shadow:0 0 0 2px rgba(122,46,160,.25); text-shadow:none; }
+.theme-dark .sw25-sr-effect, .theme-dark .sw25-sr-effect:hover { background:#3a2547; color:#e2b8ff; border-color:#8a5aa8; }
+.theme-dark .sw25-sr-macro, .theme-dark .sw25-sr-macro:hover { background:#2f2a45; color:#c9bfff; border-color:#6d63a3; }
 .sw25-sr-desc { padding:4px 10px 8px 48px; font-size:12px; }
 .sw25-sr-status { color:#6a8a2a; font-size:11px; }
 

@@ -21,6 +21,8 @@
         <div class="sw25-sr-cell sidebar-hidden" data-tooltip="Range">{{row.range}}</div>
         <div class="sw25-sr-cell sidebar-hidden" data-tooltip="Duration">{{row.duration}}</div>
         <div class="sw25-sr-actions">
+          {{#if row.hasMacro}}<a class="execitemmacro sw25-sr-xbtn sw25-sr-macro" data-tooltip="Run this spell's item macro"><i class="fa-solid fa-code"></i></a>{{/if}}
+          {{#if row.hasEffects}}<a class="applyeffect sw25-sr-xbtn sw25-sr-effect" data-tooltip="Apply this spell's effects to your targets (to you if it is a self-buff)"><i class="fa-solid fa-hand-sparkles"></i></a>{{/if}}
           <button type="button" class="sw25-spell-cast sw25-sr-cast" data-tooltip="Open the cast window: choose metamagic and how to pay, then roll">Cast</button>
           <a class="sw25-spell-more" data-tooltip="Show the description here"><i class="fa-solid fa-chevron-down"></i></a>
           {{#if ../isOwner}}
