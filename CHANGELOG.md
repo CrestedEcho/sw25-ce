@@ -1,9 +1,77 @@
 # CHANGELOG
 
-## Unreleased
-- Bundled **unofficial community power table** (Power 0-100, `module/data/power-table.mjs`) is now the default for every power lookup: chat commands, attack/damage cards and item rolls with blank table rows. A filled row in the world's "Reference Power Table" journal still wins for that Power; the "no power table row" warning only appears when neither has the row. A natural 2 is still an automatic failure with no damage (and no longer triggers the warning).
-- Power-roll chat commands are built in (no "Chat Commander" needed): `/rp k10@9+3 Sword`, `/r p10 @9 +3`, `/gmr k20`, aliases /powerroll /powroll /powr /rollpower /rollpow /rpow /pow. The result is the new damage card with the Apply panel, posted as a roll message. Plain `/r 2d6` is unchanged.
-- Multi-part monsters: the Evasion button asks which part dodges; the damage card Apply panel has a part picker (Defense, HP and heal go to that part).
+sw25-ce is a community edition of [sw25-fvtt](https://github.com/jeannjeann/sw25-fvtt) by Jean.N. Versions 2.4.1 and
+older are the original system's history, kept as it was written. The 3.0.0-ce.* entries are sw25-ce's changes.
+All ce.10 and later builds are **test pre-releases** (`-test` tags on GitHub). They are framework only, and no
+rulebook content packs are included.
+
+## 3.0.0-ce.18-test (2026-10-28)
+- Gear is never auto-equipped when it lands on a character (drops, compendium, grants). Dropping it onto a slot still equips it.
+- Accessory items now show as **"Equippable Gear"** ("Gear" for short). The manual is updated.
+- Item sheets: label boxes are readable on both the parchment and dark themes.
+- Magic tab: no more "Magic Power NaN", and resistance is shown in English words instead of raw keys.
+- Magic tab: column headers line up with the spell rows, and imported spell ranges are shown.
+- Magic tab: if a school's drop-down is left empty, it uses your casting class automatically ("Auto (Class)").
+- The "Show All Spells" list now looks like the school sections and uses the same Cast button.
+- Spells with Active Effects or an Item Macro get **Apply Effect** / **Macro** buttons next to Cast.
+- Check cards: the target's token art no longer looks like the speaker.
+- **Classes card**: a class × stat table with die buttons and breakdown tooltips.
+
+## 3.0.0-ce.17-test (2026-10-28)
+- Power rolls are built in, so the "Chat Commander" module is no longer needed: `/rp k10@9+3 Sword`, `/r p10 @9 +3`, `/gmr k20`, and the aliases /powerroll /powroll /powr /rollpower /rollpow /rpow /pow. The result is the new damage card with the Apply panel, posted as a roll message. Plain `/r 2d6` is unchanged.
+- The bundled **unofficial community power table** (Power 0–100, `module/data/power-table.mjs`) is now the default for every power lookup. A filled row in the world's "Reference Power Table" journal still takes priority for that Power. A natural 2 is still an automatic failure with no damage.
+- Spell MP costs are calculated and paid correctly.
+- Monsters and NPCs get a **Magic** section and can cast spells from the stat block. Spells dropped on them go into Magic.
+- The weapons list uses the new power roll.
+- The **Sword Shards** boost works, NPCs included.
+- Unique skill editor on the stat block.
+- Monsters and NPCs no longer get default Resist/Attack items. Existing ones are left alone.
+- Stat-block resist rolls. For multi-part monsters, the Evasion button asks which part dodges, and the Apply panel has a part picker (Defense, HP and healing go to that part).
+- The round portrait shows the token art. Click it to change the token art.
+- Rolls are real roll messages (dice sound, Dice So Nice!, roll mode).
+
+## 3.0.0-ce.16-test (2026-10-28)
+- **Attack card**: clicking a weapon's Accuracy posts one card with Accuracy, Evasion and Damage buttons. HIT / MISS shows once both rolls are in. A tie misses, and a natural 2 / 12 on a rolled check auto-fails / auto-succeeds.
+- Monsters roll 2d6 + Standard Value (fixed value − 7). The stat block has an Attack card button for each part.
+- Evasion: players roll with their assigned character, and the GM rolls with the selected token.
+- Damage card: a big total, the power and critical rolls, the bonus (added once), and a source breakdown you can expand.
+- **Apply panel**: Physical / Magic / Fixed, HP / MP, and ×−1 (heal) / ×0 / ×¼ / ×½ / ×1 / ×2 for each target. Defense only applies to physical damage, and halves round up after Defense. Applying to tokens you don't own needs a GM online.
+- Token HUD conditions (tracking only).
+- Shift-click Accuracy / Damage keeps the old rolls.
+
+## 3.0.0-ce.15-test (2026-10-26)
+- Combat feats: drag and drop works for feats and belt slots. The Activate checkbox puts the feat in a slot or takes it out. Combat feats show again in the Classes & Feats tab.
+- Click an empty belt slot to pick a consumable, or an empty unlocked feat slot to pick a feat.
+- New **Consumable** item type (potions, herbs, bandages, scrolls, ammo, mako stones), so they can go on the belt.
+- Removed the old actor-list target dialog.
+
+## 3.0.0-ce.14-test (2026-10-26)
+- Damage table fix: weapon damage reads its Power table in one place and adds the bonus once.
+- Clickable monster/NPC portrait, with the type icon as a corner badge.
+- Monster/NPC sheet: Play/Edit lock, fixed and 2d6 dice buttons for every check, HP/MP damage and heal boxes, inventory, GM-only loot roll, and a Cast button for each spell.
+- A consumable belt shared by PC, NPC and monster sheets.
+- Friendly damage card with labelled rows (Dice / Table result / Bonus / Crits) and spelled-out buttons.
+- A "Target:" row with token portraits on damage and attack cards.
+
+## 3.0.0-ce.13-test (2026-10-25)
+- Damage shown as "Power / Crit / Bonus" on the sheet tile, the weapon card and the power chat header.
+
+## 3.0.0-ce.12-test (2026-10-25)
+- Weapon power tables and crits, Apply damage/healing buttons, monster spellcasting and spell damage cards, and a Resisted button.
+- Weakness reveal, a Dead / Mark Defeated fix, and "Recalc w/o Crit" on crit cards.
+- Defaults for checks and initiative, and the round number on cards.
+
+## 3.0.0-ce.11-test (2026-10-25)
+- New styled NPC/Monster **stat-block sheet**, with HP/MP for each part.
+- **Fellow card** for NPCs who join the party (1d action roll, MP bar).
+- Hostile / Neutral toggle for monsters, which sets the token disposition.
+- Cast button and MP deduction for NPC/monster magic skills.
+- Clicking a class row opens the class item. The Combat and non-combat feats are split.
+
+## 3.0.0-ce.10-test (2026-10-25)
+- **Rules engine** for class items (`system.rules`), with class grants (by level, with choices), per-field overrides, and a rules/grants editor on the skill sheet.
+- NPC/Monster stat-block data (`system.sb`).
+- Developer tooling (pack JSON tools, a compendium builder for your own data). No content packs are shipped.
 
 ## 3.0.0-ce.9
 - Fix (v14): `SW25Actor.prepareBaseData` / `prepareDerivedData` (and Item / ActiveEffect `prepareDerivedData`) now call `super`. Core v14 `Actor#prepareBaseData` initialises and resets the per-cycle ActiveEffect phase state; skipping it caused "Cannot set properties of undefined (setting 'initial')" on construction and "phase initial/final has already completed" on every re-preparation (updateSource, updates, drops).
