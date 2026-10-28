@@ -12,7 +12,7 @@ import { pcWeaponBattle } from "./weapon-battle.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { powerTableFor, parsePowerCommand } from "./power-command.mjs";
 import { resolveTargetTokens } from "../helpers/target-chips.mjs";
-import { targetDefense, weakBonus, applyFinalToActor, appliedCard } from "./apply-damage.mjs";
+import { targetDefense, weakBonus, applyFinalToActor } from "./apply-damage.mjs";
 import { annotateAttackCard, afterWeaponDamage } from "./combat-ui.mjs";
 import { sbParts, isMultiPart, defaultPart, partIndex as clampPart, partSelectHTML, partPicksFrom, pickFor } from "./part-pick.mjs";
 
@@ -253,19 +253,18 @@ function fillPanel(msg, panel) {
 async function onApply(msg) {
   const f = msg.getFlag(SYS, "dmgcard"); const st = uiFor(msg);
   const rows = applyTargets(); if (!rows.length) return ui.notifications.warn("Select tokens on the map first.");
-  const lines = []; const remote = [];
+  const remote = [];
   for (const r of rows) {
     const part = rowPart(msg, st, r); const defense = targetDefense(r.actor, part);
     const a = applyRow(f.total, defense, { kind: st.kind, mult: st.mults[r.id] ?? 1, weak: weakBonus(r.actor, f.total, defense)[st.kind] ?? 0 });
-    if (!a.final) { lines.push(`${esc(r.name)}: no change (${esc(a.text)})`); continue; }
-    if (r.actor.isOwner) lines.push(`${await applyFinalToActor(r.actor, a.final, { pool: st.pool, heal: a.heal, part })} <small>(${esc(a.text)})</small>`);
+    if (!a.final) continue;
+    if (r.actor.isOwner) await applyFinalToActor(r.actor, a.final, { pool: st.pool, heal: a.heal, part });
     else remote.push({ tokenId: r.token?.id ?? null, actorId: r.actor.id, amount: a.final, pool: st.pool, heal: a.heal, part });
   }
   if (remote.length) {
     if (!gmOnline()) ui.notifications.warn("No GM is connected to apply damage to tokens you don't own.");
     else game.socket.emit(SOCKET, { method: "applyFinal", list: remote });
   }
-  return appliedCard(st.kind === "physical" ? "Physical damage applied" : st.kind === "fixed" ? "Fixed damage applied" : "Magic damage applied", lines);
 }
 
 function bindAttack(msg, root) {
