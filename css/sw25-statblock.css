@@ -68,6 +68,7 @@
 .fw-header { display:flex; gap:12px; align-items:center; padding:10px 14px; border-bottom:3px solid var(--fw); flex:0 0 auto; }
 .fw-portrait { position:relative; width:96px; height:96px; flex:none; }
 .fw-portrait .fw-por-img { position:absolute; left:10px; top:10px; width:76px; height:76px; border-radius:50%; object-fit:cover; border:none; }
+.fw-portrait .fw-por-img[title] { cursor:pointer; } /* GM: click edits token art */
 .fw-portrait .fw-por-frame { position:absolute; inset:0; width:96px; height:96px; border:none; pointer-events:none; }
 .fw-card h1 { margin:0; border:none; font-size:24px; }
 .fw-sub { color:var(--fw); font-style:italic; } .fw-subedit .sb-in { width:auto; field-sizing:content; min-width:3ch; }

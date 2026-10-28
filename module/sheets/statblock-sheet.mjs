@@ -15,6 +15,7 @@ import { fixedToDice, parseSbDamage, applyVital, lootFor, spellGmOnly, slugKey }
 import { skillEditorData, skillFromForm, skillCardHtml, RESIST_CHECKS, RESIST_RESULTS } from "../rules/sb-skill.mjs";
 import { beltContext, bindBeltListeners, dropOnBelt, beltFlags } from "../ce7/equipcard.mjs";
 import { usesOf, stackLabel } from "../ce7/belt-logic.mjs";
+import { actorPortrait, bindPortrait } from "../rules/token-portrait.mjs";
 import { buildStatBlockContext, foldSubmitData, NEW_ROWS, ARRAY_FIELDS } from "../rules/statblock-sheet-data.mjs";
 
 const T = "systems/sw25-ce/templates/actor";
@@ -36,7 +37,7 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
     const base = await super.getData(options);
     const sys = this.actor.system; const raw = this.actor._source.system?.sb ?? {};
     const view = sys.sbView ?? game.sw25.statblock.prepareStatBlock(raw, sys, this.actor.type);
-    const ctx = buildStatBlockContext({ type: this.actor.type, view, raw, isGM: game.user.isGM, img: this.actor.img, skillGmMap: this.actor.getFlag("sw25-ce", "sbSkillGmOnly") ?? {} });
+    const ctx = buildStatBlockContext({ type: this.actor.type, view, raw, isGM: game.user.isGM, img: actorPortrait(this.actor).src, skillGmMap: this.actor.getFlag("sw25-ce", "sbSkillGmOnly") ?? {} });
     const TE = foundry.applications.ux.TextEditor.implementation;
     const enrich = (h) => TE.enrichHTML(h ?? "", { secrets: this.actor.isOwner, relativeTo: this.actor });
     Object.assign(base, ctx, {
@@ -132,6 +133,8 @@ export class SW25StatBlockSheet extends foundry.appv1.sheets.ActorSheet {
   activateListeners(html) {
     super.activateListeners(html);
     const root = html[0] ?? html;
+    // Round portrait shows the token art; clicking edits the token art (not actor.img).
+    bindPortrait(this, root, ".sb-por-img", this.isEditable);
     // HP/MP vitals inputs (Person summary / Combat block) have no form name: they write the same per-part
     // value the Parts table edits (locked max -> its override), so there is a single source of truth.
     // Person-tab copy of the combat stat block is read-only (disabled fields are not submitted -> no duplicate names).

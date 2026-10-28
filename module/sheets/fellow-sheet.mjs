@@ -4,6 +4,7 @@
  * Non-GM users opening a Fellow NPC are routed here from the stat-block sheet.
  */
 import { buildFellowContext, prepareFellow, resolveFellowRoll, fellowChatHTML } from "../rules/fellow.mjs";
+import { actorPortrait, bindPortrait } from "../rules/token-portrait.mjs";
 
 export class SW25FellowSheet extends foundry.appv1.sheets.ActorSheet {
   static get defaultOptions() {
@@ -15,7 +16,7 @@ export class SW25FellowSheet extends foundry.appv1.sheets.ActorSheet {
 
   async getData(options) {
     const base = await super.getData(options);
-    const ctx = buildFellowContext({ name: this.actor.name, img: this.actor.img, fellow: this.actor._source.system?.fellow ?? {}, lastRoll: this._fwLast ?? null, wanted: this._fwWanted ?? null, isGM: game.user.isGM });
+    const ctx = buildFellowContext({ name: this.actor.name, img: actorPortrait(this.actor).src, fellow: this.actor._source.system?.fellow ?? {}, lastRoll: this._fwLast ?? null, wanted: this._fwWanted ?? null, isGM: game.user.isGM });
     return Object.assign(base, ctx, { editable: this.isEditable, canRoll: this.actor.isOwner || game.user.isGM });
   }
 
@@ -41,6 +42,7 @@ export class SW25FellowSheet extends foundry.appv1.sheets.ActorSheet {
   activateListeners(html) {
     super.activateListeners(html);
     const root = html[0] ?? html;
+    bindPortrait(this, root, ".fw-por-img", game.user.isGM && this.isEditable); // token art, GM only (as before)
     root.querySelectorAll("[data-action]").forEach((el) => el.addEventListener("click", (ev) => { ev.preventDefault(); this._onAction(el); }));
   }
 

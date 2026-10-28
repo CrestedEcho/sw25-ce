@@ -1,7 +1,7 @@
 <form class="{{cssClass}} sb-sheet fw-card" autocomplete="off">
 <span class="fw-badge">Fellow</span>{{#if f.owner}}<span class="fw-ex">by {{f.owner}}</span>{{/if}}
 <header class="fw-header">
-  <div class="fw-portrait"><img class="fw-por-img" src="{{img}}" {{#if isGM}}data-edit="img"{{/if}}><img class="fw-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp"></div>
+  <div class="fw-portrait"><img class="fw-por-img" src="{{img}}" {{#if isGM}}title="Click to change the token art"{{/if}}><img class="fw-por-frame" src="systems/sw25-ce/assets/frames/portrait-frame.webp"></div>
   <div class="fw-title"><h1>{{name}}</h1>
     {{#if isGM}}<div class="fw-sub fw-subedit"><input class="sb-in" name="system.fellow.race" value="{{f.race}}" placeholder="Race"> · <input class="sb-in" name="system.fellow.gender" value="{{f.gender}}" placeholder="Gender"> · <input class="sb-in w-xs" name="system.fellow.age" value="{{f.age}}" placeholder="Age"> · Adventurer Lv <input class="sb-in w-xs" name="system.fellow.level" value="{{f.level}}" data-dtype="Number"></div>
     {{else}}<div class="fw-sub">{{subLine}}</div>{{/if}}
