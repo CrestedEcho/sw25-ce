@@ -28,7 +28,6 @@ let SW25ActiveEffectConfig;
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { SW25 } from "./helpers/config.mjs";
 import { chatButton } from "./helpers/chatbutton.mjs";
-import { customCommand } from "./helpers/customcommand.mjs";
 import { powerRoll } from "./helpers/powerroll.mjs";
 import { lootRoll } from "./helpers/lootroll.mjs";
 import { growthCheck } from "./helpers/growthcheck.mjs";
@@ -1313,36 +1312,8 @@ Hooks.once("ready", async function () {
     let item = await Item.create(itemData, { parent: actor });
   });
 
-  // Custom chat command
-  let customCommandModule = "_chatcommands";
-  let chatcommands =
-    game.modules.has(customCommandModule) &&
-    game.modules.get(customCommandModule).active;
-  if (chatcommands) {
-    console.log("Enable custom chat commands");
-    game.chatCommands.register({
-      name: "/powerroll",
-      aliases: [
-        "/powroll",
-        "/powr",
-        "/rollpower",
-        "/rollpow",
-        "/rpow",
-        "/rp",
-        "/pow",
-      ],
-      module: "_chatcommands",
-      description: "Roll power table.",
-      icon: "<i class='fas fa-dice-d6'></i>",
-      callback: async (chat, parameters, messageData) => {
-        let command = "/powerroll";
-        await customCommand(command, messageData, parameters);
-        return;
-      },
-    });
-  } else {
-    console.log("Disable custom chat commands");
-  }
+  // Power-roll chat commands (/rp, /powerroll, /r p10 ...) are handled natively in rules/attack-flow.mjs
+  // (chatMessage hook), so they work without the Chat Commander module and are never handled twice.
 
   // Item update hook
   Hooks.on("updateItem", async (item, updateData, options, userId) => {

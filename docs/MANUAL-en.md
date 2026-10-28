@@ -454,15 +454,16 @@ Roll request button
 - If a target number is set, success or failure will also be automatically determined.
 
 ## Chat Commands (Custom Commands)
-- The following commands all require the "Chat Commander" Module to be enabled.
-- Without "Chat Commander", the custom commands are unavailable but the other functions can still be used.
+- Built in: no module is needed (the "Chat Commander" module is no longer required).
 - Note that it is not possible to output a rollable message enclosed in two brackets like the core roll command.
 
 ### Chat Commands for Power Rolls
 - The following commands are all valid for making a power roll, "/powerroll", "/powroll", "/powr", "/rollpower", "/rollpow", "/rpow", "/rp", "/pow".
+- The core roll commands also take a power expression when the first word is "p<x>" or "k<x>": "/r p10 @9 +3", "/roll k20". "/gmr", "/br" and "/sr" use the GM-only, blind and self roll modes. Normal dice ("/r 2d6") are unchanged.
+- "p<x>" is the same as "k<x>". Modifiers can be written together (k10@9+3) or separated by spaces (p10 @9 +3 -2); several +/- bonuses are added up.
+- The result is posted as a damage card (power roll, criticals and bonus breakdown) with the Apply panel, like an attack's damage card.
 - Power Rolls can be made from the Chat input field by typing the Power Roll expression after the command.
 - You may enter commentary text after the power roll expression.
-- All outputs will be displayed as if they had the "apply" button enabled.
 - **Caution** You must prepare the Reference Power Table in order to use the Power roll expression.
 
 #### Format for Power Roll Expressions
@@ -518,7 +519,7 @@ Settings for Monsters
 - The layout has not been validated in English.
 - Limited permissions for NPCs and monsters, icons and images will not be changed.
 - We recommend using the “Times Up” mod to manage the duration of buffs and debuffs.
-- "Chat Commander" is required to use Custom Chat Commands.
+- Power-roll chat commands are built in; "Chat Commander" is not required.
 - Combat has not been implemented. We recommend that you take initiative manually or install mods.
 - An example of a mod that supports the order of action (I personally think that Popcorn Initiative is suited for this)
   - Popcorn type "Lancer Initiative" and "Just Popcorn Initiative

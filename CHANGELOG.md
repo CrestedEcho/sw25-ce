@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## Unreleased
+- Power-roll chat commands are built in (no "Chat Commander" needed): `/rp k10@9+3 Sword`, `/r p10 @9 +3`, `/gmr k20`, aliases /powerroll /powroll /powr /rollpower /rollpow /rpow /pow. The result is the new damage card with the Apply panel, posted as a roll message. Plain `/r 2d6` is unchanged.
+- Multi-part monsters: the Evasion button asks which part dodges; the damage card Apply panel has a part picker (Defense, HP and heal go to that part).
+
 ## 3.0.0-ce.9
 - Fix (v14): `SW25Actor.prepareBaseData` / `prepareDerivedData` (and Item / ActiveEffect `prepareDerivedData`) now call `super`. Core v14 `Actor#prepareBaseData` initialises and resets the per-cycle ActiveEffect phase state; skipping it caused "Cannot set properties of undefined (setting 'initial')" on construction and "phase initial/final has already completed" on every re-preparation (updateSource, updates, drops).
 - Dark-leather theme: readable light-parchment text for the Weapons table, the Money line and the Equipment Card / feat / belt labels.

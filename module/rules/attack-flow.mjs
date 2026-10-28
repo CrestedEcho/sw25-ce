@@ -9,6 +9,7 @@ import { damageBreakdown, damageCardHTML, applyPanelHTML, applyRow, validMult } 
 import { formatDamage } from "./damage-display.mjs";
 import { parseSbDamage } from "./sb-play.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
+import { powerTableFor, parsePowerCommand } from "./power-command.mjs";
 import { resolveTargetTokens } from "../helpers/target-chips.mjs";
 import { targetDefense, weakBonus, applyFinalToActor, appliedCard } from "./apply-damage.mjs";
 import { annotateAttackCard, afterWeaponDamage } from "./combat-ui.mjs";
@@ -169,18 +170,36 @@ async function onDamage(msg) {
   if (f.itemId) await afterWeaponDamage(actor);
 }
 
+/** Power roll -> damage card state (power, crits, bonus breakdown) + the dice roll for the message. */
+async function rollPowerState(formula, pt, { name, img, label, bonusParts = [] }) {
+  const r = await powerRoll(formula, [...pt]);
+  const res = r.fakeResult?.terms?.[0]?.results?.map((x) => x.result) ?? [];
+  const each = (r.eachPowerResult ?? []).map((v, i) => { const dice = res.slice(i * 2, i * 2 + 2); return { dice, natural: dice.reduce((a, x) => a + x, 0), value: v }; });
+  const bonus = (Number(r.powMod) || 0) + (Number(r.halfPowMod) || 0);
+  const breakdown = damageBreakdown({ rolls: each, bonusParts, bonus, power: r.power, crit: r.cValue, half: r.halfPow == 1, fumble: r.fumble == 1 });
+  const state = { name, img, total: Number(r.powerResult) || 0, label, fumble: r.fumble == 1, breakdown,
+    formula: `Power ${r.power} · crit ${r.cValue >= 13 ? "—" : `${r.cValue}+`} · bonus ${bonus >= 0 ? "+" : ""}${bonus}` };
+  return { state, rolls: r.fakeResult ? [r.fakeResult] : [] }; // all dice incl. crit rerolls
+}
+
+/** Native /rp (and /r p10 ...) chat command: post the same damage card (with Apply panel) as a real roll message. */
+export async function postPowerCommand(p, chatData = {}) {
+  const speaker = chatData.speaker ?? ChatMessage.getSpeaker();
+  const actor = ChatMessage.getSpeakerActor?.(speaker) ?? null;
+  const { state, rolls } = await rollPowerState("2d6", powerTableFor(p.formula), {
+    name: p.comment || actor?.name || speaker.alias || game.user.name, img: actor?.img ?? null,
+    label: p.text, bonusParts: [{ label: "Bonus", value: p.formula.bonus }, { label: p.formula.half ? "Bonus after halving" : "Extra bonus", value: p.formula.halfBonus }],
+  });
+  if (p.comment && actor) state.name = `${actor.name}: ${p.comment}`;
+  const data = { speaker, content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor?.id ?? null, total: state.total, kind: "physical", pool: "hp", command: p.text } } } };
+  return ChatMessage.create(rollMessageData(data, p.mode ? { mode: p.mode } : undefined));
+}
+
 /** Roll damage (power table for weapons, dice for stat blocks) and post a NEW damage card. */
 export async function postDamageCard(actor, f, { cardId = null } = {}) {
   const d = f.damage; let state, rolls = [];
   if (d.type === "power") {
-    const r = await powerRoll(d.formula, [...d.pt]);
-    const res = r.fakeResult?.terms?.[0]?.results?.map((x) => x.result) ?? [];
-    rolls = (r.eachPowerResult ?? []).map((v, i) => { const dice = res.slice(i * 2, i * 2 + 2); return { dice, natural: dice.reduce((a, x) => a + x, 0), value: v }; });
-    const bonus = (Number(r.powMod) || 0) + (Number(r.halfPowMod) || 0);
-    const breakdown = damageBreakdown({ rolls, bonusParts: d.bonusParts, bonus, power: r.power, crit: r.cValue, half: r.halfPow == 1, fumble: r.fumble == 1 });
-    state = { name: f.state.name, img: f.state.img, total: Number(r.powerResult) || 0, label: d.label, fumble: r.fumble == 1, breakdown,
-      formula: `Power ${r.power} · crit ${r.cValue >= 13 ? "—" : `${r.cValue}+`} · bonus ${bonus >= 0 ? "+" : ""}${bonus}` };
-    if (r.fakeResult) rolls = [r.fakeResult]; // all dice incl. crit rerolls
+    ({ state, rolls } = await rollPowerState(d.formula, d.pt, { name: f.state.name, img: f.state.img, label: d.label, bonusParts: d.bonusParts }));
   } else {
     const r = await new Roll(d.formula).evaluate();
     const dice = diceOf(r); const bonus = r.total - dice.reduce((a, x) => a + x, 0);
@@ -277,4 +296,11 @@ export function registerAttackFlow() {
   });
   let t = null; const later = () => { clearTimeout(t); t = setTimeout(refreshPanels, 60); };
   Hooks.on("controlToken", later); Hooks.on("targetToken", later); Hooks.on("updateActor", later);
+  // Native power-roll command: /rp k10@9+3, /r p10 +3 ... (plain /r 2d6 is not touched). Returning false stops core.
+  Hooks.on("chatMessage", (_log, message, chatData) => {
+    const p = parsePowerCommand(message); if (!p) return;
+    if (p.error) { ui.notifications.warn(`SW2.5: ${p.error}`); return false; }
+    postPowerCommand(p, chatData).catch((err) => { console.error("sw25-ce | power roll", err); ui.notifications.error(`SW2.5: power roll failed: ${err.message}`); });
+    return false;
+  });
 }
