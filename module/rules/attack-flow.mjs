@@ -12,6 +12,7 @@ import { powerRoll } from "../helpers/powerroll.mjs";
 import { resolveTargetTokens } from "../helpers/target-chips.mjs";
 import { targetDefense, weakBonus, applyFinalToActor, appliedCard } from "./apply-damage.mjs";
 import { annotateAttackCard, afterWeaponDamage } from "./combat-ui.mjs";
+import { sbParts, isMultiPart, defaultPart, partIndex as clampPart, partSelectHTML, partPicksFrom, pickFor } from "./part-pick.mjs";
 
 const SYS = "sw25-ce";
 const SOCKET = "system.sw25";
@@ -23,11 +24,29 @@ function corePart(actor) {
   const parts = actor?.system?.sbView?.parts ?? [];
   return parts.find((p) => p.isCore) ?? parts[0] ?? null;
 }
-function evasionFor(actor) {
+function evasionFor(actor, part = null) {
   if (!actor) return null;
   if (actor.type === "character") return pcEvasion(actor.system);
-  if (actor.system?.sb) { const p = corePart(actor); return p ? monsterCheck("Evasion", p.evasion) : null; }
+  if (actor.system?.sb) {
+    const p = part == null ? corePart(actor) : sbParts(actor)[part];
+    return p ? monsterCheck(part == null ? "Evasion" : `Evasion (${p.name || "Part"})`, p.evasion) : null;
+  }
   return null;
+}
+/** Multi-part defender: ask which part dodges (2d6 + that part's Evasion Standard Value). null = cancelled. */
+async function pickEvasionPart(actor, preferred) {
+  const parts = sbParts(actor); const DV2 = foundry.applications?.api?.DialogV2;
+  if (!DV2) return defaultPart(parts, preferred);
+  const content = `<p>${esc(actor.name)} has several parts. Which part rolls Evasion?</p><label>Part ${partSelectHTML(parts, preferred, { cls: "sw25-eva-part" })}</label>`;
+  const v = await DV2.prompt({ window: { title: `Evasion: ${actor.name}` }, content,
+    ok: { label: "Roll Evasion", callback: (_e, b) => Number(b.form.elements.part.value) }, rejectClose: false }).catch(() => null);
+  return v == null || !Number.isInteger(v) ? null : clampPart(parts, v);
+}
+/** Part picks remembered from this attack's Evasion rolls (for the damage card's Apply part picker). */
+function evasionPartPicks(cardId) {
+  if (!cardId) return {};
+  const evs = game.messages.contents.map((m) => rollFlag(m)).filter((x) => x?.kind === "evasion" && x.cardId === cardId);
+  return partPicksFrom(evs);
 }
 
 /** Attack data for a PC's Accuracy-tile weapon (null + warning when none). */
@@ -105,19 +124,31 @@ async function spendAmmo(actor, { id, n }) {
 }
 /** Who rolls Evasion: players use their assigned character; the GM uses the selected token. */
 function evaderActor() {
-  if (game.user.isGM) return canvas.tokens?.controlled?.[0]?.actor ?? null;
-  return game.user.character ?? canvas.tokens?.controlled?.find((t) => t.actor?.isOwner)?.actor ?? null;
+  return evader()?.actor ?? null;
+}
+/** { actor, token } of whoever is rolling Evasion. */
+function evader() {
+  if (game.user.isGM) { const t = canvas.tokens?.controlled?.[0]; return t?.actor ? { actor: t.actor, token: t } : null; }
+  const c = game.user.character;
+  if (c) return { actor: c, token: canvas.tokens?.controlled?.find((t) => t.actor?.id === c.id) ?? c.getActiveTokens?.()[0] ?? null };
+  const t = canvas.tokens?.controlled?.find((x) => x.actor?.isOwner); return t ? { actor: t.actor, token: t } : null;
 }
 /** Evasion posts its own roll message, with HIT/MISS against the card's latest Accuracy roll (tie = miss, natural 2/12). */
 async function onEvasion(msg) {
-  const actor = evaderActor();
+  const ev = evader(); const actor = ev?.actor ?? null; const token = ev?.token ?? null;
   if (!actor) return ui.notifications.warn(game.user.isGM ? "Select the target's token, then click Evasion." : "You have no assigned character (User Configuration) to roll Evasion.");
-  const eva = evasionFor(actor);
+  let part = null;
+  if (isMultiPart(actor)) {
+    const prev = pickFor(evasionPartPicks(msg.id), { id: token?.id, actorId: actor.id });
+    part = await pickEvasionPart(actor, prev); if (part == null) return;
+  }
+  const eva = evasionFor(actor, part);
   if (!eva) return ui.notifications.warn(`${actor.name}: no Evasion value.`);
   const accMsg = linkedFor(msg.id).lastAccuracy; const accDoc = accMsg && game.messages.get(accMsg.id);
   const visible = !!accDoc && accDoc.isContentVisible !== false;
   const out = await postCheckRoll(msg, "evasion", eva, {
-    actor, who: actor.name, extra: { accMsgId: accMsg?.id ?? null },
+    actor, who: part == null ? actor.name : `${actor.name} (${sbParts(actor)[part]?.name || "Part"})`,
+    extra: { accMsgId: accMsg?.id ?? null, actorId: actor.id, tokenId: token?.id ?? null, part },
     outs: (roll) => { if (!visible) return []; const c = contest(accMsg.flag.roll, roll); return c ? [{ vs: `${accMsg.flag.who ?? "Accuracy"} ${accMsg.flag.roll.total}`, ...c }] : []; },
     note: () => (!accMsg ? "No Accuracy roll on this attack yet." : !visible ? "The Accuracy roll is hidden; the GM sees the result on it." : ""),
   });
@@ -134,12 +165,12 @@ async function onDamage(msg) {
   const f = msg.getFlag(SYS, "attack"); const actor = game.actors.get(f.actorId);
   if (!actor?.isOwner) return ui.notifications.warn("Only the attacker rolls damage.");
   if (!f.damage) return ui.notifications.warn("This attack has no damage.");
-  await postDamageCard(actor, f);
+  await postDamageCard(actor, f, { cardId: msg.id });
   if (f.itemId) await afterWeaponDamage(actor);
 }
 
 /** Roll damage (power table for weapons, dice for stat blocks) and post a NEW damage card. */
-export async function postDamageCard(actor, f) {
+export async function postDamageCard(actor, f, { cardId = null } = {}) {
   const d = f.damage; let state, rolls = [];
   if (d.type === "power") {
     const r = await powerRoll(d.formula, [...d.pt]);
@@ -157,14 +188,21 @@ export async function postDamageCard(actor, f) {
     state = { name: f.state.name, img: f.state.img, total: r.total, label: d.text, formula: d.formula, breakdown, fumble: false };
     rolls = [r];
   }
-  const msg = await ChatMessage.create(rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor.id, total: state.total, kind: "physical", pool: "hp" } } } }));
+  const msg = await ChatMessage.create(rollMessageData({ speaker: ChatMessage.getSpeaker({ actor }), content: damageCardHTML(state), rolls, flags: { [SYS]: { dmgcard: { actorId: actor.id, total: state.total, kind: "physical", pool: "hp", cardId, partPicks: evasionPartPicks(cardId) } } } }));
   if (f.itemId) await annotateAttackCard(actor, msg?.id, "damage");
   return msg;
 }
 
 /* ---------- damage card Apply panel (client-side state per message) ---------- */
 const UI = new Map(); // messageId -> { kind, pool, mults }
-const uiFor = (msg) => { const f = msg.getFlag(SYS, "dmgcard") ?? {}; if (!UI.has(msg.id)) UI.set(msg.id, { kind: f.kind ?? "physical", pool: f.pool ?? "hp", mults: {} }); return UI.get(msg.id); };
+const uiFor = (msg) => { const f = msg.getFlag(SYS, "dmgcard") ?? {}; if (!UI.has(msg.id)) UI.set(msg.id, { kind: f.kind ?? "physical", pool: f.pool ?? "hp", mults: {}, parts: {} }); return UI.get(msg.id); };
+/** Chosen part for one Apply row: this client's pick, else the part that rolled Evasion on the attack, else core / first alive. null for PCs and single-part blocks. */
+function rowPart(msg, st, r) {
+  if (!isMultiPart(r.actor)) return null;
+  const parts = sbParts(r.actor); const f = msg.getFlag(SYS, "dmgcard") ?? {};
+  const picks = { ...(f.partPicks ?? {}), ...evasionPartPicks(f.cardId) }; // Evasion rolled after the damage card counts too
+  return clampPart(parts, st.parts?.[r.id] ?? pickFor(picks, { id: r.id, actorId: r.actor.id }));
+}
 /** Live selected (or targeted) tokens, else the user's assigned character. */
 export function applyTargets() {
   const toks = resolveTargetTokens().filter((t) => t.actor);
@@ -176,7 +214,10 @@ export function applyTargets() {
 function fillPanel(msg, panel) {
   const f = msg.getFlag(SYS, "dmgcard"); if (!f) return;
   const st = uiFor(msg);
-  const rows = applyTargets().map((r) => { const defense = targetDefense(r.actor); return { ...r, defense, weak: weakBonus(r.actor, f.total, defense) }; });
+  const rows = applyTargets().map((r) => {
+    const part = rowPart(msg, st, r); const defense = targetDefense(r.actor, part);
+    return { ...r, defense, weak: weakBonus(r.actor, f.total, defense), parts: part == null ? null : sbParts(r.actor), part };
+  });
   panel.innerHTML = applyPanelHTML(f.total, rows, { kind: st.kind, pool: st.pool, mults: st.mults });
 }
 async function onApply(msg) {
@@ -184,11 +225,11 @@ async function onApply(msg) {
   const rows = applyTargets(); if (!rows.length) return ui.notifications.warn("Select tokens on the map first.");
   const lines = []; const remote = [];
   for (const r of rows) {
-    const defense = targetDefense(r.actor);
+    const part = rowPart(msg, st, r); const defense = targetDefense(r.actor, part);
     const a = applyRow(f.total, defense, { kind: st.kind, mult: st.mults[r.id] ?? 1, weak: weakBonus(r.actor, f.total, defense)[st.kind] ?? 0 });
     if (!a.final) { lines.push(`${esc(r.name)}: no change (${esc(a.text)})`); continue; }
-    if (r.actor.isOwner) lines.push(`${await applyFinalToActor(r.actor, a.final, { pool: st.pool, heal: a.heal })} <small>(${esc(a.text)})</small>`);
-    else remote.push({ tokenId: r.token?.id ?? null, actorId: r.actor.id, amount: a.final, pool: st.pool, heal: a.heal });
+    if (r.actor.isOwner) lines.push(`${await applyFinalToActor(r.actor, a.final, { pool: st.pool, heal: a.heal, part })} <small>(${esc(a.text)})</small>`);
+    else remote.push({ tokenId: r.token?.id ?? null, actorId: r.actor.id, amount: a.final, pool: st.pool, heal: a.heal, part });
   }
   if (remote.length) {
     if (!gmOnline()) ui.notifications.warn("No GM is connected to apply damage to tokens you don't own.");
@@ -214,7 +255,9 @@ function bindDamage(msg, root) {
     if (go) { ev.preventDefault(); go.disabled = true; try { await onApply(msg); } catch (err) { console.error("sw25-ce | apply", err); ui.notifications.error(`SW2.5: apply failed: ${err.message}`); } finally { go.disabled = false; } }
   });
   panel.addEventListener("change", (ev) => {
-    const i = ev.target; if (i.name !== "kind" && i.name !== "pool") return;
+    const i = ev.target;
+    if (i.classList?.contains("sw25-dc-part")) { const v = Number(i.value); if (Number.isInteger(v)) { uiFor(msg).parts[i.dataset.id] = v; fillPanel(msg, panel); } return; }
+    if (i.name !== "kind" && i.name !== "pool") return;
     uiFor(msg)[i.name] = i.value; fillPanel(msg, panel);
   });
 }

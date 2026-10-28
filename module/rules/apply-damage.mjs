@@ -2,6 +2,7 @@
 import { applySbCost } from "./sb-cast.mjs";
 import { resolveTargetTokens, NO_TOKENS_MSG } from "../helpers/target-chips.mjs";
 import { damageTaken, healedHP } from "./spell-power.mjs";
+import { partIndex } from "./part-pick.mjs";
 const esc = (s) => foundry.utils.escapeHTML(String(s ?? ""));
 const card = (kind, lines) => ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${kind === "heal" ? "Healing" : kind === "physical" ? "Physical damage" : kind === "fixed" ? "Fixed damage" : "Magic damage"} applied</b><br>${lines.join("<br>")}</div>` });
 /** Click handler: owned targets are applied here; the rest go to the GM over the "system.sw25" socket. */
@@ -44,16 +45,16 @@ export async function applyDamageToActors(targets, amount, kind) {
   }
   return card(kind, lines);
 }
-async function healActor(a, amount) {
+async function healActor(a, amount, part = null) {
   if (a.type === "character") {
     const before = Number(a.system.hp?.value) || 0; const after = healedHP(before, amount, a.system.hp?.max);
     await a.update({ "system.hp.value": after }); return `${esc(a.name)}: +${after - before} → HP ${after}`;
   }
   if (!a.system?.sb) return `${esc(a.name)}: unsupported actor type ${esc(a.type)}`;
   const raw = a._source.system?.sb ?? {}; const parts = structuredClone(Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {}));
-  const view = a.system.sbView?.parts ?? []; const ci = Math.max(0, view.findIndex((p) => p.isCore)); if (!parts[ci]) return `${esc(a.name)}: no parts`;
+  const view = a.system.sbView?.parts ?? []; const ci = part == null ? Math.max(0, view.findIndex((p) => p.isCore)) : (partIndex(view, part) ?? 0); if (!parts[ci]) return `${esc(a.name)}: no parts`;
   const v = view[ci] ?? {}; const before = Number(parts[ci].hpValue ?? v.hpValue ?? v.hp ?? 0); const after = healedHP(before, amount, v.hp);
-  parts[ci].hpValue = after; await a.update({ "system.sb.parts": parts }); return `${esc(a.name)}: +${after - before} → HP ${after}`;
+  parts[ci].hpValue = after; await a.update({ "system.sb.parts": parts }); return `${esc(a.name)}${partTag(view, ci, part)}: +${after - before} → HP ${after}`;
 }
 
 /** Legacy damage-card buttons (Physical / Magic / Fixed / Heal HP) on a stat-block actor: same HP path as Apply. */
@@ -66,13 +67,15 @@ export async function applyLegacyToStatBlock(token, amount, buttonType) {
   game.socket.emit("system.sw25", { method: "applyDamage", amount: Number(amount) || 0, kind, targetTokens: [token.id] });
 }
 
-/** Target Defense (physical) for the damage card: PC protection points, stat block core-part Defense. */
-export function targetDefense(a) {
+/** Target Defense (physical) for the damage card: PC protection points, stat block part Defense (core part unless `part` is given). */
+export function targetDefense(a, part = null) {
   if (!a) return 0;
   if (a.type === "character") return Number(a.system.attributes?.protectionpoint) || 0;
-  const vp = a.system?.sbView?.parts ?? []; const core = Math.max(0, vp.findIndex((p) => p.isCore));
-  return Number(vp[core]?.defense) || 0;
+  const vp = a.system?.sbView?.parts ?? []; const i = part == null ? Math.max(0, vp.findIndex((p) => p.isCore)) : (partIndex(vp, part) ?? 0);
+  return Number(vp[i]?.defense) || 0;
 }
+/** " (Head)" when a specific part of a multi-part block was chosen. */
+const partTag = (view, i, part) => (part != null && view.length > 1 && view[i] ? ` (${esc(view[i].name)})` : "");
 /** Revealed weak-point bonus per kind for a full `amount` (0 when not revealed / none). */
 export function weakBonus(a, amount, defense) {
   const weakPoint = a?.system?.sb?.weakPoint ?? ""; const revealed = a?.system?.sb?.weaknessRevealed === true;
@@ -88,7 +91,7 @@ export function weakBonus(a, amount, defense) {
  * Damage card Apply: write an already-final amount (Defense, weak point and multiplier done) to HP or MP.
  * heal = restore. Returns the chat line.
  */
-export async function applyFinalToActor(a, amount, { pool = "hp", heal = false } = {}) {
+export async function applyFinalToActor(a, amount, { pool = "hp", heal = false, part = null } = {}) {
   const n = Math.max(0, Math.floor(Number(amount) || 0)); const P = pool === "mp" ? "MP" : "HP";
   if (a.type === "character") {
     const key = pool === "mp" ? "mp" : "hp"; const cur = Number(a.system[key]?.value) || 0; const max = Number(a.system[key]?.max) || 0;
@@ -97,27 +100,27 @@ export async function applyFinalToActor(a, amount, { pool = "hp", heal = false }
     return `${esc(a.name)}: ${heal ? `+${after - cur}` : `−${n}`} → ${P} ${after}`;
   }
   if (!a.system?.sb) return `${esc(a.name)}: unsupported actor type ${esc(a.type)}`;
-  if (heal && pool === "hp") return healActor(a, n);
+  if (heal && pool === "hp") return healActor(a, n, part);
   const raw = a._source.system?.sb ?? {}; const rawParts = Array.isArray(raw.parts) ? raw.parts : Object.values(raw.parts ?? {});
-  const view = a.system.sbView?.parts ?? []; const ci = Math.max(0, view.findIndex((p) => p.isCore));
+  const view = a.system.sbView?.parts ?? []; const ci = part == null ? Math.max(0, view.findIndex((p) => p.isCore)) : (partIndex(view, part) ?? 0); const tag = partTag(view, ci, part);
   if (heal) { // MP restore on a stat block
     const parts = structuredClone(rawParts); if (!parts[ci]) return `${esc(a.name)}: no parts`;
     const v = view[ci] ?? {}; const cur = Number(parts[ci].mpValue ?? v.mpValue ?? v.mp ?? 0); const after = Math.min(Number(v.mp) || 0, cur + n);
-    parts[ci].mpValue = Math.max(cur, after); await a.update({ "system.sb.parts": parts }); return `${esc(a.name)}: +${Math.max(0, after - cur)} → MP ${Math.max(cur, after)}`;
+    parts[ci].mpValue = Math.max(cur, after); await a.update({ "system.sb.parts": parts }); return `${esc(a.name)}${tag}: +${Math.max(0, after - cur)} → MP ${Math.max(cur, after)}`;
   }
   const out = applySbCost(rawParts, view, pool === "mp" ? { mp: n, hp: 0, partIndex: ci } : { mp: 0, hp: n, partIndex: ci });
   if (out.index < 0) return `${esc(a.name)}: no parts`;
   await a.update({ "system.sb.parts": out.parts });
-  return `${esc(a.name)}: −${n} → ${P} ${pool === "mp" ? out.mpAfter : out.hpAfter}`;
+  return `${esc(a.name)}${tag}: −${n} → ${P} ${pool === "mp" ? out.mpAfter : out.hpAfter}`;
 }
 /** Post the result card for damage-card applies. */
 export const appliedCard = (title, lines) => lines.length && ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${esc(title)}</b><br>${lines.join("<br>")}</div>` });
-/** GM socket side: [{tokenId, actorId, amount, pool, heal}] */
+/** GM socket side: [{tokenId, actorId, amount, pool, heal, part?}] */
 export async function applyFinalRemote(list, title = "Damage applied") {
   const lines = [];
   for (const x of list ?? []) {
     const a = (x.tokenId && canvas.tokens.get(x.tokenId)?.actor) || (x.actorId && game.actors.get(x.actorId));
-    if (a) lines.push(await applyFinalToActor(a, x.amount, { pool: x.pool === "mp" ? "mp" : "hp", heal: !!x.heal }));
+    if (a) lines.push(await applyFinalToActor(a, x.amount, { pool: x.pool === "mp" ? "mp" : "hp", heal: !!x.heal, part: Number.isInteger(x.part) ? x.part : null }));
   }
   return appliedCard(title, lines);
 }

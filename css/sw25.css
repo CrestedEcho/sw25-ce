@@ -3741,6 +3741,7 @@ button.chat-target[data-buttontype="target-select"]{display:none}
 .sw25-dc-target { display:flex; gap:6px; align-items:center; border-top:1px solid #ddd; padding:3px 0; }
 .sw25-dc-target img { width:28px; height:28px; border:none; border-radius:50%; object-fit:cover; }
 .sw25-dc-tinfo { flex:1; min-width:0; } .sw25-dc-tinfo small { display:block; color:#555; }
+.sw25-dc-tinfo select.sw25-dc-part { display:block; width:100%; max-width:100%; height:auto; margin:2px 0; font-size:0.85em; }
 .sw25-dc-mults { display:flex; flex-wrap:wrap; gap:2px; margin-top:2px; }
 .sw25-dc-m { flex:0 0 auto; width:auto; min-width:30px; line-height:20px; padding:0 4px; font-size:11px; }
 .sw25-dc-m.on { background:#2f6f8a; color:#fff; }

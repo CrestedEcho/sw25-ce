@@ -4,6 +4,7 @@
  * first roll = 0 damage. Defense is subtracted for physical damage only (magic / fixed skip it),
  * BEFORE the multiplier; fractions round up. ×−1 heals the amount (no Defense); ×0 does nothing.
  */
+import { partSelectHTML } from "./part-pick.mjs";
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -62,7 +63,7 @@ export function damageCardHTML(s) {
     + `</div>`;
 }
 
-/** Apply panel inner HTML. rows = [{ id, name, img, defense }]; opts = { kind, pool, mults: {id: m} }. */
+/** Apply panel inner HTML. rows = [{ id, name, img, defense, parts?, part? }] (parts: multi-part stat block -> part picker); opts = { kind, pool, mults: {id: m} }. */
 export function applyPanelHTML(amount, rows, { kind = "physical", pool = "hp", mults = {}, empty = "Select tokens on the map (or set your character) to apply." } = {}) {
   const opt = `<div class="sw25-dc-opts" data-tooltip="Damage type and pool">`
     + ["physical", "magic", "fixed"].map((k) => `<label><input type="radio" name="kind" value="${k}" ${k === kind ? "checked" : ""}> ${k[0].toUpperCase() + k.slice(1)}</label>`).join("")
@@ -71,7 +72,7 @@ export function applyPanelHTML(amount, rows, { kind = "physical", pool = "hp", m
   const body = rows.map((r) => {
     const m = mults[r.id] ?? 1; const a = applyRow(amount, r.defense, { kind, mult: m, weak: r.weak?.[kind] ?? 0 });
     const sel = MULTS.map((x) => `<button type="button" class="sw25-dc-m ${x.v === a.mult ? "on" : ""}" data-id="${esc(r.id)}" data-m="${x.v}" data-tooltip="${esc(x.tip)}">${x.label}</button>`).join("");
-    return `<div class="sw25-dc-target" data-id="${esc(r.id)}">${r.img ? `<img src="${esc(r.img)}" alt="">` : ""}<div class="sw25-dc-tinfo"><b>${esc(r.name)}</b><small>${esc(a.text)}</small><div class="sw25-dc-mults">${sel}</div></div>`
+    return `<div class="sw25-dc-target" data-id="${esc(r.id)}">${r.img ? `<img src="${esc(r.img)}" alt="">` : ""}<div class="sw25-dc-tinfo"><b>${esc(r.name)}</b>${r.parts?.length > 1 ? partSelectHTML(r.parts, r.part, { id: r.id }) : ""}<small>${esc(a.text)}</small><div class="sw25-dc-mults">${sel}</div></div>`
       + `<span class="sw25-dc-final ${a.heal ? "heal" : ""}">${a.heal ? "+" : a.final ? "−" : ""}${a.final}</span></div>`;
   }).join("");
   return opt + body + `<button type="button" class="sw25-dc-go"><i class="fas fa-check"></i> Apply</button>`;
