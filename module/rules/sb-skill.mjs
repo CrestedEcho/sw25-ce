@@ -82,7 +82,8 @@ export function skillCardHtml(skill, { actorName = "", description = "", gmOnly 
   const btn = d ? `<div class="sw25-sk-check"><span>Check <b>${d.fixed - 7}</b> (${d.fixed})</span>`
     + `<button type="button" data-sw25-skchk="fixed" data-fixed="${d.fixed}" data-label="${esc(label)}"><i class="fas fa-square"></i> ${d.fixed}</button>`
     + `<button type="button" data-sw25-skchk="dice" data-fixed="${d.fixed}" data-label="${esc(label)}"><i class="fas fa-dice"></i> ${esc(d.formula)}</button></div>` : "";
-  const res = s.resist ? `<div class="sw25-sk-resist">Resist: <b>${esc(resistLabel(s.resist, checkLabels))}</b>${s.resistResult ? ` / ${esc(resultLabel(s.resistResult, resultLabels))}` : ""}</div>` : "";
+  const res = s.resist ? `<div class="sw25-sk-resist">Resist: <b>${esc(resistLabel(s.resist, checkLabels))}</b>${s.resistResult ? ` / ${esc(resultLabel(s.resistResult, resultLabels))}` : ""}</div>`
+    : s.resistResult ? `<div class="sw25-sk-resist">Resist: <b>${esc(resultLabel(s.resistResult, resultLabels))}</b></div>` : "";
   return `<div class="sw25-skill-card${gmOnly ? " is-gm" : ""}">`
     + `<header class="sw25-sk-head">${icons}<h3>${esc(s.name ?? "Skill")}</h3></header>`
     + `<div class="sw25-sk-meta">${s.part ? `<span class="sw25-sk-part">${esc(s.part)}</span>` : ""}${tagText ? `<span class="sw25-sk-tags">${esc(tagText)}</span>` : ""}${gmOnly ? `<span class="sw25-sk-gm"><i class="fas fa-eye-slash"></i> GM only</span>` : ""}</div>`

@@ -72,10 +72,10 @@ export function buildStatBlockContext({ type, view = {}, raw = {}, isGM = false,
     inMagic: !!parseMagicSkill(u) && (!u.magicMoved || movedFrom.has(u.name)),
     tags: (u.tags ?? []).map((t) => ({ key: t, ...(SKILL_TAGS[t] ?? { glyph: "·", label: t, tip: t }) })),
     check: u.check && u.check.value != null && u.check.value !== "" ? `${u.check.value}(${u.check.fixed ?? Number(u.check.value) + 7})` : "",
-    resist: u.resist ? `${resistLabel(u.resist)}${u.resistResult ? ` / ${resultLabel(u.resistResult)}` : ""}` : "",
+    resist: u.resist ? `${resistLabel(u.resist)}${u.resistResult ? ` / ${resultLabel(u.resistResult)}` : ""}` : u.resistResult ? resultLabel(u.resistResult) : "",
     key: slugKey(u.name), gmOnly: spellGmOnly(skillGmMap, u.name),
   }));
-  const loot = (view.loot ?? []).map((l, i) => ({ i, roll: l.always ? "Always" : l.roll, item: l.item, price: l.price, materialCard: l.materialCard ?? "", always: l.always }));
+  const loot = (view.loot ?? []).map((l, i) => ({ i, roll: l.always ? "Always" : l.roll, item: l.item, price: l.price, materialCard: l.materialCard ?? "", always: l.always, uuid: l.uuid ?? "" }));
   const tabs = sheetTabs(type, hostile);
   const mv = view.movement ?? {};
   const fmtMove = (v, m) => (v == null ? "—" : `${v}${m ? ` (${m})` : ""}`);

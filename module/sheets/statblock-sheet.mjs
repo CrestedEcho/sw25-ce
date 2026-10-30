@@ -318,12 +318,15 @@ SW25StatBlockSheet.prototype._sbLoot = async function () {
   const rows = Array.isArray(raw.loot) ? raw.loot : Object.values(raw.loot ?? {});
   const r = await new Roll("2d6").evaluate();
   const got = lootFor(rows, r.total);
-  const li = got.map((l) => `<li>${l.always ? "<small>(Always)</small> " : ""}<b>${esc(l.item || "?")}</b>${l.price != null && l.price !== "" ? ` — ${esc(l.price)}G` : ""}${l.materialCard ? ` <small>[${esc(l.materialCard)}]</small>` : ""}</li>`).join("");
+  // Rows with a uuid (a real Item) become content links the GM can drag from chat onto a character sheet.
+  const name = (l) => (l.uuid ? `@UUID[${l.uuid}]{${String(l.item || "?").replace(/[{}\]]/g, "")}}` : `<b>${esc(l.item || "?")}</b>`);
+  const li = got.map((l) => `<li>${l.always ? "<small>(Always)</small> " : ""}${name(l)}${l.price != null && l.price !== "" ? ` — ${esc(l.price)}G` : ""}${l.materialCard ? ` <small>[${esc(l.materialCard)}]</small>` : ""}</li>`).join("");
   const shards = view.swordShards;
   const content = `<div class="sw25-sbloot"><div class="sw25-gmonly"><i class="fas fa-eye-slash"></i> Whisper · GM only</div><header><b>${esc(this.actor.name)}</b> — loot 🎲 2d6 = <b>${r.total}</b></header>`
     + `<ul>${li || "<li class=\"muted\">Nothing dropped</li>"}</ul>`
     + (shards ? `<div>Sword Shards: <b>${esc(shards)}</b></div>` : "") + `</div>`;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), rolls: [r], content, whisper: ChatMessage.getWhisperRecipients("GM").map((u) => u.id) });
+  const TE = foundry.applications.ux.TextEditor.implementation;
+  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), rolls: [r], content: await TE.enrichHTML(content), whisper: ChatMessage.getWhisperRecipients("GM").map((u) => u.id) });
 };
 
 /** Show a non-weapon item to chat (image, name, description). */

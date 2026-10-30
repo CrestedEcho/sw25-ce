@@ -15,6 +15,7 @@ import { SW25 } from "../helpers/config.mjs";
 import { Util } from "../helpers/utils.mjs";
 import { DamageSupporter } from "../helpers/damagesupport.mjs";
 import { prepareCe7Context, bindCe7Listeners, handleCe7Drop } from "../ce7/equipcard.mjs";
+import { stackPlan } from "../ce7/item-stack.mjs";
 import { afterWeaponDamage, annotateAttackCard } from "../rules/combat-ui.mjs";
 import { spellCostOptions } from "../rules/spell-ui.mjs";
 import { castSpellFlow, postSpellDescription } from "../rules/spell-flow.mjs";
@@ -3185,6 +3186,10 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     if (ce7 !== null) return ce7;
     const isBookmarkDrop = event.target.closest(".bookmark-drop-area");
     if (!isBookmarkDrop) {
+      // Same name/type/price/card already owned -> add to its quantity (Shift = separate item).
+      const src = await Item.implementation.fromDropData(data);
+      const plan = src && this.actor.isOwner && stackPlan(this.actor.items, src.toObject(), { shiftKey: event.shiftKey, sameActor: src.parent?.id === this.actor.id });
+      if (plan) return this.actor.items.get(plan.id)?.update(plan.update);
       return super._onDropItem(event, data);
     }
 
