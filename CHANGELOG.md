@@ -5,6 +5,11 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.20 (2026-10-31)
+- Inventory stacking: an item dropped on a character sheet adds to the quantity of an owned item with the same name, type, price and material card instead of making a second copy. Only items, consumables and resources stack (weapons, armour and gear never do). Hold **Shift** while dropping to keep it separate.
+- Monster loot: loot rows linked to a real Item get a 🧳 handle on the stat block, and the GM's **Roll Loot** chat card shows them as links. Drag either onto a character sheet to give the item.
+- Stat-block skills: a resistance that only has a result (such as **Can't**) now shows on the stat block and skill card instead of being blank.
+
 ## 3.0.0-ce.19 (2026-10-28) — first full release
 - First full (non-test) release of sw25-ce. It includes everything from ce.10 to ce.18 below.
 - Installs from the "latest" manifest now update automatically: `https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json`.

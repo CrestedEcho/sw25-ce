@@ -87,7 +87,7 @@ Everything below was added on top of the original system. Full details are in [C
    https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json
    ```
 
-   This link always points to the **latest full release** (currently **3.0.0-ce.19**). Foundry's **Update**
+   This link always points to the **latest full release** (currently **3.0.0-ce.20**). Foundry's **Update**
    button picks up new versions automatically. If you installed one of the old `-test` builds, install again with
    this link to get updates.
 3. Create a world and choose **Sword World 2.5 (CE Edition)** as its game system.
