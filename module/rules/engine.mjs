@@ -558,3 +558,27 @@ export function ruleSourceLevel(item, { adv = 0, actorType = "character" } = {})
   if (item.type === "combatability" && actorType === "character" && !["slot", "auto"].includes(item.system.featSource)) return null;
   return level;
 }
+
+/** Ability-list item type a choice fills, from its explicit `itemType` or the choice word (item vocabulary, not class names). */
+const CHOICE_ITEM_TYPES = [
+  [/^technique/, "enhancearts"], [/spellsong|finale|song/, "magicalsong"], [/stunt|riding/, "ridingtrick"], [/evocation|alchem/, "alchemytech"],
+  [/aspect|phase/, "phasearea"], [/stratagem|maneuver|tactic/, "tactics"], [/infusion/, "infusion"], [/barbarous/, "barbarousskill"],
+  [/essence/, "essenceweave"], [/^feat/, "combatability"], [/language/, "language"], [/^spell/, "spell"],
+];
+export function choiceItemType(g) {
+  if (g?.itemType) return String(g.itemType);
+  const c = String(g?.choose ?? "").toLowerCase();
+  return CHOICE_ITEM_TYPES.find(([re]) => re.test(c))?.[1] ?? null;
+}
+/** Item types a character's classes (level > 0) let them pick, so the sheet can show those sections even when empty. */
+export function allowedAbilityTypes(classItems) {
+  const out = new Set();
+  for (const c of classItems ?? []) {
+    if (c?.type !== "skill" || !(Number(c.system?.skilllevel) > 0)) continue;
+    for (const g of grantList(c.system?.autoFeats)) {
+      if (g.choose) { const t = choiceItemType(g); if (t) out.add(t); }
+      else if (Number(c.system.skilllevel) >= g.level && KIND_TYPES[g.kind]?.length === 1) out.add(KIND_TYPES[g.kind][0]);
+    }
+  }
+  return out;
+}

@@ -82,3 +82,14 @@ test("F7: Magic tab has a catch-all Other spells section", async () => {
   assert.match(t, /{{#if otherSpells\.length}}/);
   assert.match(fs.readFileSync(new URL("../module/helpers/templates.mjs", import.meta.url), "utf8"), /actor-spells-other\.hbs/);
 });
+
+import { allowedAbilityTypes, choiceItemType } from "../module/rules/engine.mjs";
+test("Small: ability sections a class lets you pick from show even while empty (from class grant data)", () => {
+  const k = (choose, lvl = 1, extra = {}) => ({ type: "skill", system: { skilllevel: lvl, autoFeats: [{ choose, options: ["a"], level: 1, ...extra }] } });
+  assert.deepEqual([...allowedAbilityTypes([k("technique")])], ["enhancearts"]);
+  assert.deepEqual([...allowedAbilityTypes([k("spellsong-or-finale"), k("stunt"), k("evocation"), k("aspect"), k("stratagem-or-maneuver"), k("infusion"), k("essence-weaving")])].sort(),
+    ["alchemytech", "enhancearts", "essenceweave", "infusion", "magicalsong", "phasearea", "ridingtrick", "tactics"].filter((x) => x !== "enhancearts").sort());
+  assert.equal(allowedAbilityTypes([k("technique", 0)]).size, 0, "class at level 0 allows nothing");
+  assert.equal(choiceItemType({ choose: "mystery", itemType: "barbarousskill" }), "barbarousskill", "explicit itemType wins");
+  assert.equal(choiceItemType({ choose: "god" }), null);
+});

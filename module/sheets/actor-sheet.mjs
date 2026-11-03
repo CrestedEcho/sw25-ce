@@ -24,6 +24,7 @@ import { weaponRoute } from "../rules/weapon-route.mjs";
 import { weaponCardRow, pcWeaponBattle } from "../rules/weapon-battle.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf, SPELL_TYPES } from "../rules/spell-school.mjs";
+import * as RE from "../rules/engine.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
 
 /**
@@ -608,6 +609,12 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     if (essenceweave.length == 0) {
       ewshow = false;
     } else ewshow = true;
+
+    // ce.21: a section the character's classes let them pick from stays visible even while empty (drop target).
+    const allowed = RE.allowedAbilityTypes(this.actor.items);
+    eashow ||= allowed.has("enhancearts"); msshow ||= allowed.has("magicalsong"); rtshow ||= allowed.has("ridingtrick");
+    atshow ||= allowed.has("alchemytech"); pashow ||= allowed.has("phasearea"); tcshow ||= allowed.has("tactics");
+    ifshow ||= allowed.has("infusion"); bsshow ||= allowed.has("barbarousskill"); ewshow ||= allowed.has("essenceweave");
 
     let ofshow = true;
     if (otherfeature.length == 0) {
