@@ -5,6 +5,21 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.21-test (2026-11-03) — test pre-release
+- Test pre-release of the character-creation work. Framework only; no rulebook content is included. Its manifest is pinned to this build, so it does not auto-update to later full releases (reinstall with the "latest" link for those).
+- **Race item type**: the race sheet lists the A–F creation dice, starting languages and restricted classes (text only, never enforced), and links racial abilities and Lv6/Lv11 enhanced abilities. Dropping a race on a character sets the race name and dice formulas, adds the linked ability cards (enhanced ones stay inactive until that adventurer level) and replaces any previous race. Deleting the race removes them.
+- **Players roll their own dice**: per-score and **Roll all A–F** buttons roll the creation dice, post the result to chat and fill the score. Nothing is rolled automatically.
+- **Race Appearance section**: optional male and female example portraits (a placeholder shows when a file is missing) and a rich-text description of looks, on the race sheet and the character's race card.
+- Dice HP/MP costs such as "1dHP" or "2d(9)HP" are never spent automatically by **Use**; the player rolls them.
+- **Declare** and **Use** buttons on every active ability and feat-slot row (Use spends listed MP/HP and posts the card); roll links on slot, auto and racial rows; racial rows can be dragged and clicked to show.
+- Rules editor on every item sheet that has rules (feats, race abilities, techniques, gear), not just classes.
+- Feat rule bonuses apply only when the feat is slotted or auto-granted on a character (NPC feats unchanged).
+- Per-level class picks: each level gets its own pick, plain-name options resolve to items, every pending pick is prompted, and pick counts show "one per level".
+- Class defaults (evasion, weapon accuracy, initiative, monster knowledge) come from class data instead of hardcoded class names, so homebrew classes work.
+- Magic tab: spell school aliases (Deep Magic/Wizard, Arcane/Bibliomancer, class names) and a catch-all **Other spells** section.
+- Empty ability sections (techniques, spellsongs, stunts, …) stay visible when one of the character's classes grants picks of that kind.
+- Race abilities can list HP/MP costs and a quantity so the Use button can spend them.
+
 ## 3.0.0-ce.20 (2026-10-31)
 - Inventory stacking: an item dropped on a character sheet adds to the quantity of an owned item with the same name, type, price and material card instead of making a second copy. Only items, consumables and resources stack (weapons, armour and gear never do). Hold **Shift** while dropping to keep it separate.
 - Monster loot: loot rows linked to a real Item get a 🧳 handle on the stat block, and the GM's **Roll Loot** chat card shows them as links. Drag either onto a character sheet to give the item.
