@@ -543,3 +543,18 @@ export const KIND_TYPES = {
   armor: ["armor"],
   item: ["item", "consumable", "accessory"],
 };
+
+/**
+ * Does an owned item's system.rules apply? Classes need a level, weapons/armor/accessories must be equipped, and on
+ * characters a feat (combatability) counts only when it sits in a feat slot or was auto-granted by a class/race;
+ * a feat merely lying in the inventory or "learned" list adds nothing. Returns the level the rules run at, or null.
+ */
+export function ruleSourceLevel(item, { adv = 0, actorType = "character" } = {}) {
+  if (!item?.system?.rules) return null;
+  const isClass = item.type === "skill";
+  const level = isClass ? Number(item.system.skilllevel) || 0 : Number(adv) || 1;
+  if (isClass && !(level > 0)) return null;
+  if (["weapon", "armor", "accessory"].includes(item.type) && item.system.equip !== true) return null;
+  if (item.type === "combatability" && actorType === "character" && !["slot", "auto"].includes(item.system.featSource)) return null;
+  return level;
+}

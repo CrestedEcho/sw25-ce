@@ -1360,11 +1360,8 @@ function sw25RuleSources(actor) {
   const out = [];
   for (const item of actor.items) {
     const raw = item.system?.rules;
-    if (!raw) continue;
-    const isClass = item.type === "skill";
-    const level = isClass ? Number(item.system.skilllevel) || 0 : adv || 1;
-    if (isClass && !(level > 0)) continue;
-    if (["weapon", "armor", "accessory"].includes(item.type) && item.system.equip !== true) continue;
+    const level = RE.ruleSourceLevel(item, { adv, actorType: actor.type });
+    if (level == null) continue;
     const choices = item.flags?.["sw25-ce"]?.choices ?? {};
     out.push({ id: item.id, name: item.name, type: item.type, level, rules: raw, choices, selectors: { ...choices } });
   }
