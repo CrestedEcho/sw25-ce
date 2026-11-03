@@ -93,3 +93,10 @@ test("Small: ability sections a class lets you pick from show even while empty (
   assert.equal(choiceItemType({ choose: "mystery", itemType: "barbarousskill" }), "barbarousskill", "explicit itemType wins");
   assert.equal(choiceItemType({ choose: "god" }), null);
 });
+
+test("F8: race abilities declare hpcost / mpcost / quantity (and their base fields)", async () => {
+  const fs = await import("node:fs");
+  const t = JSON.parse(fs.readFileSync(new URL("../template.json", import.meta.url), "utf8")).Item.raceability;
+  for (const k of ["hpcost", "mpcost", "quantity", "basehpcost", "basempcost", "maxhpcost"]) assert.ok(k in t, k);
+  assert.deepEqual(t.templates, ["base", "roll"]);
+});

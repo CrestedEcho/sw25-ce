@@ -1534,6 +1534,12 @@ export class SW25Item extends Item {
       systemData.mpcost = Number(systemData.basempcost);
     }
 
+    // ce.21 (F8): racial abilities declare HP/MP cost and uses like other abilities (the sheet already showed them).
+    if (itemData.type == "raceability") {
+      if (systemData.basehpcost !== "" && systemData.basehpcost != null) systemData.hpcost = systemData.basehpcost;
+      if (Number(systemData.basempcost) > 0) systemData.mpcost = Number(systemData.basempcost);
+    }
+
     if (itemData.type == "essenceweave") {
       systemData.checkbase =
         Number(systemData.checkbase) + Number(actorData.attributes.efewckmod);
