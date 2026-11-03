@@ -221,6 +221,7 @@
           "mod": "",
           "basename": "A",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -232,6 +233,7 @@
           "mod": "",
           "basename": "B",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -243,6 +245,7 @@
           "mod": "",
           "basename": "C",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -254,6 +257,7 @@
           "mod": "",
           "basename": "D",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -265,6 +269,7 @@
           "mod": "",
           "basename": "E",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -276,6 +281,7 @@
           "mod": "",
           "basename": "F",
           "valuebase": "",
+          "dice": "",
           "valuegrowth": 0,
           "valuemodify": 0,
           "efvaluemodify": 0,
@@ -755,6 +761,7 @@
       "resource",
       "combatability",
       "skill",
+      "race",
       "raceability",
       "language",
       "monsterability",
@@ -1251,6 +1258,24 @@
       "overview": "",
       "basempcost": 0,
       "mpcost": 0
+    },
+    "race": {
+      "templates": [
+        "base"
+      ],
+      "source": "",
+      "dice": {
+        "dex": "2d",
+        "agi": "2d",
+        "str": "2d",
+        "vit": "2d",
+        "int": "2d",
+        "mnd": "2d"
+      },
+      "languages": "",
+      "restricted": "",
+      "abilities": [],
+      "enhanced": []
     }
   }
 }

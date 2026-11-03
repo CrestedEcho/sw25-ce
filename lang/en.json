@@ -1495,6 +1495,30 @@
     "AttackCard": {
       "Card": "Attack card",
       "CardTip": "Post an attack card: roll Accuracy, the target rolls Evasion, then roll Damage."
+    },
+    "RaceItem": {
+      "Details": "Details",
+      "Dice": "Creation dice",
+      "DiceHint": "(formulas only: the player rolls each score)",
+      "Languages": "Starting languages",
+      "TextOnly": "(text)",
+      "Restricted": "Restricted classes",
+      "NotEnforced": "(text only, never enforced)",
+      "Source": "Source",
+      "Abilities": "Racial abilities",
+      "AbilitiesHint": "(linked items, added to the character as cards)",
+      "Enhanced": "Enhanced abilities",
+      "EnhancedHint": "(linked; inactive on the character until that adventurer level)",
+      "FromLevel": "from adventurer Lv",
+      "Remove": "Remove link",
+      "DropAbility": "+ Drop a racial ability item here",
+      "DropEnhanced": "+ Drop an enhanced ability item here (level 6 by default)",
+      "RollScore": "Roll {letter} ({dice}): posts to chat and fills {letter}",
+      "RollAll": "Roll all A–F",
+      "RollAllTip": "Roll every creation score that has dice; each result posts to chat and fills its score",
+      "Info": "Race",
+      "Inactive": "inactive until adventurer Lv {level}",
+      "Applies": "Lv {level}+"
     }
   },
   "TYPES": {
@@ -1523,6 +1547,7 @@
       "resource": "Resource",
       "combatability": "Feats",
       "skill": "Class",
+      "race": "Race",
       "raceability": "Race Ability",
       "language": "Language",
       "otherfeature": "Other Features",

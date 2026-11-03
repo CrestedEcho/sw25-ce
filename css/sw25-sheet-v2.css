@@ -410,3 +410,26 @@ form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.
 .sw25v2.theme-dark .cc-step a:hover{background:rgba(201,162,78,.15)}
 .sw25v2 .ce7-roll{flex:0 0 auto;opacity:.75}.sw25v2 .ce7-roll:hover{opacity:1}.sw25v2 .sw-acts{display:inline-flex;flex:0 0 auto}.sw25v2 .sw-acts:empty{display:none}.sw25v2 .ce7-row a.item-edit{flex:0 0 auto}
 .sw25v2 .ce7-row .ce7-feat-show{flex:1;cursor:pointer}
+
+/* ce.21 F1: race item + creation dice */
+.sw-abroll{display:inline-block;font-size:11px;padding:0 5px;border:1px solid #8a6a2a;border-radius:4px;background:#efe2c2;color:#3a2a10;cursor:pointer;margin-top:2px}
+.sw-abroll:hover,.sw-abroll-all:hover{background:#a3843a;color:#fff}
+.sw-abroll-all{position:absolute;right:8px;top:4px;font-size:11px;padding:1px 6px;border:1px solid #8a6a2a;border-radius:4px;background:#efe2c2;color:#3a2a10;cursor:pointer;z-index:2}
+.panel.abilities{position:relative}
+.ce7-row.sw-inactive{opacity:.55;font-style:italic}
+.sw-race-lvpill{flex:0 0 auto;font-size:10.5px;padding:0 6px;border-radius:9px;background:#dfe8f3;border:1px solid #8aa3c2;color:#1d3550}
+.sw-raceinfo{align-items:flex-start}
+.sw-raceinfo small{font-weight:normal;opacity:.85}
+.sw-race-details h4{margin:8px 0 4px}
+.sw-race-details h4 small{font-weight:normal;opacity:.7}
+.sw-race-dice{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.sw-race-die{display:flex;flex-direction:column;align-items:center;border:1px solid #c9b47f;border-radius:5px;padding:3px}
+.sw-race-die input{width:3.5em;text-align:center}
+.sw-race-die span{font-size:16px;font-weight:bold}
+.sw-race-txt{border:1px solid #e0d3b0;border-radius:4px;padding:4px 6px;min-height:1.4em}
+.sw-race-details textarea{width:100%}
+.sw-race-links{list-style:none;padding:0;margin:0}
+.sw-race-links li{display:flex;gap:6px;align-items:center;padding:3px 4px;border-bottom:1px dotted #c9b47f}
+.sw-race-links .sw-race-lv{margin-left:auto;font-size:11px}
+.sw-race-links .sw-race-lv input{width:3em}
+.sw-race-drop{margin-top:6px;border:1px dashed #a3843a;border-radius:5px;padding:5px;text-align:center;opacity:.8}

@@ -1,0 +1,73 @@
+<form class="{{cssClass}}" autocomplete="off">
+<section class="sw25item sw-race">
+  <header class="header">
+    <section class="header__img">
+      <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    </section>
+    <section class="header__title">
+      <h1 class="charname">
+        {{#if system.isEdit}}<input name="name" type="text" value="{{item.name}}" placeholder="Name"/>{{else}}{{item.name}}{{/if}}
+      </h1>
+    </section>
+    <section class="header__subtitle">
+      {{localize "TYPES.Item.race"}}{{#if system.source}} · {{system.source}}{{/if}}
+    </section>
+    <section class="header__activate"></section>
+    <section class="togglearea">
+      <label class="togglearea__btn">
+        <input id="{{item._id}}isEdit" type="checkbox" name="system.isEdit" {{#if system.isEdit}}checked{{/if}} data-dtype="Boolean"/>
+        <div class="togglearea__btn--slider"><i class="fa-solid fa-wrench"></i></div>
+      </label>
+    </section>
+  </header>
+
+  <main class="main">
+  <nav class="sheet-tabs tabs" data-group="primary" style="margin: 0px;">
+    <a class="item" data-tab="description">{{localize "SW25.Description"}}</a>
+    <a class="item" data-tab="details">{{localize "SW25.RaceItem.Details"}}</a>
+  </nav>
+
+  <section class="sheet-body">
+    <section class="tab" data-group="primary" data-tab="description" style="height: 100%;">
+      {{editor system.description target="system.description" rollData=rollData button=true owner=owner editable=editable}}
+    </section>
+
+    <section class="tab sw-race-details" data-group="primary" data-tab="details">
+      <h4>{{localize "SW25.RaceItem.Dice"}} <small>{{localize "SW25.RaceItem.DiceHint"}}</small></h4>
+      <div class="sw-race-dice">
+        {{#each raceDice as |d|}}
+        <label class="sw-race-die"><b>{{d.letter}}</b>
+          {{#if ../system.isEdit}}<input type="text" name="system.dice.{{d.key}}" value="{{d.value}}" placeholder="2d" data-dtype="String"/>{{else}}<span>{{d.value}}</span>{{/if}}
+          <small>{{d.label}}</small></label>
+        {{/each}}
+      </div>
+      <h4>{{localize "SW25.RaceItem.Languages"}} <small>{{localize "SW25.RaceItem.TextOnly"}}</small></h4>
+      {{#if system.isEdit}}<textarea name="system.languages" rows="2">{{system.languages}}</textarea>{{else}}<div class="sw-race-txt">{{system.languages}}</div>{{/if}}
+      <h4>{{localize "SW25.RaceItem.Restricted"}} <small>{{localize "SW25.RaceItem.NotEnforced"}}</small></h4>
+      {{#if system.isEdit}}<textarea name="system.restricted" rows="2">{{system.restricted}}</textarea>{{else}}<div class="sw-race-txt">{{system.restricted}}</div>{{/if}}
+      {{#if system.isEdit}}<label class="sw-race-src">{{localize "SW25.RaceItem.Source"}} <input type="text" name="system.source" value="{{system.source}}" data-dtype="String"/></label>{{/if}}
+
+      <h4>{{localize "SW25.RaceItem.Abilities"}} <small>{{localize "SW25.RaceItem.AbilitiesHint"}}</small></h4>
+      <ul class="sw-race-links" data-list="abilities">
+        {{#each raceAbilities as |l|}}
+        <li><a class="content-link" draggable="true" data-link data-uuid="{{l.uuid}}"><i class="fas fa-link"></i> {{l.name}}</a>
+          <span class="sw-race-lv">Lv {{#if ../system.isEdit}}<input type="number" class="sw-race-level" data-list="abilities" data-idx="{{l.idx}}" value="{{l.level}}" min="1"/>{{else}}{{l.level}}{{/if}}</span>
+          {{#if ../editable}}<a class="sw-race-del" data-list="abilities" data-idx="{{l.idx}}" data-tooltip="{{localize 'SW25.RaceItem.Remove'}}"><i class="fas fa-xmark"></i></a>{{/if}}</li>
+        {{/each}}
+      </ul>
+      <div class="sw-race-drop" data-list="abilities">{{localize "SW25.RaceItem.DropAbility"}}</div>
+
+      <h4>{{localize "SW25.RaceItem.Enhanced"}} <small>{{localize "SW25.RaceItem.EnhancedHint"}}</small></h4>
+      <ul class="sw-race-links" data-list="enhanced">
+        {{#each raceEnhanced as |l|}}
+        <li><a class="content-link" draggable="true" data-link data-uuid="{{l.uuid}}"><i class="fas fa-link"></i> {{l.name}}</a>
+          <span class="sw-race-lv">{{localize "SW25.RaceItem.FromLevel"}} {{#if ../system.isEdit}}<input type="number" class="sw-race-level" data-list="enhanced" data-idx="{{l.idx}}" value="{{l.level}}" min="2"/>{{else}}{{l.level}}{{/if}}</span>
+          {{#if ../editable}}<a class="sw-race-del" data-list="enhanced" data-idx="{{l.idx}}" data-tooltip="{{localize 'SW25.RaceItem.Remove'}}"><i class="fas fa-xmark"></i></a>{{/if}}</li>
+        {{/each}}
+      </ul>
+      <div class="sw-race-drop" data-list="enhanced">{{localize "SW25.RaceItem.DropEnhanced"}}</div>
+    </section>
+  </section>
+  </main>
+</section>
+</form>

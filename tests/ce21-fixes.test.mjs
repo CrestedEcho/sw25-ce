@@ -45,7 +45,7 @@ test("F4: feat-slot, auto and racial rows carry a roll link and an action holder
   const t = fs.readFileSync(new URL("../templates/actor/parts/actor-ce7-feats.hbs", import.meta.url), "utf8");
   assert.equal((t.match(/class="rollable ce7-roll" data-roll-type="item"/g) ?? []).length, 4);
   assert.equal((t.match(/class="sw-acts"/g) ?? []).length, 4);
-  assert.match(t, /ce7feats\.racial as \|it\|}}<div class="item ce7-row ce7-drag" draggable="true"/);
+  assert.match(t, /ce7feats\.racial as \|it\|}}<div class="item ce7-row ce7-drag[^"]*" draggable="true"/);
 });
 
 test("F5: rules editor renders for any item type (feat, race ability, armor)", async () => {

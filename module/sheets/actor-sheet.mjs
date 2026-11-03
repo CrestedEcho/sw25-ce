@@ -25,6 +25,7 @@ import { weaponCardRow, pcWeaponBattle } from "../rules/weapon-battle.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
 import { spellTypeOf, SPELL_TYPES } from "../rules/spell-school.mjs";
 import * as RE from "../rules/engine.mjs";
+import * as RACE from "../rules/race.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
 
 /**
@@ -747,6 +748,10 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.abshow = abshow;
     context.bibliomancer = bibliomancer;
     context.otherSpells = otherSpells;
+    // ce.21 F1: race item (text notes) and creation dice (players roll them; never auto-rolled).
+    const raceItem = this.actor.items.find((i) => i.type === "race");
+    context.raceInfo = raceItem ? { id: raceItem.id, name: raceItem.name, img: raceItem.img, languages: raceItem.system.languages ?? "", restricted: raceItem.system.restricted ?? "" } : null;
+    context.raceDice = RACE.ABIL_KEYS.some((k) => RACE.diceFormula(this.actor.system.abilities?.[k]?.dice));
     context.bmshow = bmshow;
     context.monsterabilities = monsterabilities;
     context.actions = actions;
@@ -829,6 +834,10 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // -------------------------------------------------------------
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
+
+    // ce.21 F1: creation rolls are always player-initiated; each posts to chat and fills its A-F score.
+    html.on("click", ".sw-abroll", (ev) => { ev.preventDefault(); ev.stopPropagation(); RACE.rollAbilityScore(this.actor, ev.currentTarget.dataset.ab); });
+    html.on("click", ".sw-abroll-all", (ev) => { ev.preventDefault(); ev.stopPropagation(); RACE.rollAllScores(this.actor); });
 
     // Add Inventory Item
     html.on("click", ".item-create", this._onItemCreate.bind(this));

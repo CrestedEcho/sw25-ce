@@ -63,6 +63,7 @@
   {{#unless system.toFellow}}
   <div class="panel abilities">
     <span class="ribbon">{{localize "SW25.V2.Abilities"}}</span>
+    {{#if raceDice}}<a class="sw-abroll-all" data-tooltip="{{localize 'SW25.RaceItem.RollAllTip'}}"><i class="fas fa-dice"></i> {{localize "SW25.RaceItem.RollAll"}}</a>{{/if}}
     <div class="abil">
       {{#with system.abilities.dex as |ab|}}
       <div class="ab" data-tooltip="{{localize 'SW25.V2.Tip.AbDex'}}">
@@ -70,6 +71,7 @@
         <div class="n">{{localize "SW25.Ability.Dex.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="dex" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           <label data-tooltip="{{localize 'SW25.V2.Tip.Base'}}">{{localize "SW25.Ability.Technique"}}<input type="number" name="system.abilities.dex.racevalue" value="{{ab.racevalue}}" data-dtype="Number"/></label>
@@ -90,6 +92,7 @@
         <div class="n">{{localize "SW25.Ability.Agi.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="agi" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           
@@ -110,6 +113,7 @@
         <div class="n">{{localize "SW25.Ability.Str.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="str" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           <label data-tooltip="{{localize 'SW25.V2.Tip.Base'}}">{{localize "SW25.Ability.Body"}}<input type="number" name="system.abilities.str.racevalue" value="{{ab.racevalue}}" data-dtype="Number"/></label>
@@ -130,6 +134,7 @@
         <div class="n">{{localize "SW25.Ability.Vit.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="vit" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           
@@ -150,6 +155,7 @@
         <div class="n">{{localize "SW25.Ability.Int.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="int" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           <label data-tooltip="{{localize 'SW25.V2.Tip.Base'}}">{{localize "SW25.Ability.Heart"}}<input type="number" name="system.abilities.int.racevalue" value="{{ab.racevalue}}" data-dtype="Number"/></label>
@@ -170,6 +176,7 @@
         <div class="n">{{localize "SW25.Ability.Mnd.long"}}</div>
         <div class="v">{{ab.value}}</div>
         <div class="b">{{numberFormat ab.mod decimals=0 sign=true}}</div>
+        {{#if ab.dice}}<a class="sw-abroll" data-ab="mnd" data-tooltip="{{localize 'SW25.RaceItem.RollScore' letter=ab.basename dice=ab.dice}}"><i class="fas fa-dice-d6"></i> {{ab.dice}}</a>{{/if}}
         {{#if ../system.isEdit}}
         <div class="ab-edit">
           

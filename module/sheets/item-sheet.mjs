@@ -1,3 +1,4 @@
+import * as RACE from "../rules/race.mjs";
 import {
   onManageActiveEffect,
   prepareActiveEffectCategories,
@@ -85,6 +86,8 @@ export class SW25ItemSheet extends foundry.appv1.sheets.ItemSheet {
     if (itemData.type == "skill") {
       this._prepareSkillData(context);
     }
+
+    if (itemData.type == "race") Object.assign(context, RACE.raceSheetData(itemData.system));
 
     if (itemData.type == "check") {
       this._prepareCheckData(context);
@@ -383,6 +386,37 @@ export class SW25ItemSheet extends foundry.appv1.sheets.ItemSheet {
 
   /* -------------------------------------------- */
 
+  /** ce.21 F1: race sheet link lists (drop to link, edit level, remove). */
+  _sw25RaceListeners(html) {
+    const root = html[0] ?? html;
+    const listOf = (which) => foundry.utils.duplicate(this.item.system[which] ?? []);
+    root.querySelectorAll(".sw-race-drop, .sw-race-links").forEach((zone) => {
+      zone.addEventListener("dragover", (ev) => ev.preventDefault());
+      zone.addEventListener("drop", async (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        const data = foundry.applications?.ux?.TextEditor?.implementation?.getDragEventData?.(ev) ?? TextEditor.getDragEventData(ev);
+        if (data?.type !== "Item") return;
+        const src = await fromUuid(data.uuid);
+        if (!src) return;
+        const which = zone.dataset.list;
+        await this.item.update({ [`system.${which}`]: RACE.addRaceLink(listOf(which), { uuid: src.uuid, name: src.name }, which) });
+      });
+    });
+    root.querySelectorAll(".sw-race-level").forEach((inp) => inp.addEventListener("change", async (ev) => {
+      ev.stopPropagation();
+      const which = inp.dataset.list, list = listOf(which);
+      if (!list[inp.dataset.idx]) return;
+      list[inp.dataset.idx].level = Math.max(1, Number(inp.value) || 1);
+      await this.item.update({ [`system.${which}`]: list });
+    }));
+    root.querySelectorAll(".sw-race-del").forEach((a) => a.addEventListener("click", async (ev) => {
+      ev.preventDefault();
+      const which = a.dataset.list, list = listOf(which);
+      list.splice(Number(a.dataset.idx), 1);
+      await this.item.update({ [`system.${which}`]: list });
+    }));
+  }
+
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
@@ -391,6 +425,8 @@ export class SW25ItemSheet extends foundry.appv1.sheets.ItemSheet {
     if (!this.isEditable) return;
 
     // Roll handlers, click handlers, etc. would go here.
+
+    if (this.item.type === "race") this._sw25RaceListeners(html);
 
     // Active Effect management
     html.on("click", ".effect-control", (ev) =>

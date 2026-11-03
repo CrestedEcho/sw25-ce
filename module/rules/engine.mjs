@@ -555,7 +555,10 @@ export function ruleSourceLevel(item, { adv = 0, actorType = "character" } = {})
   const level = isClass ? Number(item.system.skilllevel) || 0 : Number(adv) || 1;
   if (isClass && !(level > 0)) return null;
   if (["weapon", "armor", "accessory"].includes(item.type) && item.system.equip !== true) return null;
-  if (item.type === "combatability" && actorType === "character" && !["slot", "auto"].includes(item.system.featSource)) return null;
+  // ce.21 F1: a card a race added (e.g. an enhanced Lv6 ability) counts only from its adventurer level; race feats count as granted.
+  const raceLv = Number(item.flags?.["sw25-ce"]?.raceLevel) || 0;
+  if (raceLv > Math.max(1, Number(adv) || 0)) return null;
+  if (item.type === "combatability" && actorType === "character" && !raceLv && !["slot", "auto"].includes(item.system.featSource)) return null;
   return level;
 }
 

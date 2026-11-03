@@ -181,7 +181,7 @@ export async function useAbility(actor, item) {
 function useButtons(actor, root) {
   for (const li of itemRows(root)) {
     const item = actor.items.get(li.dataset.itemId);
-    if (!AU.showUse(item) || li.querySelector(".sw-use")) continue;
+    if (!AU.showUse(item) || li.querySelector(".sw-use") || li.classList.contains("sw-inactive")) continue;
     const c = AU.useCost(item);
     const cost = [c.mp ? `${c.mp} MP` : "", c.hp ? `${c.hp} HP` : ""].filter(Boolean).join(" + ");
     actsOf(li).insertAdjacentHTML("beforeend",

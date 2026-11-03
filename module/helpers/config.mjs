@@ -665,6 +665,7 @@ SW25.itemTypeList = [
   { type: "resource", label: "SW25.TYPES.Item.resource" },
   { type: "combatability", label: "SW25.TYPES.Item.combatability" },
   { type: "skill", label: "SW25.TYPES.Item.skill" },
+  { type: "race", label: "SW25.TYPES.Item.race" },
   { type: "raceability", label: "SW25.TYPES.Item.raceability" },
   { type: "language", label: "SW25.TYPES.Item.language" },
   { type: "monsterability", label: "SW25.TYPES.Item.monsterability" },

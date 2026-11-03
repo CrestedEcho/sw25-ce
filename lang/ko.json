@@ -1081,6 +1081,7 @@
       "resource": "리소스",
       "combatability": "전투 특기",
       "skill": "기술",
+      "race": "종족",
       "raceability": "종족 특성",
       "language": "언어",
       "otherfeature": "기타 특기",

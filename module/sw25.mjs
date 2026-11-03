@@ -12,6 +12,7 @@ import { syncGrants, resyncGrants, setChoice, resolveRef } from "./rules/grants.
 import { registerRulesUI } from "./rules/sheet-ui.mjs";
 import { registerStatBlockUI } from "./rules/statblock-ui.mjs";
 import { registerCombatUI } from "./rules/combat-ui.mjs";
+import { registerRaceHooks } from "./rules/race.mjs";
 import * as StatBlock from "./rules/statblock.mjs";
 import { shardFollowUpdate } from "./rules/sb-shards.mjs";
 import { registerSkillCardHooks } from "./rules/sb-skill.mjs";
@@ -203,6 +204,7 @@ Hooks.once("init", function () {
   registerRulesUI();
   registerStatBlockUI();
   registerCombatUI();
+  registerRaceHooks();
   registerLiveTargets();
   registerSpellCards();
   registerConditions();

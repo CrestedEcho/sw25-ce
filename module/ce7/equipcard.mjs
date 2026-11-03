@@ -1,3 +1,4 @@
+import { raceOf, raceLevelOf, raceCardActive } from "../rules/race.mjs";
 import { toggleBeltSlot, usesOf, consumePlan, hasFormula, slotsArray, isConsumable, isLimited, sanitizeBelt, beltPickList, assignBeltSlot, stackLabel } from "./belt-logic.mjs";
 /**
  * sw25-ce 3.0.0-ce.7 — Equipment Card, Combat-tab Feats / Consumables Belt,
@@ -170,8 +171,12 @@ export function prepareCe7Context(sheet, context) {
   context.ce7feats = {
     slots: fslots,
     auto: feats.filter((f) => f.system.featSource === "auto").map(mini),
-    racial: actor.items.filter((i) => i.type === "raceability").map(mini),
-    unassigned: feats.filter((f) => !used.has(f.id) && f.system.featSource !== "auto").map(mini),
+    // ce.21 F1: racial cards (incl. any a race added); enhanced ones show their level and stay inactive until it.
+    racial: actor.items.filter((i) => i.type === "raceability" || raceOf(i)).map((i) => {
+      const lv = raceLevelOf(i);
+      return { ...mini(i), raceLevel: lv > 1 ? lv : 0, inactive: !raceCardActive(i, adv) };
+    }),
+    unassigned: feats.filter((f) => !used.has(f.id) && f.system.featSource !== "auto" && !raceOf(f)).map(mini),
   };
 
   // Consumables belt
@@ -358,7 +363,7 @@ export async function handleCe7Drop(sheet, event, data) {
       return own({ "system.featSource": "auto", "system.featLevel": 0, "system.equip": true });
     }
     case "racial": {
-      if (src.type !== "raceability") return warnType(game.i18n.localize("SW25.V2.Feats.Racial")), true;
+      if (src.type !== "raceability" && src.type !== "race") return warnType(game.i18n.localize("SW25.V2.Feats.Racial")), true;
       return own();
     }
   }
