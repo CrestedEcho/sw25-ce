@@ -120,7 +120,26 @@ export function raceSheetData(sys = {}) {
     raceDice: ABIL_KEYS.map((key) => ({ key, letter: ABIL_LETTERS[key], label: labels[key], value: sys.dice?.[key] ?? "" })),
     raceAbilities: list(sys.abilities),
     raceEnhanced: list(sys.enhanced),
+    racePortraits: racePortraits(sys),
   };
+}
+/** Default portrait paths a race bundle points at: assets/sw25-content/races/<slug>-m.webp / -f.webp. */
+export const RACE_PORTRAIT_DIR = "assets/sw25-content/races";
+export const racePortraitPath = (slug, sex) => (slug ? `${RACE_PORTRAIT_DIR}/${slug}-${sex === "female" ? "f" : "m"}.webp` : "");
+/** Up to two example portraits (male, female; either optional). Blank paths are left out; a missing file is hidden by the sheet. */
+export function racePortraits(sys = {}) {
+  const p = sys.portraits ?? {};
+  return [["male", "SW25.RaceItem.Male"], ["female", "SW25.RaceItem.Female"]]
+    .map(([key, label]) => ({ key, label, src: String(p[key] ?? "").trim() }))
+    .filter((x) => x.src);
+}
+/** Hide portraits whose file is missing (graceful fallback): marks the frame .missing so CSS shows a placeholder. */
+export function hideMissingPortraits(root) {
+  const el = root?.[0] ?? root; if (!el?.querySelectorAll) return;
+  for (const img of el.querySelectorAll(".sw-race-portrait img")) {
+    const miss = () => img.closest(".sw-race-portrait")?.classList.add("missing");
+    if (img.complete && img.naturalWidth === 0) miss(); else img.addEventListener("error", miss, { once: true });
+  }
 }
 /** New list after linking a dropped item (no duplicates by uuid). Enhanced links default to level 6. */
 export function addRaceLink(list, { uuid, name }, which = "abilities") {

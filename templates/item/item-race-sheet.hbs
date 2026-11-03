@@ -29,6 +29,26 @@
 
   <section class="sheet-body">
     <section class="tab" data-group="primary" data-tab="description" style="height: 100%;">
+      <section class="sw-race-appearance">
+        <h4>{{localize "SW25.RaceItem.Appearance"}} <small>{{localize "SW25.RaceItem.AppearanceHint"}}</small></h4>
+        {{#if racePortraits.length}}
+        <div class="sw-race-portraits">
+          {{#each racePortraits as |p|}}
+          <figure class="sw-race-portrait" data-sex="{{p.key}}"><img src="{{p.src}}" alt="{{localize p.label}}"/><span class="sw-race-portrait-missing"><i class="fas fa-user"></i> {{localize "SW25.RaceItem.NoPortrait"}}</span><figcaption>{{localize p.label}}</figcaption></figure>
+          {{/each}}
+        </div>
+        {{/if}}
+        {{#if system.isEdit}}
+        <div class="sw-race-portrait-paths">
+          <label>{{localize "SW25.RaceItem.Male"}} <input type="text" name="system.portraits.male" value="{{system.portraits.male}}" placeholder="assets/sw25-content/races/<slug>-m.webp" data-dtype="String"/>
+            <button type="button" class="file-picker" data-type="image" data-target="system.portraits.male" data-tooltip="Browse"><i class="fas fa-file-import fa-fw"></i></button></label>
+          <label>{{localize "SW25.RaceItem.Female"}} <input type="text" name="system.portraits.female" value="{{system.portraits.female}}" placeholder="assets/sw25-content/races/<slug>-f.webp" data-dtype="String"/>
+            <button type="button" class="file-picker" data-type="image" data-target="system.portraits.female" data-tooltip="Browse"><i class="fas fa-file-import fa-fw"></i></button></label>
+        </div>
+        {{/if}}
+        <div class="sw-race-appearance-text">{{editor system.appearance target="system.appearance" rollData=rollData button=true owner=owner editable=editable}}</div>
+      </section>
+      <h4>{{localize "SW25.Description"}}</h4>
       {{editor system.description target="system.description" rollData=rollData button=true owner=owner editable=editable}}
     </section>
 

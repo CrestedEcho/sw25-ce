@@ -170,6 +170,12 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // Add roll data for TinyMCE editors.
     context.rollData = context.actor.getRollData();
 
+    // ce.21 F1: race appearance text, enriched for the race card (links, inline roll buttons).
+    if (context.raceInfo?.appearance) {
+      const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+      try { context.raceInfo.appearance = await TE.enrichHTML(context.raceInfo.appearance, { secrets: this.actor.isOwner, rollData: context.rollData }); } catch { /* keep raw */ }
+    }
+
     // Prepare active effects
     context.effects = prepareActiveEffectCategories(
       // A generator that returns all effects stored on the actor
@@ -750,7 +756,9 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.otherSpells = otherSpells;
     // ce.21 F1: race item (text notes) and creation dice (players roll them; never auto-rolled).
     const raceItem = this.actor.items.find((i) => i.type === "race");
-    context.raceInfo = raceItem ? { id: raceItem.id, name: raceItem.name, img: raceItem.img, languages: raceItem.system.languages ?? "", restricted: raceItem.system.restricted ?? "" } : null;
+    context.raceInfo = raceItem ? { id: raceItem.id, name: raceItem.name, img: raceItem.img, languages: raceItem.system.languages ?? "", restricted: raceItem.system.restricted ?? "",
+      portraits: RACE.racePortraits(raceItem.system), appearance: String(raceItem.system.appearance ?? "").trim() } : null;   // enriched in getData
+    if (context.raceInfo) context.raceInfo.hasAppearance = !!(context.raceInfo.appearance || context.raceInfo.portraits.length);
     context.raceDice = RACE.ABIL_KEYS.some((k) => RACE.diceFormula(this.actor.system.abilities?.[k]?.dice));
     context.bmshow = bmshow;
     context.monsterabilities = monsterabilities;
@@ -789,6 +797,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
 
   /** @override */
   activateListeners(html) {
+    RACE.hideMissingPortraits(html);
     super.activateListeners(html);
     bindCe7Listeners(this, html);
 

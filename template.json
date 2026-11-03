@@ -1275,7 +1275,12 @@
       "languages": "",
       "restricted": "",
       "abilities": [],
-      "enhanced": []
+      "enhanced": [],
+      "appearance": "",
+      "portraits": {
+        "male": "",
+        "female": ""
+      }
     }
   }
 }

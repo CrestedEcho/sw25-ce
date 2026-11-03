@@ -420,6 +420,7 @@ export class SW25ItemSheet extends foundry.appv1.sheets.ItemSheet {
   /** @override */
   activateListeners(html) {
     super.activateListeners(html);
+    if (this.item.type === "race") RACE.hideMissingPortraits(html);
 
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;

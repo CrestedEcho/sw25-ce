@@ -130,3 +130,25 @@ test("F1: race item type, template, sheet, per-score roll buttons and hooks are 
   const apply = src.slice(src.indexOf("export async function applyRace"), src.indexOf("export async function removeRace"));
   assert.doesNotMatch(apply, /Roll|valuebase/);
 });
+
+test("race appearance: portraits optional, default paths, missing files hidden", async () => {
+  const R = await import("../module/rules/race.mjs");
+  assert.deepEqual(R.racePortraits({}), []);
+  assert.deepEqual(R.racePortraits({ portraits: { male: "", female: " a/b-f.webp " } }).map((p) => [p.key, p.src]), [["female", "a/b-f.webp"]]);
+  assert.equal(R.racePortraits({ portraits: { male: "m.webp", female: "f.webp" } }).length, 2);
+  assert.equal(R.racePortraitPath("dwarf", "male"), "assets/sw25-content/races/dwarf-m.webp");
+  assert.equal(R.racePortraitPath("dwarf", "female"), "assets/sw25-content/races/dwarf-f.webp");
+  assert.ok(R.raceSheetData({ portraits: { male: "m.webp" } }).racePortraits.length === 1);
+  // graceful fallback: an image that failed to load marks its frame .missing
+  const cls = new Set(); const frame = { classList: { add: (c) => cls.add(c) } };
+  const img = { complete: true, naturalWidth: 0, closest: () => frame, addEventListener() {} };
+  R.hideMissingPortraits({ querySelectorAll: () => [img] });
+  assert.ok(cls.has("missing"));
+  const fs = await import("node:fs");
+  const t = JSON.parse(fs.readFileSync(new URL("../template.json", import.meta.url))).Item.race;
+  assert.deepEqual(t.portraits, { male: "", female: "" }); assert.equal(t.appearance, "");
+  const hbs = fs.readFileSync(new URL("../templates/item/item-race-sheet.hbs", import.meta.url), "utf8");
+  assert.ok(hbs.indexOf("sw-race-appearance") < hbs.indexOf('target="system.description"'), "appearance shown before the description");
+  const card = fs.readFileSync(new URL("../templates/actor/parts/actor-ce7-feats.hbs", import.meta.url), "utf8");
+  assert.ok(card.includes("sw-raceinfo-appearance") && card.includes("raceInfo.portraits"));
+});

@@ -433,3 +433,24 @@ form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.
 .sw-race-links .sw-race-lv{margin-left:auto;font-size:11px}
 .sw-race-links .sw-race-lv input{width:3em}
 .sw-race-drop{margin-top:6px;border:1px dashed #a3843a;border-radius:5px;padding:5px;text-align:center;opacity:.8}
+
+/* ce.21 F1: race appearance (portraits + looks text) on the race sheet and the character's race card */
+.sw-race-appearance { margin: 0 0 8px; padding: 6px 8px; border: 1px solid rgba(0,0,0,.15); border-radius: 6px; background: rgba(0,0,0,.03); }
+.sw-race-appearance h4 { margin: 0 0 4px; }
+.sw-race-portraits { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 6px; }
+.sw-race-portrait { margin: 0; width: 140px; text-align: center; }
+.sw-race-portrait img { width: 140px; height: 186px; object-fit: cover; border: 1px solid rgba(0,0,0,.25); border-radius: 4px; display: block; }
+.sw-race-portrait figcaption { font-size: 11px; opacity: .8; }
+.sw-race-portrait-missing { display: none; }
+.sw-race-portrait.missing img { display: none; }
+.sw-race-portrait.missing .sw-race-portrait-missing { display: flex; align-items: center; justify-content: center; gap: 4px; width: 140px; height: 186px;
+  border: 1px dashed rgba(0,0,0,.3); border-radius: 4px; font-size: 11px; opacity: .7; }
+.sw-race-portraits.small .sw-race-portrait, .sw-race-portraits.small .sw-race-portrait img,
+.sw-race-portraits.small .sw-race-portrait.missing .sw-race-portrait-missing { width: 72px; height: 96px; }
+.sw-race-portraits.small .sw-race-portrait { height: auto; }
+.sw-race-portrait-paths { display: grid; gap: 4px; margin-bottom: 6px; }
+.sw-race-portrait-paths label { display: flex; gap: 4px; align-items: center; }
+.sw-race-portrait-paths input { flex: 1; }
+.sw-race-appearance-text { min-height: 60px; }
+.sw-raceinfo-appearance { padding: 4px 6px 6px 40px; font-size: 12px; }
+.sw-raceinfo-appearance-text p { margin: 2px 0; }

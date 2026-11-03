@@ -1518,7 +1518,12 @@
       "RollAllTip": "Roll every creation score that has dice; each result posts to chat and fills its score",
       "Info": "Race",
       "Inactive": "inactive until adventurer Lv {level}",
-      "Applies": "Lv {level}+"
+      "Applies": "Lv {level}+",
+      "Appearance": "Appearance",
+      "AppearanceHint": "(looks and features)",
+      "Male": "Male",
+      "Female": "Female",
+      "NoPortrait": "No portrait yet"
     }
   },
   "TYPES": {
