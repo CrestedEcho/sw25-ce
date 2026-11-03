@@ -1,15 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { defaultCheckFor, checkClassList, bestClass, defaultWeaponClass, EVASION_CLASSES } from "../module/rules/class-pick.mjs";
+import { defaultCheckFor, checkClassList, bestClass, defaultWeaponClass, EVASION_CLASSES, classMatches, classGivesCheck } from "../module/rules/class-pick.mjs";
 import { SCHOOL_TO_TYPE, spellTypeOf } from "../module/rules/spell-school.mjs";
 import { testActorDoc } from "../tools/build-compendia.mjs";
 
 const cls = (slug, name, lvl) => ({ type: "skill", name, flags: { "sw25-ce": { slug } }, system: { skilllevel: lvl } });
 const warrior = [cls("fighter", "Fighter", 2), cls("scout", "Scout", 1), cls("ranger", "Ranger", 1)];
 
-test("Initiative / Monster Knowledge checks default to Scout|Tactician+Agi and Sage+Int", () => {
-  assert.deepEqual(defaultCheckFor("Initiative", { init: "Initiative", mknow: "Monster Knowledge" }), { checkskill: "scout|tactician", checkabi: "agi" });
-  assert.deepEqual(defaultCheckFor("Monster Knowledge", { init: "Initiative", mknow: "Monster Knowledge" }), { checkskill: "sage", checkabi: "int" });
+test("Initiative / Monster Knowledge checks default to the classes whose data rolls them (+Agi / +Int)", () => {
+  assert.deepEqual(defaultCheckFor("Initiative", { init: "Initiative", mknow: "Monster Knowledge" }), { checkskill: "@initiative", checkabi: "agi" });
+  assert.deepEqual(defaultCheckFor("Monster Knowledge", { init: "Initiative", mknow: "Monster Knowledge" }), { checkskill: "@monster-knowledge", checkabi: "int" });
+  const init = checkClassList("@initiative");
+  assert.ok(classMatches(cls("scout", "Scout", 1), init) && classMatches(cls("tactician", "Tactician", 1), init));
+  assert.ok(!classMatches(cls("fighter", "Fighter", 1), init));
+  assert.ok(classMatches(cls("sage", "Sage", 1), checkClassList("@monster-knowledge")));
+  const dh = { type: "skill", name: "Dark Hunter", flags: { "sw25-ce": { slug: "dark-hunter", data: { classSkills: [{ package: "monster-knowledge", limit: ["daemon"] }] } } }, system: { skilllevel: 3 } };
+  assert.ok(!classMatches(dh, checkClassList("@monster-knowledge")), "limited package (daemons only) is not the general check");
   assert.equal(defaultCheckFor("Other", { init: "Initiative", mknow: "Monster Knowledge" }), null);
   assert.deepEqual(checkClassList("scout|tactician"), ["scout", "tactician"]);
   assert.equal(checkClassList("adv"), null);
@@ -21,6 +27,15 @@ test("Evasion / weapon class defaults pick the best fighter class", () => {
   assert.equal(bestClass([cls("sorcerer", "Sorcerer", 2)], EVASION_CLASSES), null, "Tabbit: no evasion class -> Evasion 0 is correct");
   assert.equal(defaultWeaponClass(warrior, { system: { type: "sword" } }).name, "Fighter");
   assert.equal(defaultWeaponClass([...warrior, cls("marksman", "Marksman", 1)], { system: { type: "bow" } }).name, "Marksman");
+});
+
+test("Class defaults come from class data, not class names: a homebrew class with evasion data counts", () => {
+  const brew = { type: "skill", name: "Blade Monk", flags: { "sw25-ce": { slug: "blade-monk", data: { classSkills: [{ check: "accuracy", limit: ["melee"] }, { check: "evasion" }] } } }, system: { skilllevel: 4 } };
+  assert.equal(bestClass([cls("fighter", "Fighter", 2), brew], EVASION_CLASSES).name, "Blade Monk");
+  assert.equal(defaultWeaponClass([brew], { system: { type: "sword" } }).name, "Blade Monk");
+  const noEva = { ...brew, flags: { "sw25-ce": { slug: "fighter", data: { classSkills: [{ check: "accuracy", limit: ["melee"] }] } } } };
+  assert.equal(classGivesCheck(noEva, "evasion"), false, "data wins over the slug fallback");
+  assert.equal(defaultWeaponClass([cls("grappler", "Grappler", 3), cls("fighter", "Fighter", 1)], { system: { type: "wrestling" } }).name, "Grappler");
 });
 
 test("Spell school maps to the sheet's Magic-tab bucket", () => {
