@@ -1340,6 +1340,10 @@
         "PickRowTip": "Put {item} in this belt slot",
         "UsesLeft": "{left}/{max} uses left",
         "PickNone": "No consumables in this inventory yet. Use New Consumable in the inventory to make one, then click the slot again."
+      },
+      "Magic": {
+        "OtherSpells": "Other spells",
+        "OtherSpellsTip": "Spells whose school this sheet does not know (homebrew or a missing school). They cast and roll as normal; set the spell's school to move it into a school section."
       }
     },
     "EquipCard": {

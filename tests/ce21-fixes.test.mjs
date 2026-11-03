@@ -58,3 +58,27 @@ test("F5: rules editor renders for any item type (feat, race ability, armor)", a
   assert.match(h, /adventurer level/);
   assert.match(itemRulesEditor({ type: "armor", system: { rules: [] } }), /<tbody><\/tbody>/);
 });
+
+import { spellTypeOf, isOtherSpell, schoolType } from "../module/rules/spell-school.mjs";
+import { SCHOOL_NAMES } from "../module/rules/engine.mjs";
+test("F7: Deep Magic / Wizard and Arcane / Bibliomancer aliases; unknown schools go to Other spells", () => {
+  const sp = (type, school) => ({ system: { type }, flags: { "sw25-ce": { data: { school } } } });
+  assert.equal(spellTypeOf(sp("", "Deep Magic")), "wizard");
+  assert.equal(spellTypeOf(sp("", "deep-magic")), "wizard");
+  assert.equal(spellTypeOf(sp("", "Wizard")), "wizard");
+  assert.equal(spellTypeOf(sp("", "Arcane")), "bibliomancer");
+  assert.equal(spellTypeOf(sp("Bibliomancer", "")), "bibliomancer");
+  assert.equal(spellTypeOf(sp("", "truespeech")), "sorcerer", "existing schools unchanged");
+  assert.equal(spellTypeOf(sp("priest", "")), "priest");
+  assert.equal(isOtherSpell(sp("", "Blood Magic")), true);
+  assert.equal(isOtherSpell(sp("homebrew", "")), true);
+  assert.equal(isOtherSpell(sp("", "deep magic")), false);
+  assert.equal(schoolType("Fairy Tamer"), "fairy");
+  assert.equal(SCHOOL_NAMES["deep magic"], "wz"); assert.equal(SCHOOL_NAMES.arcane, "bm"); assert.equal(SCHOOL_NAMES.bibliomancer, "bm");
+});
+test("F7: Magic tab has a catch-all Other spells section", async () => {
+  const fs = await import("node:fs");
+  const t = fs.readFileSync(new URL("../templates/actor/actor-character-sheet.hbs", import.meta.url), "utf8");
+  assert.match(t, /{{#if otherSpells\.length}}/);
+  assert.match(fs.readFileSync(new URL("../module/helpers/templates.mjs", import.meta.url), "utf8"), /actor-spells-other\.hbs/);
+});

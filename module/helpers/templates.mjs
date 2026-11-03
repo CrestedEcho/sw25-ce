@@ -47,6 +47,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/parts/actor-spells-sorcerer.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-conjurer.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-wizard.hbs",
+    "systems/sw25-ce/templates/actor/parts/actor-spells-other.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-priest.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-magitech.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-fairy.hbs",

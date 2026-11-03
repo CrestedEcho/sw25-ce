@@ -414,6 +414,13 @@
         <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-bibliomancer.hbs"}}</div>
       </div>
       {{/if}}
+      {{#if otherSpells.length}}
+      <div class="panel school item sw-other-spells">
+        <div class="school-head"><span class="ribbon spelllist-label"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/skill.svg)"></span> {{localize "SW25.V2.Magic.OtherSpells"}}</span>
+          <span class="spacer"></span><span class="notes" data-tooltip="{{localize 'SW25.V2.Magic.OtherSpellsTip'}}"><i class="fas fa-circle-info"></i></span></div>
+        <div class="spelllist-description">{{> "systems/sw25-ce/templates/actor/parts/actor-spells-other.hbs"}}</div>
+      </div>
+      {{/if}}
       <label class="showtoggle"><input type="checkbox" name="system.attributes.showspell" data-dtype="Boolean" {{#if system.attributes.showspell}}checked{{/if}}/> {{localize "SW25.Attributes.Showspell"}}</label>
       {{#if system.attributes.showspell}}<div class="panel">{{> "systems/sw25-ce/templates/actor/parts/actor-spells.hbs"}}</div>{{/if}}
     </div>

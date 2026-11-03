@@ -1,0 +1,6 @@
+<ol class='items-list sw25-spell-list'>
+  {{> "systems/sw25-ce/templates/actor/parts/actor-spell-header.hbs" title=(localize "SW25.V2.Magic.OtherSpells")}}
+  {{#each otherSpells as |item id|}}
+    {{> "systems/sw25-ce/templates/actor/parts/actor-spell-item.hbs" item=item isOwner=../isOwner}}
+  {{/each}}
+</ol>

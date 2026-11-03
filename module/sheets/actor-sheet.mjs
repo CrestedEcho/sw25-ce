@@ -23,7 +23,7 @@ import { postAttackCard, rollWeaponDamage, attackWithWeapon } from "../rules/att
 import { weaponRoute } from "../rules/weapon-route.mjs";
 import { weaponCardRow, pcWeaponBattle } from "../rules/weapon-battle.mjs";
 import { rowData as spellRowData } from "../rules/spell-card.mjs";
-import { spellTypeOf } from "../rules/spell-school.mjs";
+import { spellTypeOf, SPELL_TYPES } from "../rules/spell-school.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
 
 /**
@@ -263,6 +263,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     const daemon = [];
     const abyssal = [];
     const bibliomancer = [];
+    const otherSpells = []; // F7: spells with no known school still show on the Magic tab
     const monsterabilities = [];
     const actions = [];
     const actionsf17 = [];
@@ -480,6 +481,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
         if (spellType === "bibliomancer") {
           bibliomancer.push(i);
         }
+        if (!SPELL_TYPES.includes(spellType)) otherSpells.push(i);
       }
 
       // Append to monsterability.
@@ -737,6 +739,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.abyssal = abyssal;
     context.abshow = abshow;
     context.bibliomancer = bibliomancer;
+    context.otherSpells = otherSpells;
     context.bmshow = bmshow;
     context.monsterabilities = monsterabilities;
     context.actions = actions;

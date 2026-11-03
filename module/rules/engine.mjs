@@ -11,7 +11,7 @@
 
 export const SCHOOLS = ["sc", "cn", "wz", "pr", "mt", "fr", "dr", "dm", "ab", "bm"];
 export const ABILITIES = ["dex", "agi", "str", "vit", "int", "mnd"];
-export const SCHOOL_NAMES = { truespeech: "sc", sorcerer: "sc", spiritualism: "cn", conjurer: "cn", wizard: "wz",
+export const SCHOOL_NAMES = { truespeech: "sc", sorcerer: "sc", spiritualism: "cn", conjurer: "cn", wizard: "wz", "deep-magic": "wz", "deep magic": "wz", deepmagic: "wz",
   divine: "pr", priest: "pr", magitech: "mt", artificer: "mt", fairy: "fr", nature: "dr", druid: "dr",
   summoning: "dm", daemonologist: "dm", abyssal: "ab", arcane: "bm", bibliomancer: "bm" };
 

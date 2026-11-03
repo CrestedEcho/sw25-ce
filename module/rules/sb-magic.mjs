@@ -98,7 +98,9 @@ export function fairyAllows(doc, fairies = []) {
   return true;
 }
 
-const TYPE_TO_SCHOOL = Object.fromEntries(Object.entries(SCHOOL_TO_TYPE).map(([k, v]) => [v, k]));
+// first school per bucket wins (the alias entries such as "sorcerer" -> "sorcerer" must not replace "truespeech")
+const TYPE_TO_SCHOOL = {};
+for (const [k, v] of Object.entries(SCHOOL_TO_TYPE)) if (!(v in TYPE_TO_SCHOOL) && v !== "wizard") TYPE_TO_SCHOOL[v] = k;
 /** School key of a spell doc: system.school / Writer flags, else the legacy item bucket (system.type "sorcerer" -> truespeech). */
 export function spellSchoolKey(doc) {
   const s = String(doc?.system?.school ?? doc?.flags?.["sw25-ce"]?.data?.school ?? doc?.flags?.["sw25-ce"]?.school ?? "").toLowerCase();
