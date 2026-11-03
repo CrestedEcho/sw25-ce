@@ -2,6 +2,7 @@
  * sw25-ce rule-engine UI (injected by hooks; no template context changes needed):
  *  - Character sheet: "Overrides" panel (misc mod + locked manual value per target, quill marker), rule notes.
  *  - Skill (class) item sheet: rules list + grants editor for homebrew classes.
+ *  - Every other item sheet: collapsible rules list (F5).
  */
 import { ACTOR_TARGETS, normalizeRules, grantList, choicePick, choiceProgress } from "./engine.mjs";
 
@@ -47,10 +48,9 @@ function overridesPanel(actor, open) {
 const RULE_FIELDS = ["key", "mode", "value", "level_min", "level_max", "predicate", "priority", "label"];
 const MODES = ["add", "multiply", "override", "upgrade", "downgrade"];
 
-function classEditor(item) {
+/** Rules table rows (any item type). */
+function rulesRows(item) {
   const rules = normalizeRules(item.system.rules);
-  const grants = grantList(item.system.autoFeats);
-  const choices = item.getFlag(SYS, "choices") ?? {};
   const rRows = rules.map((r, i) => `<tr data-index="${i}">
     <td><input class="rr" data-f="key" value="${esc(r.key)}" style="width:150px"></td>
     <td><select class="rr" data-f="mode">${MODES.map((m) => `<option ${m === (r.mode ?? "add") ? "selected" : ""}>${m}</option>`).join("")}</select></td>
@@ -59,6 +59,20 @@ function classEditor(item) {
     <td><input class="rr" data-f="level_max" type="number" value="${r.level_max ?? ""}" style="width:36px"></td>
     <td><input class="rr" data-f="predicate" value="${esc([].concat(r.predicate ?? []).join(", "))}" style="width:120px"></td>
     <td><a class="rr-del"><i class="fas fa-trash"></i></a></td></tr>`).join("");
+  return rRows;
+}
+const RULES_TABLE = (rRows, levelNote) => `<p class="notes">Rules: key / mode / value (number or formula with @level, @abilities.str.value) / level min–max${levelNote} / predicates (comma separated). Unknown keys are kept as notes.</p>
+    <table style="font-size:0.85em"><thead><tr><th>Key</th><th>Mode</th><th>Value</th><th>Lv≥</th><th>Lv≤</th><th>Predicate</th><th></th></tr></thead><tbody>${rRows}</tbody></table>
+    <a class="rr-add"><i class="fas fa-plus"></i> Add rule</a>`;
+/** F5: rules editor for every non-class item type (feats, race abilities, gear, ...). Level = adventurer level. */
+export function itemRulesEditor(item) {
+  return RULES_TABLE(rulesRows(item), " (adventurer level)");
+}
+
+function classEditor(item) {
+  const grants = grantList(item.system.autoFeats);
+  const choices = item.getFlag(SYS, "choices") ?? {};
+  const rRows = rulesRows(item);
   const progress = choiceProgress(item.system.autoFeats, item.system.skilllevel, choices);
   const shown = new Set();
   const gRows = grants.map((g, i) => {
@@ -69,9 +83,7 @@ function classEditor(item) {
     return `${head}<li data-index="${i}">Lv ${g.level}: choose <b>${esc(g.choose)}</b> ${g.options.length ? `(${g.options.length} options)` : "(manual pick)"} → <i>${esc(pick ?? "unset")}</i> <a class="gc-reset" data-id="${esc(g.key)}" data-legacy="${g.index === 1 && g.key !== g.choose ? esc(g.choose) : ""}" title="Clear choice"><i class="fas fa-rotate-left"></i></a> <a class="gr-del"><i class="fas fa-trash"></i></a></li>`;
   }).map((row, i) => row ?? (() => { const g = grants[i];
     return `<li data-index="${i}">Lv <input class="gr-level" type="number" min="1" max="20" value="${g.level}" style="width:40px"> ${esc(g.kind)}: ${esc(g.name ?? g.ref)}${g.when ? ` <i>when ${esc(JSON.stringify(g.when))}</i>` : ""} <a class="gr-del"><i class="fas fa-trash"></i></a></li>`; })()).join("");
-  return `<p class="notes">Rules: key / mode / value (number or formula with @level, @abilities.str.value) / level min–max / predicates (comma separated). Unknown keys are kept as notes.</p>
-    <table style="font-size:0.85em"><thead><tr><th>Key</th><th>Mode</th><th>Value</th><th>Lv≥</th><th>Lv≤</th><th>Predicate</th><th></th></tr></thead><tbody>${rRows}</tbody></table>
-    <a class="rr-add"><i class="fas fa-plus"></i> Add rule</a>
+  return `${RULES_TABLE(rRows, "")}
     <h4>Grants</h4><ul class="gr-list" style="list-style:none;padding:0;margin:0">${gRows}</ul>
     <div class="gr-drop" style="border:1px dashed #999;padding:6px;text-align:center;margin-top:4px">Drop a feat, spell or feature here to grant it at a level</div>
     <a class="gc-add"><i class="fas fa-plus"></i> Add choice (e.g. god)</a>`;
@@ -106,11 +118,24 @@ export function registerRulesUI() {
 
   Hooks.on("renderItemSheet", (app, html) => {
     const item = app.item ?? app.document;
-    if (item?.type !== "skill") return;
+    if (!item || item.system?.rules === undefined) return;
     const root = html[0] ?? html;
-    const box = root.querySelector?.(".sw-classrules .sw-rules-editor");
-    if (!box) return;
-    box.innerHTML = classEditor(item);
+    if (!root?.querySelector) return;
+    let box;
+    if (item.type === "skill") {
+      box = root.querySelector(".sw-classrules .sw-rules-editor");
+      if (!box) return;
+      box.innerHTML = classEditor(item);
+    } else {
+      // F5: every other item type with system.rules gets a collapsible Rules editor at the end of the sheet body.
+      if (root.querySelector(".sw-itemrules")) return;
+      const host = root.querySelector(".sheet-body") ?? root.querySelector("form") ?? root;
+      const n = normalizeRules(item.system.rules).length;
+      host.insertAdjacentHTML("beforeend", `<details class="sw-itemrules" ${app._sw25RulesOpen || n ? "open" : ""} style="margin:6px 0"><summary><b>Rules</b> (${n})</summary><div class="sw-rules-editor">${itemRulesEditor(item)}</div></details>`);
+      const det = host.querySelector(".sw-itemrules");
+      det.addEventListener("toggle", () => { app._sw25RulesOpen = det.open; });
+      box = det.querySelector(".sw-rules-editor");
+    }
     if (!app.isEditable) { box.querySelectorAll("input,select,a").forEach((e) => { e.disabled = true; e.style.pointerEvents = "none"; }); return; }
     const rules = () => foundry.utils.deepClone(normalizeRules(item.system.rules));
     const grants = () => foundry.utils.deepClone(Array.isArray(item.system.autoFeats) ? item.system.autoFeats : Object.values(item.system.autoFeats ?? {}));

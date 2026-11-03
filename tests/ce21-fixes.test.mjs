@@ -47,3 +47,14 @@ test("F4: feat-slot, auto and racial rows carry a roll link and an action holder
   assert.equal((t.match(/class="sw-acts"/g) ?? []).length, 4);
   assert.match(t, /ce7feats\.racial as \|it\|}}<div class="item ce7-row ce7-drag" draggable="true"/);
 });
+
+test("F5: rules editor renders for any item type (feat, race ability, armor)", async () => {
+  globalThis.foundry ??= { utils: {} };
+  const { itemRulesEditor } = await import("../module/rules/sheet-ui.mjs");
+  const h = itemRulesEditor({ type: "raceability", system: { rules: [{ key: "evasion", mode: "add", value: 1, predicate: ["declared:x"] }] } });
+  assert.match(h, /class="rr" data-f="key" value="evasion"/);
+  assert.match(h, /declared:x/);
+  assert.match(h, /rr-add/);
+  assert.match(h, /adventurer level/);
+  assert.match(itemRulesEditor({ type: "armor", system: { rules: [] } }), /<tbody><\/tbody>/);
+});
