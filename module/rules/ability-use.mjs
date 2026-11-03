@@ -18,8 +18,11 @@ export function declareSlugsFor(item) {
   if (s.decla === true || s.decla === "true") return [item?.flags?.["sw25-ce"]?.slug || slugify(item?.name)];
   return [];
 }
-/** First whole number in a cost field ("3", "3 MP", "2 (per round)"); 0 if none. */
+/** First whole number in a cost field ("3", "3 MP", "2 (per round)"); 0 if none.
+ * A dice cost ("1dHP", "2d(9)HP", "1d6") is 0: the player rolls it (roll button on the card), it is never auto-spent. */
+export const isDiceCost = (v) => /(^|[^a-z])\d*d(\d|\(|hp|mp|\s|$)/i.test(String(v ?? ""));
 export function costNumber(v) {
+  if (isDiceCost(v)) return 0;
   const m = String(v ?? "").match(/\d+/);
   return m ? Number(m[0]) : 0;
 }

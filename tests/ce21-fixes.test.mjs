@@ -30,6 +30,8 @@ test("F4: Declare chip for any declared ability (flag or declared:<slug> rule), 
 });
 test("F4: Use button on active abilities; spends the listed MP / HP", () => {
   assert.equal(costNumber("3 MP"), 3); assert.equal(costNumber(""), 0); assert.equal(costNumber(5), 5);
+  for (const d of ["1dHP", "2d(9)HP", "1d6", "2d"]) assert.equal(costNumber(d), 0, d); // dice costs: player rolls them
+  assert.equal(costNumber("2 (per round)"), 2); assert.equal(costNumber("3 days"), 3);
   assert.deepEqual(useCost({ system: { mpcost: "3", hpcost: "" } }), { mp: 3, hp: 0 });
   assert.equal(showUse({ type: "combatability", system: { constant: true } }), false, "passive feat: no Use");
   assert.equal(showUse({ type: "combatability", system: { constant: true, decla: true } }), true);
