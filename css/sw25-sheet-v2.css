@@ -408,3 +408,5 @@ form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.
 .sw25v2.theme-dark .cc input.cc-mod{background:rgba(0,0,0,.3)}
 .sw25v2.theme-dark .cc input.cc-mod.set{color:#9be39b;background:rgba(40,90,40,.35);border-color:#5d8f4a}
 .sw25v2.theme-dark .cc-step a:hover{background:rgba(201,162,78,.15)}
+.sw25v2 .ce7-roll{flex:0 0 auto;opacity:.75}.sw25v2 .ce7-roll:hover{opacity:1}.sw25v2 .sw-acts{display:inline-flex;flex:0 0 auto}.sw25v2 .sw-acts:empty{display:none}.sw25v2 .ce7-row a.item-edit{flex:0 0 auto}
+.sw25v2 .ce7-row .ce7-feat-show{flex:1;cursor:pointer}

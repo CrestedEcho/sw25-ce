@@ -3,6 +3,7 @@
  * Pure state logic lives in combat-state.mjs.
  */
 import * as CS from "./combat-state.mjs";
+import * as AU from "./ability-use.mjs";
 import * as RE from "./engine.mjs";
 import { applyDamageToTargets } from "./apply-damage.mjs";
 
@@ -144,20 +145,48 @@ function counterBadges(actor, root) {
   }
 }
 
+const CHIP = "flex:0 0 auto;margin:0 4px;padding:0 4px;border:1px solid #888;border-radius:3px;font-size:0.8em;cursor:pointer";
+/** Rows that show an owned item: classic list rows and the ce7 feat-slot / racial rows. */
+const itemRows = (root) => root.querySelectorAll("li.item[data-item-id], .ce7-row[data-item-id], .ce7-feat-slot[data-item-id]");
+const actsOf = (li) => li.querySelector(".sw-acts") ?? li.querySelector(".item-name") ?? li;
+
 function declareChips(actor, root) {
-  for (const li of root.querySelectorAll("li.item[data-item-id]")) {
+  for (const li of itemRows(root)) {
     const item = actor.items.get(li.dataset.itemId);
-    if (!item || item.type !== "combatability") continue;
-    const slugs = CS.declaredSlugs(item.system?.rules);
+    if (!item || !AU.ABILITY_TYPES.includes(item.type)) continue;
+    const slugs = AU.declareSlugsFor(item);
     if (!slugs.length || li.querySelector(".sw-declare")) continue;
     const on = CS.isDeclared(actor.getFlag(SYS, "declare"), slugs);
     const ling = !on && CS.declState(actor.getFlag(SYS, "declare")).lingering.some((s) => slugs.includes(s));
     const title = on ? "Declared for the next attack (click to cancel)" : ling ? "Used this round: risk lasts until your next turn" : "Declare for the next attack";
     const html = `<a class="sw-declare" data-slugs="${esc(slugs.join(","))}" title="${esc(title)}"
-      style="flex:0 0 auto;margin:0 4px;padding:0 4px;border:1px solid #888;border-radius:3px;font-size:0.8em;${on ? "background:#c33;color:#fff" : ling ? "background:#eaa" : ""}">${on ? "Declared" : ling ? "Risk" : "Declare"}</a>`;
-    (li.querySelector(".item-name") ?? li).insertAdjacentHTML("beforeend", html);
+      style="${CHIP};${on ? "background:#c33;color:#fff" : ling ? "background:#eaa" : ""}">${on ? "Declared" : ling ? "Risk" : "Declare"}</a>`;
+    actsOf(li).insertAdjacentHTML("beforeend", html);
     const a = li.querySelector(".sw-declare");
     a.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); if (actor.isOwner) setDeclare(actor, slugs, !on); });
+  }
+}
+
+/** Use: pay the listed MP/HP cost, then post the item's card (description + roll buttons). */
+export async function useAbility(actor, item) {
+  const cost = AU.useCost(item);
+  if (cost.mp || cost.hp) {
+    const r = AU.spendPatch(actor.system, cost);
+    if (!r.ok) return void ui.notifications.warn(`${item.name}: ${r.reason}.`);
+    await actor.update(r.patch);
+    ui.notifications.info(`${item.name}: spent ${r.spent}.`);
+  }
+  return item.roll();
+}
+function useButtons(actor, root) {
+  for (const li of itemRows(root)) {
+    const item = actor.items.get(li.dataset.itemId);
+    if (!AU.showUse(item) || li.querySelector(".sw-use")) continue;
+    const c = AU.useCost(item);
+    const cost = [c.mp ? `${c.mp} MP` : "", c.hp ? `${c.hp} HP` : ""].filter(Boolean).join(" + ");
+    actsOf(li).insertAdjacentHTML("beforeend",
+      `<a class="sw-use" title="Use ${esc(item.name)}${cost ? ` (spends ${esc(cost)})` : ""}: post its card" style="${CHIP}">Use${cost ? ` <small>${esc(cost)}</small>` : ""}</a>`);
+    li.querySelector(".sw-use").addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); if (actor.isOwner) useAbility(actor, item); });
   }
 }
 
@@ -166,7 +195,7 @@ export function registerCombatUI() {
     const actor = app.actor;
     if (!actor || actor.type !== "character") return;
     const root = html[0] ?? html;
-    if (root?.querySelectorAll) { declareChips(actor, root); counterBadges(actor, root); }
+    if (root?.querySelectorAll) { declareChips(actor, root); useButtons(actor, root); counterBadges(actor, root); }
   });
   Hooks.on("renderChatMessageHTML", (msg, el) => renderAttackCard(msg, el));
   // Rank limits warn, never block.

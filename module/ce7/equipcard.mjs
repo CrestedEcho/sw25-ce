@@ -408,7 +408,7 @@ export function bindCe7Listeners(sheet, html) {
   root.querySelectorAll(".ce7-feat-clear").forEach((a) => a.setAttribute("draggable", "false"));
   // Feats: click a filled slot / feat name = show in chat; Shift-click = open the feat sheet.
   const showFeat = (ev) => {
-    if (ev.target.closest(".ce7-feat-clear, .ce7-feat-assign")) return;
+    if (ev.target.closest(".ce7-feat-clear, .ce7-feat-assign, .rollable, .sw-use, .sw-declare, .item-edit")) return;
     ev.preventDefault(); ev.stopPropagation();
     const it = actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId);
     if (!it) return;

@@ -41,12 +41,12 @@ test("feat chat card: name, icon, effect, requirements when present", () => {
 });
 test("feat panel: names are show-in-chat, X/assign separate, tooltip text", () => {
   const t = fs.readFileSync(new URL("../templates/actor/parts/actor-ce7-feats.hbs", import.meta.url), "utf8");
-  assert.equal((t.match(/ce7-feat-show/g) ?? []).length, 3);
-  assert.equal((t.match(/item-edit/g) ?? []).length, 1); // racial abilities only
+  assert.equal((t.match(/ce7-feat-show/g) ?? []).length, 4); // ce.21: racial names show in chat too
+  assert.equal((t.match(/item-edit/g) ?? []).length, 1); // racial abilities only (open-sheet icon)
   const en = JSON.parse(fs.readFileSync(new URL("../lang/en.json", import.meta.url), "utf8"));
   assert.match(JSON.stringify(en), /Click to show in chat · drag to move · × to take out/);
   const js = fs.readFileSync(new URL("../module/ce7/equipcard.mjs", import.meta.url), "utf8");
-  assert.match(js, /closest\("\.ce7-feat-clear, \.ce7-feat-assign"\)\) return/);
+  assert.match(js, /closest\("\.ce7-feat-clear, \.ce7-feat-assign[^"]*"\)\) return/);
   assert.match(js, /ev\.shiftKey\) return it\.sheet\.render\(true\)/);
 });
 
