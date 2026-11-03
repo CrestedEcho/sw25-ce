@@ -429,16 +429,75 @@ export function toLegacy(active) {
 /** Normalise one autoFeats entry. Legacy {uuid, level} -> {kind:"feat", ref:uuid}. */
 export function normalizeGrant(g) {
   if (!g || typeof g !== "object") return null;
-  if (g.choose) return { choose: String(g.choose), options: [].concat(g.options ?? []), level: Number(g.level) || 1, level_max: g.level_max ?? null, when: g.when ?? null };
+  if (g.choose) return { choose: String(g.choose), id: g.id != null ? String(g.id) : null, kind: g.kind ?? null, options: [].concat(g.options ?? []),
+    optionsMinLevel: g.optionsMinLevel ?? g.optionMinLevels ?? null, note: g.note ?? null,
+    level: Number(g.level) || 1, level_max: g.level_max ?? null, when: g.when ?? null };
   const ref = g.ref ?? g.uuid;
   if (!ref) return null;
   return { kind: g.kind ?? "feat", ref: String(ref), level: Number(g.level) || 1, level_max: g.level_max ?? null, when: g.when ?? null, name: g.name };
 }
+/**
+ * Normalised grant list. Every choice gets its own storage `key`: an explicit `id`, else the `choose` name when
+ * that choice appears once (e.g. "god"), else `<choose>@<level>` so a "one per level" choice stores one pick per level.
+ */
 export function grantList(raw) {
   const arr = Array.isArray(raw) ? raw : Object.values(raw ?? {});
-  return arr.map(normalizeGrant).filter(Boolean);
+  const list = arr.map(normalizeGrant).filter(Boolean);
+  const count = {};
+  for (const g of list) if (g.choose) count[g.choose] = (count[g.choose] ?? 0) + 1;
+  const used = new Set();
+  const seen = {};
+  for (const g of list) {
+    if (!g.choose) continue;
+    let key = g.id ?? (count[g.choose] > 1 ? `${g.choose}@${g.level}` : g.choose);
+    for (let n = 2; used.has(key); n++) key = `${g.id ?? `${g.choose}@${g.level}`}#${n}`;
+    used.add(key);
+    g.key = key;
+    g.index = seen[g.choose] = (seen[g.choose] ?? 0) + 1; // 1-based position within its choice group
+    g.total = count[g.choose];
+  }
+  return list;
 }
 const optId = (o) => (typeof o === "object" && o ? String(o.id ?? o.ref ?? o.slug) : String(o));
+/** Grant kind a plain-name option of this choice resolves to: explicit `kind`, else read from the choice name. "god" is a selector only. */
+export function choiceKind(g) {
+  if (g?.kind) return g.kind;
+  const c = String(g?.choose ?? "").toLowerCase();
+  if (c === "god") return null;
+  if (/^feats?\b/.test(c)) return "feat";
+  if (/^spells?$/.test(c)) return "spell";
+  if (/language/.test(c)) return "language";
+  if (/^features?$/.test(c)) return "feature";
+  return "technique";
+}
+/** The stored pick for a choice entry (legacy single-key picks count for the first entry of the group). */
+export function choicePick(g, choices = {}) {
+  const v = choices?.[g.key];
+  if (v != null && v !== "") return v;
+  if (g.key !== g.choose && g.index === 1) { const old = choices?.[g.choose]; if (old != null && old !== "" && typeof old !== "object") return old; }
+  return null;
+}
+/** One grant ref for a picked option, or null (unknown option, selector-only choice). */
+export function choiceGrant(g, picked) {
+  const opt = g.options.find((o) => optId(o) === String(picked));
+  if (!opt) return null;
+  if (typeof opt === "object") return opt.ref ? { kind: opt.kind ?? choiceKind(g) ?? "feat", ref: String(opt.ref) } : null;
+  const kind = choiceKind(g);
+  return kind ? { kind, ref: String(opt) } : null;
+}
+/** "one per level" progress per choice group: { <choose>: { picked, open, total } } at a class level. */
+export function choiceProgress(rawList, level, choices = {}) {
+  const lv = Number(level) || 0;
+  const out = {};
+  for (const g of grantList(rawList)) {
+    if (!g.choose) continue;
+    const o = (out[g.choose] ??= { picked: 0, open: 0, total: 0 });
+    o.total++;
+    if (lv < g.level) continue;
+    if (choicePick(g, choices) != null) o.picked++; else o.open++;
+  }
+  return out;
+}
 const inRange = (g, lv) => lv >= g.level && (g.level_max == null || lv <= Number(g.level_max));
 const whenOk = (g, choices) => !g.when || Object.entries(g.when).every(([k, v]) => [].concat(v).map(String).includes(String(choices?.[k] ?? "")));
 
@@ -447,7 +506,7 @@ const whenOk = (g, choices) => !g.when || Object.entries(g.when).every(([k, v]) 
  * granted: [{id, ref}] items already on the actor from this class.
  * overrides: { block:[ref], add:[{kind,ref}] } from flags.sw25-ce.grantOverrides.
  * Returns { want:[{kind,ref}], add:[{kind,ref}], remove:[id], pending:[choose entries needing a pick] }.
- * Choice options may themselves be grant refs: a chosen option that is an object with kind/ref is granted.
+ * Choice options may be grant refs ({kind, ref}) or plain slugs (kind from choiceKind). Each entry has its own pick key (grantList).
  */
 export function planGrants(rawList, level, choices = {}, granted = [], overrides = {}) {
   const lv = Number(level) || 0;
@@ -457,10 +516,10 @@ export function planGrants(rawList, level, choices = {}, granted = [], overrides
   for (const g of list) {
     if (!inRange(g, lv) || !whenOk(g, choices)) continue;
     if (g.choose) {
-      const picked = choices?.[g.choose];
-      if (picked == null || picked === "") { pending.push(g); continue; }
-      const opt = g.options.find((o) => optId(o) === String(picked));
-      if (opt && typeof opt === "object" && opt.ref) want.push({ kind: opt.kind ?? "feat", ref: String(opt.ref) });
+      const picked = choicePick(g, choices);
+      if (picked == null) { pending.push(g); continue; }
+      const w = choiceGrant(g, picked);
+      if (w) want.push(w);
       continue;
     }
     want.push({ kind: g.kind, ref: g.ref });

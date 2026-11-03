@@ -53,3 +53,50 @@ test("chosen option that is itself a grant is granted; learned-ability choose gr
   assert.deepEqual(p.add, [{ kind: "feat", ref: "dodge" }]);
   assert.deepEqual(p.pending.map((g) => g.choose), ["technique"]);
 });
+
+/* ce.21: per-level picks and plain-name options (Enhancer, Bard, Rider, ... one per level) */
+import { choiceKind, choicePick, choiceProgress } from "../module/rules/engine.mjs";
+const opts = ["beetleskin", "cats-eyes", "animal-shape"];
+const enhancer = [1, 2, 3].map((level) => ({ choose: "technique", options: opts, optionsMinLevel: { "animal-shape": 5 }, level }));
+
+test("repeated choice: every level gets its own pick key; single choices keep their name", () => {
+  const l = grantList([...enhancer, { choose: "god", options: ["lyphos"], level: 1 }]);
+  assert.deepEqual(l.map((g) => g.key), ["technique@1", "technique@2", "technique@3", "god"]);
+  assert.deepEqual(l.slice(0, 3).map((g) => [g.index, g.total]), [[1, 3], [2, 3], [3, 3]]);
+  assert.deepEqual(l[0].optionsMinLevel, { "animal-shape": 5 });
+  assert.equal(grantList([{ choose: "feat", id: "bonus", options: [], level: 1 }])[0].key, "bonus", "explicit id wins");
+});
+
+test("plain-name options resolve to grants of the choice's kind; each level grants its own pick", () => {
+  const p1 = planGrants(enhancer, 1, {}, []);
+  assert.deepEqual(p1.pending.map((g) => g.key), ["technique@1"]);
+  const p3 = planGrants(enhancer, 3, { "technique@1": "beetleskin", "technique@2": "cats-eyes" }, []);
+  assert.deepEqual(p3.add, [{ kind: "technique", ref: "beetleskin" }, { kind: "technique", ref: "cats-eyes" }]);
+  assert.deepEqual(p3.pending.map((g) => g.key), ["technique@3"], "level 3 still open");
+  const down = planGrants(enhancer, 1, { "technique@1": "beetleskin", "technique@2": "cats-eyes" }, [{ id: "x", ref: "beetleskin" }, { id: "y", ref: "cats-eyes" }]);
+  assert.deepEqual(down.remove, ["y"], "losing a level drops that level's pick");
+});
+
+test("legacy single pick (choices.technique) counts for the first level only", () => {
+  const p = planGrants(enhancer, 2, { technique: "beetleskin" }, []);
+  assert.deepEqual(p.add, [{ kind: "technique", ref: "beetleskin" }]);
+  assert.deepEqual(p.pending.map((g) => g.key), ["technique@2"]);
+  assert.equal(choicePick(grantList(enhancer)[1], { technique: "beetleskin" }), null);
+});
+
+test("choice kinds come from the choice name; god is a selector only", () => {
+  assert.equal(choiceKind({ choose: "feat" }), "feat");
+  assert.equal(choiceKind({ choose: "language (speak or read)" }), "language");
+  assert.equal(choiceKind({ choose: "spellsong-or-finale" }), "technique");
+  assert.equal(choiceKind({ choose: "stunt" }), "technique");
+  assert.equal(choiceKind({ choose: "god" }), null);
+  assert.equal(choiceKind({ choose: "x", kind: "feature" }), "feature");
+  assert.deepEqual(planGrants([{ choose: "god", options: ["lyphos"], level: 1 }], 1, { god: "lyphos" }, []).add, []);
+  assert.deepEqual(planGrants([{ choose: "feat", options: ["targeting"], level: 1 }], 1, { feat: "targeting" }, []).add, [{ kind: "feat", ref: "targeting" }]);
+  assert.deepEqual(planGrants([{ choose: "feat", options: ["targeting"], level: 1 }], 1, { feat: "not-an-option" }, []).add, [], "unknown pick grants nothing");
+});
+
+test("choiceProgress shows 'one per level' counts (never a hard limit)", () => {
+  assert.deepEqual(choiceProgress(enhancer, 2, { "technique@1": "beetleskin" }).technique, { picked: 1, open: 1, total: 3 });
+  assert.deepEqual(choiceProgress(enhancer, 0, {}).technique, { picked: 0, open: 0, total: 3 });
+});

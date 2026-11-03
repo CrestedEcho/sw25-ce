@@ -3,7 +3,7 @@
  *  - Character sheet: "Overrides" panel (misc mod + locked manual value per target, quill marker), rule notes.
  *  - Skill (class) item sheet: rules list + grants editor for homebrew classes.
  */
-import { ACTOR_TARGETS, normalizeRules, grantList } from "./engine.mjs";
+import { ACTOR_TARGETS, normalizeRules, grantList, choicePick, choiceProgress } from "./engine.mjs";
 
 const SYS = "sw25-ce";
 const QUILL = `systems/${SYS}/assets/ui/override-quill.webp`;
@@ -59,9 +59,16 @@ function classEditor(item) {
     <td><input class="rr" data-f="level_max" type="number" value="${r.level_max ?? ""}" style="width:36px"></td>
     <td><input class="rr" data-f="predicate" value="${esc([].concat(r.predicate ?? []).join(", "))}" style="width:120px"></td>
     <td><a class="rr-del"><i class="fas fa-trash"></i></a></td></tr>`).join("");
-  const gRows = grants.map((g, i) => g.choose
-    ? `<li data-index="${i}">Lv ${g.level}: choose <b>${esc(g.choose)}</b> ${g.options.length ? `(${g.options.length} options)` : "(manual pick)"} → <i>${esc(choices[g.choose] ?? "unset")}</i> <a class="gc-reset" data-id="${esc(g.choose)}" title="Clear choice"><i class="fas fa-rotate-left"></i></a> <a class="gr-del"><i class="fas fa-trash"></i></a></li>`
-    : `<li data-index="${i}">Lv <input class="gr-level" type="number" min="1" max="20" value="${g.level}" style="width:40px"> ${esc(g.kind)}: ${esc(g.name ?? g.ref)}${g.when ? ` <i>when ${esc(JSON.stringify(g.when))}</i>` : ""} <a class="gr-del"><i class="fas fa-trash"></i></a></li>`).join("");
+  const progress = choiceProgress(item.system.autoFeats, item.system.skilllevel, choices);
+  const shown = new Set();
+  const gRows = grants.map((g, i) => {
+    if (!g.choose) return null;
+    const pick = choicePick(g, choices);
+    const pr = progress[g.choose];
+    const head = g.total > 1 && !shown.has(g.choose) ? (shown.add(g.choose), `<li class="gc-count" style="font-weight:bold">${esc(g.choose)}: one per level, ${pr.picked} of ${pr.total} picked${pr.open ? ` (${pr.open} open)` : ""}</li>`) : "";
+    return `${head}<li data-index="${i}">Lv ${g.level}: choose <b>${esc(g.choose)}</b> ${g.options.length ? `(${g.options.length} options)` : "(manual pick)"} → <i>${esc(pick ?? "unset")}</i> <a class="gc-reset" data-id="${esc(g.key)}" data-legacy="${g.index === 1 && g.key !== g.choose ? esc(g.choose) : ""}" title="Clear choice"><i class="fas fa-rotate-left"></i></a> <a class="gr-del"><i class="fas fa-trash"></i></a></li>`;
+  }).map((row, i) => row ?? (() => { const g = grants[i];
+    return `<li data-index="${i}">Lv <input class="gr-level" type="number" min="1" max="20" value="${g.level}" style="width:40px"> ${esc(g.kind)}: ${esc(g.name ?? g.ref)}${g.when ? ` <i>when ${esc(JSON.stringify(g.when))}</i>` : ""} <a class="gr-del"><i class="fas fa-trash"></i></a></li>`; })()).join("");
   return `<p class="notes">Rules: key / mode / value (number or formula with @level, @abilities.str.value) / level min–max / predicates (comma separated). Unknown keys are kept as notes.</p>
     <table style="font-size:0.85em"><thead><tr><th>Key</th><th>Mode</th><th>Value</th><th>Lv≥</th><th>Lv≤</th><th>Predicate</th><th></th></tr></thead><tbody>${rRows}</tbody></table>
     <a class="rr-add"><i class="fas fa-plus"></i> Add rule</a>
@@ -117,7 +124,7 @@ export function registerRulesUI() {
     box.querySelector(".rr-add")?.addEventListener("click", (ev) => { stop(ev); item.update({ "system.rules": [...rules(), { key: "hp.bonus", mode: "add", value: 0, level_min: 1, label: "" }] }); });
     box.querySelectorAll(".gr-level").forEach((inp) => inp.addEventListener("change", (ev) => { stop(ev); const l = grants(); l[Number(inp.closest("li").dataset.index)].level = Number(inp.value) || 1; item.update({ "system.autoFeats": l }); }));
     box.querySelectorAll(".gr-del").forEach((a) => a.addEventListener("click", (ev) => { stop(ev); const l = grants(); l.splice(Number(a.closest("li").dataset.index), 1); item.update({ "system.autoFeats": l }); }));
-    box.querySelectorAll(".gc-reset").forEach((a) => a.addEventListener("click", (ev) => { stop(ev); item.unsetFlag(SYS, `choices.${a.dataset.id}`); }));
+    box.querySelectorAll(".gc-reset").forEach((a) => a.addEventListener("click", (ev) => { stop(ev); const upd = { [`flags.${SYS}.choices.-=${a.dataset.id}`]: null }; if (a.dataset.legacy) upd[`flags.${SYS}.choices.-=${a.dataset.legacy}`] = null; item.update(upd); }));
     box.querySelector(".gc-add")?.addEventListener("click", async (ev) => {
       stop(ev);
       const id = await foundry.applications.api.DialogV2.prompt({ window: { title: "Choice id" }, content: `<input name="id" value="god">`, ok: { callback: (e, b) => b.form.elements.id.value }, rejectClose: false });
