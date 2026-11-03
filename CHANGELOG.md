@@ -5,6 +5,11 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.21-test2 (2026-11-03) — test pre-release
+- Fix: in ce.21-test no SW25 sheet was registered, so characters, monsters and items opened in Foundry's bare default sheet. The actor sheet's data builder awaited the race-card text without being async, a syntax error that stopped the whole system script from loading. It is now async.
+- New regression test walks the system's module graph from `system.json`, syntax-checks every file and checks that every named import is exported.
+- Otherwise the same as ce.21-test. Framework only; no rulebook content is included. Its manifest is pinned to this build.
+
 ## 3.0.0-ce.21-test (2026-11-03) — test pre-release
 - Test pre-release of the character-creation work. Framework only; no rulebook content is included. Its manifest is pinned to this build, so it does not auto-update to later full releases (reinstall with the "latest" link for those).
 - **Race item type**: the race sheet lists the A–F creation dice, starting languages and restricted classes (text only, never enforced), and links racial abilities and Lv6/Lv11 enhanced abilities. Dropping a race on a character sets the race name and dice formulas, adds the linked ability cards (enhanced ones stay inactive until that adventurer level) and replaces any previous race. Deleting the race removes them.

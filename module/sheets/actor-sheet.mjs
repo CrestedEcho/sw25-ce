@@ -132,7 +132,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     }
   }
 
-  _sw25GetData(options) {
+  async _sw25GetData(options) {
     // Retrieve the data structure from the base sheet. You can inspect or log
     // the context variable to see the structure, but some key properties for
     // sheets are the actor object, the data object, whether or not it's
