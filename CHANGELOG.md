@@ -5,6 +5,10 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.24-release (2026-11-04)
+- Fix: on a new character whose race values (Technique/Body/Mind) or A–F scores were still blank, class skill bases came out in the hundreds or thousands (for example 1502 instead of 3). The blank values were joined as text instead of added as numbers, e.g. after rolling A–F with the race dice buttons and dropping a class before typing the race values. Ability parts are now always added as numbers, with blanks counting as 0. Saving the sheet used to hide the problem. These values are only calculated, never stored, so existing characters need no migration.
+- Framework only; no rulebook content is included.
+
 ## 3.0.0-ce.23-release (2026-11-04)
 - **Character sheet layout**: the race portraits, appearance and description now sit at the top of the **Bio** tab (the description comes from the race item). The Combat tab keeps only the racial abilities, with a link to the Bio card. The belt moved between Weapons and Combat Feats, and the wallet moved to the top of **Inventory**.
 - **Initiative button**: the Combat Checks panel is gone. A round Initiative button next to Fellow rolls 2d6 + bonus, posts a chat card with the formula and bonuses, and sets it on the combat tracker (it adds the character's token to the current combat if needed). Nothing is rolled automatically.
