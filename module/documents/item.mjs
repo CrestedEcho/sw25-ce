@@ -1,4 +1,5 @@
 import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } from "../rules/class-pick.mjs";
+import { abNum } from "../rules/ability-num.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
 import { hasPowerObject, planPcCast, rollSpellDamage } from "../rules/spell-power.mjs";
 import { castChatHTML } from "../rules/sb-cast.mjs";
@@ -215,11 +216,11 @@ export class SW25Item extends Item {
     else systemData.efallskmod = 0;
 
     const dexmod = Math.floor(
-      (actorData.abilities.dex.racevalue +
-        actorData.abilities.dex.valuebase +
-        actorData.abilities.dex.valuegrowth +
-        actorData.abilities.dex.valuemodify +
-        actorData.abilities.dex.efvaluemodify) /
+      (abNum(actorData.abilities.dex.racevalue) +
+        abNum(actorData.abilities.dex.valuebase) +
+        abNum(actorData.abilities.dex.valuegrowth) +
+        abNum(actorData.abilities.dex.valuemodify) +
+        abNum(actorData.abilities.dex.efvaluemodify)) /
         6 +
         Number(actorData.abilities.dex.efmodify)
     );
@@ -235,11 +236,11 @@ export class SW25Item extends Item {
       Number(dexmod) +
       Number(systemData.skillmod);
     const agimod = Math.floor(
-      (actorData.abilities.dex.racevalue +
-        actorData.abilities.agi.valuebase +
-        actorData.abilities.agi.valuegrowth +
-        actorData.abilities.agi.valuemodify +
-        actorData.abilities.agi.efvaluemodify) /
+      (abNum(actorData.abilities.dex.racevalue) +
+        abNum(actorData.abilities.agi.valuebase) +
+        abNum(actorData.abilities.agi.valuegrowth) +
+        abNum(actorData.abilities.agi.valuemodify) +
+        abNum(actorData.abilities.agi.efvaluemodify)) /
         6 +
         Number(actorData.abilities.agi.efmodify)
     );
@@ -255,11 +256,11 @@ export class SW25Item extends Item {
       Number(agimod) +
       Number(systemData.skillmod);
     const strmod = Math.floor(
-      (actorData.abilities.str.racevalue +
-        actorData.abilities.str.valuebase +
-        actorData.abilities.str.valuegrowth +
-        actorData.abilities.str.valuemodify +
-        actorData.abilities.str.efvaluemodify) /
+      (abNum(actorData.abilities.str.racevalue) +
+        abNum(actorData.abilities.str.valuebase) +
+        abNum(actorData.abilities.str.valuegrowth) +
+        abNum(actorData.abilities.str.valuemodify) +
+        abNum(actorData.abilities.str.efvaluemodify)) /
         6 +
         Number(actorData.abilities.str.efmodify)
     );
@@ -275,11 +276,11 @@ export class SW25Item extends Item {
       Number(strmod) +
       Number(systemData.skillmod);
     const vitmod = Math.floor(
-      (actorData.abilities.str.racevalue +
-        actorData.abilities.vit.valuebase +
-        actorData.abilities.vit.valuegrowth +
-        actorData.abilities.vit.valuemodify +
-        actorData.abilities.vit.efvaluemodify) /
+      (abNum(actorData.abilities.str.racevalue) +
+        abNum(actorData.abilities.vit.valuebase) +
+        abNum(actorData.abilities.vit.valuegrowth) +
+        abNum(actorData.abilities.vit.valuemodify) +
+        abNum(actorData.abilities.vit.efvaluemodify)) /
         6 +
         Number(actorData.abilities.vit.efmodify)
     );
@@ -295,20 +296,20 @@ export class SW25Item extends Item {
       Number(vitmod) +
       Number(systemData.skillmod);
     const intmod = Math.floor(
-      (actorData.abilities.int.racevalue +
-        actorData.abilities.int.valuebase +
-        actorData.abilities.int.valuegrowth +
-        actorData.abilities.int.valuemodify +
-        actorData.abilities.int.efvaluemodify) /
+      (abNum(actorData.abilities.int.racevalue) +
+        abNum(actorData.abilities.int.valuebase) +
+        abNum(actorData.abilities.int.valuegrowth) +
+        abNum(actorData.abilities.int.valuemodify) +
+        abNum(actorData.abilities.int.efvaluemodify)) /
         6 +
         Number(actorData.abilities.int.efmodify)
     );
     const invokemod = Math.floor(
-      (actorData.abilities.int.racevalue +
-        actorData.abilities.int.valuebase +
-        actorData.abilities.int.valuegrowth +
-        actorData.abilities.int.valuemodify +
-        actorData.abilities.int.efvaluemodify +
+      (abNum(actorData.abilities.int.racevalue) +
+        abNum(actorData.abilities.int.valuebase) +
+        abNum(actorData.abilities.int.valuegrowth) +
+        abNum(actorData.abilities.int.valuemodify) +
+        abNum(actorData.abilities.int.efvaluemodify) +
         (systemData.dedicated ? 2 : 0)) /
         6 +
         Number(actorData.abilities.int.efmodify)
@@ -329,11 +330,11 @@ export class SW25Item extends Item {
       Number(invokemod) +
       Number(systemData.skillmod);
     const mndmod = Math.floor(
-      (actorData.abilities.int.racevalue +
-        actorData.abilities.mnd.valuebase +
-        actorData.abilities.mnd.valuegrowth +
-        actorData.abilities.mnd.valuemodify +
-        actorData.abilities.mnd.efvaluemodify) /
+      (abNum(actorData.abilities.int.racevalue) +
+        abNum(actorData.abilities.mnd.valuebase) +
+        abNum(actorData.abilities.mnd.valuegrowth) +
+        abNum(actorData.abilities.mnd.valuemodify) +
+        abNum(actorData.abilities.mnd.efvaluemodify)) /
         6 +
         Number(actorData.abilities.mnd.efmodify)
     );
@@ -418,61 +419,61 @@ export class SW25Item extends Item {
     let abimod = 0;
     if (checkabi == "dex")
       abimod = Math.floor(
-        (actorData.abilities.dex.racevalue +
-          actorData.abilities.dex.valuebase +
-          actorData.abilities.dex.valuegrowth +
-          actorData.abilities.dex.valuemodify +
-          actorData.abilities.dex.efvaluemodify) /
+        (abNum(actorData.abilities.dex.racevalue) +
+          abNum(actorData.abilities.dex.valuebase) +
+          abNum(actorData.abilities.dex.valuegrowth) +
+          abNum(actorData.abilities.dex.valuemodify) +
+          abNum(actorData.abilities.dex.efvaluemodify)) /
           6 +
           Number(actorData.abilities.dex.efmodify)
       );
     if (checkabi == "agi")
       abimod = Math.floor(
-        (actorData.abilities.dex.racevalue +
-          actorData.abilities.agi.valuebase +
-          actorData.abilities.agi.valuegrowth +
-          actorData.abilities.agi.valuemodify +
-          actorData.abilities.agi.efvaluemodify) /
+        (abNum(actorData.abilities.dex.racevalue) +
+          abNum(actorData.abilities.agi.valuebase) +
+          abNum(actorData.abilities.agi.valuegrowth) +
+          abNum(actorData.abilities.agi.valuemodify) +
+          abNum(actorData.abilities.agi.efvaluemodify)) /
           6 +
           Number(actorData.abilities.agi.efmodify)
       );
     if (checkabi == "str")
       abimod = Math.floor(
-        (actorData.abilities.str.racevalue +
-          actorData.abilities.str.valuebase +
-          actorData.abilities.str.valuegrowth +
-          actorData.abilities.str.valuemodify +
-          actorData.abilities.str.efvaluemodify) /
+        (abNum(actorData.abilities.str.racevalue) +
+          abNum(actorData.abilities.str.valuebase) +
+          abNum(actorData.abilities.str.valuegrowth) +
+          abNum(actorData.abilities.str.valuemodify) +
+          abNum(actorData.abilities.str.efvaluemodify)) /
           6 +
           Number(actorData.abilities.str.efmodify)
       );
     if (checkabi == "vit")
       abimod = Math.floor(
-        (actorData.abilities.str.racevalue +
-          actorData.abilities.vit.valuebase +
-          actorData.abilities.vit.valuegrowth +
-          actorData.abilities.vit.valuemodify +
-          actorData.abilities.vit.efvaluemodify) /
+        (abNum(actorData.abilities.str.racevalue) +
+          abNum(actorData.abilities.vit.valuebase) +
+          abNum(actorData.abilities.vit.valuegrowth) +
+          abNum(actorData.abilities.vit.valuemodify) +
+          abNum(actorData.abilities.vit.efvaluemodify)) /
           6 +
           Number(actorData.abilities.vit.efmodify)
       );
     if (checkabi == "int")
       abimod = Math.floor(
-        (actorData.abilities.int.racevalue +
-          actorData.abilities.int.valuebase +
-          actorData.abilities.int.valuegrowth +
-          actorData.abilities.int.valuemodify +
-          actorData.abilities.int.efvaluemodify) /
+        (abNum(actorData.abilities.int.racevalue) +
+          abNum(actorData.abilities.int.valuebase) +
+          abNum(actorData.abilities.int.valuegrowth) +
+          abNum(actorData.abilities.int.valuemodify) +
+          abNum(actorData.abilities.int.efvaluemodify)) /
           6 +
           Number(actorData.abilities.int.efmodify)
       );
     if (checkabi == "mnd")
       abimod = Math.floor(
-        (actorData.abilities.int.racevalue +
-          actorData.abilities.mnd.valuebase +
-          actorData.abilities.mnd.valuegrowth +
-          actorData.abilities.mnd.valuemodify +
-          actorData.abilities.mnd.efvaluemodify) /
+        (abNum(actorData.abilities.int.racevalue) +
+          abNum(actorData.abilities.mnd.valuebase) +
+          abNum(actorData.abilities.mnd.valuegrowth) +
+          abNum(actorData.abilities.mnd.valuemodify) +
+          abNum(actorData.abilities.mnd.efvaluemodify)) /
           6 +
           Number(actorData.abilities.mnd.efmodify)
       );
@@ -830,11 +831,11 @@ export class SW25Item extends Item {
     if (actor.type == "character" || actor.type == "monster") {
       if (systemData.checkabi == "dex")
         checkabimod = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.dex?.valuebase ?? 0) +
-            (actorData.abilities?.dex?.valuegrowth ?? 0) +
-            (actorData.abilities?.dex?.valuemodify ?? 0) +
-            (actorData.abilities?.dex?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.dex?.valuebase) +
+            abNum(actorData.abilities?.dex?.valuegrowth) +
+            abNum(actorData.abilities?.dex?.valuemodify) +
+            abNum(actorData.abilities?.dex?.efvaluemodify) +
             dedicatedDex +
             (checkDedicated ? 2 : 0)) /
             6 +
@@ -842,121 +843,121 @@ export class SW25Item extends Item {
         );
       if (systemData.checkabi == "agi")
         checkabimod = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.agi?.valuebase ?? 0) +
-            (actorData.abilities?.agi?.valuegrowth ?? 0) +
-            (actorData.abilities?.agi?.valuemodify ?? 0) +
-            (actorData.abilities?.agi?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.agi?.valuebase) +
+            abNum(actorData.abilities?.agi?.valuegrowth) +
+            abNum(actorData.abilities?.agi?.valuemodify) +
+            abNum(actorData.abilities?.agi?.efvaluemodify) +
             (checkDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.agi?.efmodify ?? 0)
         );
       if (systemData.checkabi == "str")
         checkabimod = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.str?.valuebase ?? 0) +
-            (actorData.abilities?.str?.valuegrowth ?? 0) +
-            (actorData.abilities?.str?.valuemodify ?? 0) +
-            (actorData.abilities?.str?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.str?.valuebase) +
+            abNum(actorData.abilities?.str?.valuegrowth) +
+            abNum(actorData.abilities?.str?.valuemodify) +
+            abNum(actorData.abilities?.str?.efvaluemodify) +
             (checkDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.str?.efmodify ?? 0)
         );
       if (systemData.checkabi == "vit")
         checkabimod = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.vit?.valuebase ?? 0) +
-            (actorData.abilities?.vit?.valuegrowth ?? 0) +
-            (actorData.abilities?.vit?.valuemodify ?? 0) +
-            (actorData.abilities?.vit?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.vit?.valuebase) +
+            abNum(actorData.abilities?.vit?.valuegrowth) +
+            abNum(actorData.abilities?.vit?.valuemodify) +
+            abNum(actorData.abilities?.vit?.efvaluemodify) +
             (checkDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.vit?.efmodify ?? 0)
         );
       if (systemData.checkabi == "int")
         checkabimod = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.int?.valuebase ?? 0) +
-            (actorData.abilities?.int?.valuegrowth ?? 0) +
-            (actorData.abilities?.int?.valuemodify ?? 0) +
-            (actorData.abilities?.int?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.int?.valuebase) +
+            abNum(actorData.abilities?.int?.valuegrowth) +
+            abNum(actorData.abilities?.int?.valuemodify) +
+            abNum(actorData.abilities?.int?.efvaluemodify) +
             (checkDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.int?.efmodify ?? 0)
         );
       if (systemData.checkabi == "mnd")
         checkabimod = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.mnd?.valuebase ?? 0) +
-            (actorData.abilities?.mnd?.valuegrowth ?? 0) +
-            (actorData.abilities?.mnd?.valuemodify ?? 0) +
-            (actorData.abilities?.mnd?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.mnd?.valuebase) +
+            abNum(actorData.abilities?.mnd?.valuegrowth) +
+            abNum(actorData.abilities?.mnd?.valuemodify) +
+            abNum(actorData.abilities?.mnd?.efvaluemodify) +
             (checkDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.mnd?.efmodify ?? 0)
         );
       if (systemData.powerabi == "dex")
         powerabimod = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.dex?.valuebase ?? 0) +
-            (actorData.abilities?.dex?.valuegrowth ?? 0) +
-            (actorData.abilities?.dex?.valuemodify ?? 0) +
-            (actorData.abilities?.dex?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.dex?.valuebase) +
+            abNum(actorData.abilities?.dex?.valuegrowth) +
+            abNum(actorData.abilities?.dex?.valuemodify) +
+            abNum(actorData.abilities?.dex?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.dex?.efmodify ?? 0)
         );
       if (systemData.powerabi == "agi")
         powerabimod = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.agi?.valuebase ?? 0) +
-            (actorData.abilities?.agi?.valuegrowth ?? 0) +
-            (actorData.abilities?.agi?.valuemodify ?? 0) +
-            (actorData.abilities?.agi?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.agi?.valuebase) +
+            abNum(actorData.abilities?.agi?.valuegrowth) +
+            abNum(actorData.abilities?.agi?.valuemodify) +
+            abNum(actorData.abilities?.agi?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.agi?.efmodify ?? 0)
         );
       if (systemData.powerabi == "str")
         powerabimod = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.str?.valuebase ?? 0) +
-            (actorData.abilities?.str?.valuegrowth ?? 0) +
-            (actorData.abilities?.str?.valuemodify ?? 0) +
-            (actorData.abilities?.str?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.str?.valuebase) +
+            abNum(actorData.abilities?.str?.valuegrowth) +
+            abNum(actorData.abilities?.str?.valuemodify) +
+            abNum(actorData.abilities?.str?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.str?.efmodify ?? 0)
         );
       if (systemData.powerabi == "vit")
         powerabimod = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.vit?.valuebase ?? 0) +
-            (actorData.abilities?.vit?.valuegrowth ?? 0) +
-            (actorData.abilities?.vit?.valuemodify ?? 0) +
-            (actorData.abilities?.vit?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.vit?.valuebase) +
+            abNum(actorData.abilities?.vit?.valuegrowth) +
+            abNum(actorData.abilities?.vit?.valuemodify) +
+            abNum(actorData.abilities?.vit?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.vit?.efmodify ?? 0)
         );
       if (systemData.powerabi == "int")
         powerabimod = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.int?.valuebase ?? 0) +
-            (actorData.abilities?.int?.valuegrowth ?? 0) +
-            (actorData.abilities?.int?.valuemodify ?? 0) +
-            (actorData.abilities?.int?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.int?.valuebase) +
+            abNum(actorData.abilities?.int?.valuegrowth) +
+            abNum(actorData.abilities?.int?.valuemodify) +
+            abNum(actorData.abilities?.int?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.int?.efmodify ?? 0)
         );
       if (systemData.powerabi == "mnd")
         powerabimod = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.mnd?.valuebase ?? 0) +
-            (actorData.abilities?.mnd?.valuegrowth ?? 0) +
-            (actorData.abilities?.mnd?.valuemodify ?? 0) +
-            (actorData.abilities?.mnd?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.mnd?.valuebase) +
+            abNum(actorData.abilities?.mnd?.valuegrowth) +
+            abNum(actorData.abilities?.mnd?.valuemodify) +
+            abNum(actorData.abilities?.mnd?.efvaluemodify) +
             (powerDedicated ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.mnd?.efmodify ?? 0)
@@ -969,198 +970,198 @@ export class SW25Item extends Item {
     ) {
       if (systemData.checkabi1 == "dex")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.dex?.valuebase ?? 0) +
-            (actorData.abilities?.dex?.valuegrowth ?? 0) +
-            (actorData.abilities?.dex?.valuemodify ?? 0) +
-            (actorData.abilities?.dex?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.dex?.valuebase) +
+            abNum(actorData.abilities?.dex?.valuegrowth) +
+            abNum(actorData.abilities?.dex?.valuemodify) +
+            abNum(actorData.abilities?.dex?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.dex?.efmodify ?? 0)
         );
       if (systemData.checkabi1 == "agi")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.agi?.valuebase ?? 0) +
-            (actorData.abilities?.agi?.valuegrowth ?? 0) +
-            (actorData.abilities?.agi?.valuemodify ?? 0) +
-            (actorData.abilities?.agi?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.agi?.valuebase) +
+            abNum(actorData.abilities?.agi?.valuegrowth) +
+            abNum(actorData.abilities?.agi?.valuemodify) +
+            abNum(actorData.abilities?.agi?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.agi?.efmodify ?? 0)
         );
       if (systemData.checkabi1 == "str")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.str?.valuebase ?? 0) +
-            (actorData.abilities?.str?.valuegrowth ?? 0) +
-            (actorData.abilities?.str?.valuemodify ?? 0) +
-            (actorData.abilities?.str?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.str?.valuebase) +
+            abNum(actorData.abilities?.str?.valuegrowth) +
+            abNum(actorData.abilities?.str?.valuemodify) +
+            abNum(actorData.abilities?.str?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.str?.efmodify ?? 0)
         );
       if (systemData.checkabi1 == "vit")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.vit?.valuebase ?? 0) +
-            (actorData.abilities?.vit?.valuegrowth ?? 0) +
-            (actorData.abilities?.vit?.valuemodify ?? 0) +
-            (actorData.abilities?.vit?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.vit?.valuebase) +
+            abNum(actorData.abilities?.vit?.valuegrowth) +
+            abNum(actorData.abilities?.vit?.valuemodify) +
+            abNum(actorData.abilities?.vit?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.vit?.efmodify ?? 0)
         );
       if (systemData.checkabi1 == "int")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.int?.valuebase ?? 0) +
-            (actorData.abilities?.int?.valuegrowth ?? 0) +
-            (actorData.abilities?.int?.valuemodify ?? 0) +
-            (actorData.abilities?.int?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.int?.valuebase) +
+            abNum(actorData.abilities?.int?.valuegrowth) +
+            abNum(actorData.abilities?.int?.valuemodify) +
+            abNum(actorData.abilities?.int?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.int?.efmodify ?? 0)
         );
       if (systemData.checkabi1 == "mnd")
         checkabimod1 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.mnd?.valuebase ?? 0) +
-            (actorData.abilities?.mnd?.valuegrowth ?? 0) +
-            (actorData.abilities?.mnd?.valuemodify ?? 0) +
-            (actorData.abilities?.mnd?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.mnd?.valuebase) +
+            abNum(actorData.abilities?.mnd?.valuegrowth) +
+            abNum(actorData.abilities?.mnd?.valuemodify) +
+            abNum(actorData.abilities?.mnd?.efvaluemodify) +
             (checkDedicated1 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.mnd?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "dex")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.dex?.valuebase ?? 0) +
-            (actorData.abilities?.dex?.valuegrowth ?? 0) +
-            (actorData.abilities?.dex?.valuemodify ?? 0) +
-            (actorData.abilities?.dex?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.dex?.valuebase) +
+            abNum(actorData.abilities?.dex?.valuegrowth) +
+            abNum(actorData.abilities?.dex?.valuemodify) +
+            abNum(actorData.abilities?.dex?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.dex?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "agi")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.agi?.valuebase ?? 0) +
-            (actorData.abilities?.agi?.valuegrowth ?? 0) +
-            (actorData.abilities?.agi?.valuemodify ?? 0) +
-            (actorData.abilities?.agi?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.agi?.valuebase) +
+            abNum(actorData.abilities?.agi?.valuegrowth) +
+            abNum(actorData.abilities?.agi?.valuemodify) +
+            abNum(actorData.abilities?.agi?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.agi?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "str")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.str?.valuebase ?? 0) +
-            (actorData.abilities?.str?.valuegrowth ?? 0) +
-            (actorData.abilities?.str?.valuemodify ?? 0) +
-            (actorData.abilities?.str?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.str?.valuebase) +
+            abNum(actorData.abilities?.str?.valuegrowth) +
+            abNum(actorData.abilities?.str?.valuemodify) +
+            abNum(actorData.abilities?.str?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.str?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "vit")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.vit?.valuebase ?? 0) +
-            (actorData.abilities?.vit?.valuegrowth ?? 0) +
-            (actorData.abilities?.vit?.valuemodify ?? 0) +
-            (actorData.abilities?.vit?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.vit?.valuebase) +
+            abNum(actorData.abilities?.vit?.valuegrowth) +
+            abNum(actorData.abilities?.vit?.valuemodify) +
+            abNum(actorData.abilities?.vit?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.vit?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "int")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.int?.valuebase ?? 0) +
-            (actorData.abilities?.int?.valuegrowth ?? 0) +
-            (actorData.abilities?.int?.valuemodify ?? 0) +
-            (actorData.abilities?.int?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.int?.valuebase) +
+            abNum(actorData.abilities?.int?.valuegrowth) +
+            abNum(actorData.abilities?.int?.valuemodify) +
+            abNum(actorData.abilities?.int?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.int?.efmodify ?? 0)
         );
       if (systemData.checkabi2 == "mnd")
         checkabimod2 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.mnd?.valuebase ?? 0) +
-            (actorData.abilities?.mnd?.valuegrowth ?? 0) +
-            (actorData.abilities?.mnd?.valuemodify ?? 0) +
-            (actorData.abilities?.mnd?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.mnd?.valuebase) +
+            abNum(actorData.abilities?.mnd?.valuegrowth) +
+            abNum(actorData.abilities?.mnd?.valuemodify) +
+            abNum(actorData.abilities?.mnd?.efvaluemodify) +
             (checkDedicated2 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.mnd?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "dex")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.dex?.valuebase ?? 0) +
-            (actorData.abilities?.dex?.valuegrowth ?? 0) +
-            (actorData.abilities?.dex?.valuemodify ?? 0) +
-            (actorData.abilities?.dex?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.dex?.valuebase) +
+            abNum(actorData.abilities?.dex?.valuegrowth) +
+            abNum(actorData.abilities?.dex?.valuemodify) +
+            abNum(actorData.abilities?.dex?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.dex?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "agi")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.dex?.racevalue ?? 0) +
-            (actorData.abilities?.agi?.valuebase ?? 0) +
-            (actorData.abilities?.agi?.valuegrowth ?? 0) +
-            (actorData.abilities?.agi?.valuemodify ?? 0) +
-            (actorData.abilities?.agi?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.dex?.racevalue) +
+            abNum(actorData.abilities?.agi?.valuebase) +
+            abNum(actorData.abilities?.agi?.valuegrowth) +
+            abNum(actorData.abilities?.agi?.valuemodify) +
+            abNum(actorData.abilities?.agi?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.agi?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "str")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.str?.valuebase ?? 0) +
-            (actorData.abilities?.str?.valuegrowth ?? 0) +
-            (actorData.abilities?.str?.valuemodify ?? 0) +
-            (actorData.abilities?.str?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.str?.valuebase) +
+            abNum(actorData.abilities?.str?.valuegrowth) +
+            abNum(actorData.abilities?.str?.valuemodify) +
+            abNum(actorData.abilities?.str?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.str?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "vit")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.str?.racevalue ?? 0) +
-            (actorData.abilities?.vit?.valuebase ?? 0) +
-            (actorData.abilities?.vit?.valuegrowth ?? 0) +
-            (actorData.abilities?.vit?.valuemodify ?? 0) +
-            (actorData.abilities?.vit?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.str?.racevalue) +
+            abNum(actorData.abilities?.vit?.valuebase) +
+            abNum(actorData.abilities?.vit?.valuegrowth) +
+            abNum(actorData.abilities?.vit?.valuemodify) +
+            abNum(actorData.abilities?.vit?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.vit?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "int")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.int?.valuebase ?? 0) +
-            (actorData.abilities?.int?.valuegrowth ?? 0) +
-            (actorData.abilities?.int?.valuemodify ?? 0) +
-            (actorData.abilities?.int?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.int?.valuebase) +
+            abNum(actorData.abilities?.int?.valuegrowth) +
+            abNum(actorData.abilities?.int?.valuemodify) +
+            abNum(actorData.abilities?.int?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.int?.efmodify ?? 0)
         );
       if (systemData.checkabi3 == "mnd")
         checkabimod3 = Math.floor(
-          ((actorData.abilities?.int?.racevalue ?? 0) +
-            (actorData.abilities?.mnd?.valuebase ?? 0) +
-            (actorData.abilities?.mnd?.valuegrowth ?? 0) +
-            (actorData.abilities?.mnd?.valuemodify ?? 0) +
-            (actorData.abilities?.mnd?.efvaluemodify ?? 0) +
+          (abNum(actorData.abilities?.int?.racevalue) +
+            abNum(actorData.abilities?.mnd?.valuebase) +
+            abNum(actorData.abilities?.mnd?.valuegrowth) +
+            abNum(actorData.abilities?.mnd?.valuemodify) +
+            abNum(actorData.abilities?.mnd?.efvaluemodify) +
             (checkDedicated3 ? 2 : 0)) /
             6 +
             Number(actorData.abilities?.mnd?.efmodify ?? 0)
@@ -1608,7 +1609,7 @@ export class SW25Item extends Item {
             if (actorData.effect.vitres)
               systemData.efmod = Number(actorData.effect.vitres);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.vit?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.vit?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.vit?.efmodify ?? 0);
             break;
@@ -1616,7 +1617,7 @@ export class SW25Item extends Item {
             if (actorData.effect.mndres)
               systemData.efmod = Number(actorData.effect.mndres);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.mnd?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.mnd?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.mnd?.efmodify ?? 0);
             break;
@@ -1624,7 +1625,7 @@ export class SW25Item extends Item {
             if (actorData.attributes.efhitmod)
               systemData.efmod = Number(actorData.attributes.efhitmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.dex?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.dex?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.dex?.efmodify ?? 0);
             break;
@@ -1632,7 +1633,7 @@ export class SW25Item extends Item {
             if (actorData.attributes.efdmod)
               systemData.efmod = Number(actorData.attributes.efdmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.str?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.str?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.str?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1641,7 +1642,7 @@ export class SW25Item extends Item {
             if (actorData.attributes.efdodgemod)
               systemData.efmod = Number(actorData.attributes.efdodgemod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.agi?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.agi?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.agi?.efmodify ?? 0);
             break;
@@ -1652,7 +1653,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1664,7 +1665,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1676,7 +1677,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1688,7 +1689,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1700,7 +1701,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1712,7 +1713,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1724,7 +1725,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1736,7 +1737,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1748,7 +1749,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;
@@ -1760,7 +1761,7 @@ export class SW25Item extends Item {
                 Number(systemData.efallmgpmod);
             else systemData.efmod = Number(systemData.efallmgpmod);
             systemData.efmod += Math.floor(
-              (actorData.abilities?.int?.efvaluemodify ?? 0) / 6
+              abNum(actorData.abilities?.int?.efvaluemodify) / 6
             );
             systemData.efmod += Number(actorData.abilities?.int?.efmodify ?? 0);
             systemData.efallckmod = 0;

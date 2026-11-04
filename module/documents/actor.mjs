@@ -1,5 +1,6 @@
 const SW25_AE_MODES = { CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4, OVERRIDE: 5 };
 import { effectInitPC } from "../sw25.mjs";
+import { abNum } from "../rules/ability-num.mjs";
 import { PT } from "../helpers/powerroll.mjs";
 import * as RE from "../rules/engine.mjs";
 import { weaponCritValue } from "../rules/crit-value.mjs";
@@ -246,11 +247,11 @@ export class SW25Actor extends Actor {
       if (item.type == "skill") {
         if (dodgeskill && item.name == dodgeskill) {
           const dodgeAgimod = Math.floor(
-            (systemData.abilities.dex.racevalue +
-              systemData.abilities.agi.valuebase +
-              systemData.abilities.agi.valuegrowth +
-              systemData.abilities.agi.valuemodify +
-              systemData.abilities.agi.efvaluemodify +
+            (abNum(systemData.abilities.dex.racevalue) +
+              abNum(systemData.abilities.agi.valuebase) +
+              abNum(systemData.abilities.agi.valuegrowth) +
+              abNum(systemData.abilities.agi.valuemodify) +
+              abNum(systemData.abilities.agi.efvaluemodify) +
               (systemData.shieldDedicated ? 2 : 0)) /
               6 +
               Number(systemData.abilities.agi.efmodify)
@@ -778,12 +779,12 @@ export class SW25Actor extends Actor {
       Number(systemData.hpbase) +
       Number(systemData.hp.hpmod) +
       Number(systemData.hp.efhpmod) +
-      Math.floor((systemData.abilities?.vit?.efvaluemodify ?? 0));
+      Math.floor(abNum(systemData.abilities?.vit?.efvaluemodify));
     systemData.mp.max =
       Number(systemData.mpbase) +
       Number(systemData.mp.mpmod) +
       Number(systemData.mp.efmpmod) +
-      Math.floor((systemData.abilities?.mnd?.efvaluemodify ?? 0));
+      Math.floor(abNum(systemData.abilities?.mnd?.efvaluemodify));
     systemData.pp =
       Number(systemData.ppbase) +
       Number(systemData.attributes.ppmod) +
