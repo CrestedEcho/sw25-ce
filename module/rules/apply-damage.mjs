@@ -117,10 +117,8 @@ export async function applyFinalToActor(a, amount, { pool = "hp", heal = false, 
 export const appliedCard = (title, lines) => lines.length && ChatMessage.create({ content: `<div class="sw25-spelldmg"><b>${esc(title)}</b><br>${lines.join("<br>")}</div>` });
 /** GM socket side: [{tokenId, actorId, amount, pool, heal, part?}] */
 export async function applyFinalRemote(list, title = "Damage applied") {
-  const lines = [];
   for (const x of list ?? []) {
     const a = (x.tokenId && canvas.tokens.get(x.tokenId)?.actor) || (x.actorId && game.actors.get(x.actorId));
-    if (a) lines.push(await applyFinalToActor(a, x.amount, { pool: x.pool === "mp" ? "mp" : "hp", heal: !!x.heal, part: Number.isInteger(x.part) ? x.part : null }));
+    if (a) await applyFinalToActor(a, x.amount, { pool: x.pool === "mp" ? "mp" : "hp", heal: !!x.heal, part: Number.isInteger(x.part) ? x.part : null });
   }
-  return appliedCard(title, lines);
 }
