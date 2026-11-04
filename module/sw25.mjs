@@ -33,7 +33,12 @@ import { SW25 } from "./helpers/config.mjs";
 import { chatButton } from "./helpers/chatbutton.mjs";
 import { powerRoll } from "./helpers/powerroll.mjs";
 import { lootRoll } from "./helpers/lootroll.mjs";
-import { growthCheck } from "./helpers/growthcheck.mjs";
+import {
+  createGrowthChoiceCoordinator,
+  growthCheck,
+  notifyGrowthChoiceResult,
+  registerGrowthChoiceChatHandler,
+} from "./helpers/growthcheck.mjs";
 import { actionRoll } from "./helpers/actionroll.mjs";
 import { rollreq } from "./helpers/rollrequest.mjs";
 import { targetRollDialog } from "./helpers/dialogs.mjs";
@@ -928,6 +933,76 @@ Hooks.once("ready", async function () {
       description.slideToggle();
     });
   });
+  registerGrowthChoiceChatHandler();
+
+  // Register growth coordination before optional reference-data setup can return early.
+  const handleGrowthChoice = createGrowthChoiceCoordinator({
+    getMessage: (id) => game.messages.get(id),
+    getActor: (uuid) => fromUuid(uuid),
+    authorize: (request, message, actor) => {
+      const user = game.users.get(request.userId);
+      return Boolean(
+        user &&
+          message.author?.id === user.id &&
+          actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
+      );
+    },
+  });
+  game.socket.on("system.sw25", async (data) => {
+    if (data?.method === "growthChoiceResult") {
+      notifyGrowthChoiceResult(data);
+      return;
+    }
+    if (data?.method !== "growthChoice" || !game.user.isGM) return;
+
+    const activeGMs = game.users
+      .filter((user) => user.isGM && user.active)
+      .map((user) => user.id)
+      .sort();
+    if (activeGMs[0] !== game.user.id) return;
+
+    let result;
+    if (!game.user.active || game.user.id !== data.coordinatorId) {
+      result = { ok: false, reason: "coordinator-failed" };
+    } else {
+      try {
+        result = await handleGrowthChoice(data);
+      } catch (error) {
+        console.error("sw25-ce | growth choice coordinator failed", error);
+        result = { ok: false, reason: "coordinator-failed" };
+      }
+    }
+    if (result.ok) {
+      try {
+        const actor = await fromUuid(result.actorUuid);
+        const ability = result.ability.capitalize();
+        const abilityName = game.i18n.localize(`SW25.Ability.${ability}.long`);
+        const abilityDie = game.i18n.localize(`SW25.Ability.${ability}.die`);
+        const content = `<div class="growth">
+            <span class="fontsize12">${abilityDie}${abilityName}&nbsp;</span>:&nbsp;
+            ${game.i18n.localize("SW25.Ability.Growth")}&nbsp;
+            <span class="fontsize12 before">${result.before}</span>
+            ><span class="fontsize11">></span><span class="fontsize12">></span>
+            <span class="fontsize15 after">${result.after}</span>
+          </div>`;
+        await ChatMessage.create({
+          user: game.user.id,
+          speaker: ChatMessage.getSpeaker({ actor }),
+          content,
+        });
+      } catch (error) {
+        console.error("sw25-ce | failed to create growth result message", error);
+      }
+    }
+    game.socket.emit("system.sw25", {
+      method: "growthChoiceResult",
+      requestId: data.requestId,
+      userId: data.userId,
+      messageId: data.messageId,
+      ...result,
+    });
+  });
+
   // Add listener to past message
   $(".chat-message .buttonclick").each((index, element) => {
     const messageId = $(element).closest(".message").attr("data-message-id");

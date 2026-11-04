@@ -1,0 +1,181 @@
+name: Test and release Foundry system
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sw25-ce-main-release
+  cancel-in-progress: false
+
+jobs:
+  test-package-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main and release tags
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Install project tooling
+        working-directory: tools
+        run: npm ci
+
+      - name: Run project tests
+        working-directory: tools
+        run: npm test
+
+      - name: Run syntax checks
+        working-directory: tools
+        run: npm run check
+
+      - name: Calculate next Foundry version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+
+          const tags = execFileSync('git', ['tag', '--list', 'v3.0.0-ce.*'], { encoding: 'utf8' })
+            .split('\n')
+            .filter(Boolean);
+          let highest = 0;
+          for (const tag of tags) {
+            const match = tag.match(/^v3\.0\.0-ce\.(\d+)(?:-|$)/);
+            if (match) highest = Math.max(highest, Number(match[1]));
+          }
+          // Keep the suffix alphanumeric so this compares above prior -test prereleases.
+          process.stdout.write(`3.0.0-ce.${highest + 1}-release`);
+          NODE
+          )"
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Preparing ${TAG}"
+
+      - name: Build checked-in compendium sources
+        run: |
+          mkdir -p "$RUNNER_TEMP/sw25-packs"
+          node tools/packs.mjs build --out "$RUNNER_TEMP/sw25-packs"
+
+      - name: Assemble Foundry package
+        env:
+          SW25_VERSION: ${{ steps.version.outputs.version }}
+          SW25_STAGE: ${{ runner.temp }}/sw25-release
+          SW25_PACKS: ${{ runner.temp }}/sw25-packs
+        run: |
+          set -euo pipefail
+          rm -rf "$SW25_STAGE"
+          mkdir -p "$SW25_STAGE/packs"
+          cp -a assets css fonts lang module templates "$SW25_STAGE/"
+          cp -a template.json LICENSE.txt README.md CHANGELOG.md CREDITS.md "$SW25_STAGE/"
+          cp -a "$SW25_PACKS/." "$SW25_STAGE/packs/"
+          SW25_MANIFEST="$SW25_STAGE/system.json" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const manifestPath = process.env.SW25_MANIFEST;
+          const stage = path.dirname(manifestPath);
+          const manifest = JSON.parse(fs.readFileSync('system.json', 'utf8'));
+          const version = process.env.SW25_VERSION;
+          const tag = `v${version}`;
+          manifest.version = version;
+          manifest.manifest = 'https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json';
+          manifest.download = `https://github.com/CrestedEcho/sw25-ce/releases/download/${tag}/sw25-ce.zip`;
+          // Only declare packs actually built into this self-contained package.
+          manifest.packs = manifest.packs.filter((pack) =>
+            fs.existsSync(path.join(stage, pack.path))
+          );
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          NODE
+          (cd "$SW25_STAGE" && zip -qr "$RUNNER_TEMP/sw25-ce.zip" .)
+
+      - name: Verify ZIP structure and manifest
+        env:
+          SW25_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          unzip -t "$RUNNER_TEMP/sw25-ce.zip"
+          python3 - "$RUNNER_TEMP/sw25-ce.zip" "$SW25_VERSION" <<'PY'
+          import json
+          import sys
+          import zipfile
+
+          archive_path, version = sys.argv[1:]
+          with zipfile.ZipFile(archive_path) as archive:
+              bad_member = archive.testzip()
+              assert bad_member is None, f"Corrupt ZIP member: {bad_member}"
+              names = set(archive.namelist())
+              required = {
+                  "system.json",
+                  "template.json",
+                  "module/sw25.mjs",
+                  "css/sw25.css",
+                  "lang/en.json",
+              }
+              missing = required - names
+              assert not missing, f"Missing required root-level files: {sorted(missing)}"
+              forbidden = (".git/", "AGENTS.md", "docs/", "tests/", "tools/", "pack-src/", "macros/")
+              leaked = sorted(name for name in names if any(part in name for part in forbidden))
+              assert not leaked, f"Development-only files found in ZIP: {leaked[:20]}"
+              assert not any(name.startswith("sw25-ce/") for name in names), "ZIP has an extra wrapper directory"
+              manifest = json.loads(archive.read("system.json"))
+              assert manifest["version"] == version, (manifest["version"], version)
+              assert manifest["manifest"] == "https://github.com/CrestedEcho/sw25-ce/releases/latest/download/system.json"
+              assert manifest["download"] == f"https://github.com/CrestedEcho/sw25-ce/releases/download/v{version}/sw25-ce.zip"
+              for pack in manifest.get("packs", []):
+                  prefix = pack["path"].rstrip("/") + "/"
+                  assert any(name.startswith(prefix) for name in names), f"Missing declared pack: {pack['path']}"
+          print(f"Verified Foundry package for {version}: {len(names)} ZIP entries")
+          PY
+
+      - name: Create draft release with assets
+        id: create-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            "$RUNNER_TEMP/sw25-release/system.json" \
+            "$RUNNER_TEMP/sw25-ce.zip" \
+            --draft \
+            --target "$GITHUB_SHA" \
+            --title "Sword World 2.5 ${RELEASE_VERSION}" \
+            --notes "Automated Foundry VTT release ${RELEASE_VERSION}."
+          assets="$(gh release view "$RELEASE_TAG" --json assets --jq '[.assets[].name] | sort | join(",")')"
+          test "$assets" = "sw25-ce.zip,system.json"
+
+      - name: Publish verified release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest
+
+      - name: Remove unpublished draft if release processing failed
+        if: failure() && steps.version.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft >/tmp/sw25-release-draft 2>/dev/null; then
+            if [[ "$(cat /tmp/sw25-release-draft)" == "true" ]]; then
+              gh release delete "$RELEASE_TAG" --yes
+            fi
+          fi
