@@ -5,6 +5,13 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.23-release (2026-11-04)
+- **Character sheet layout**: the race portraits, appearance and description now sit at the top of the **Bio** tab (the description comes from the race item). The Combat tab keeps only the racial abilities, with a link to the Bio card. The belt moved between Weapons and Combat Feats, and the wallet moved to the top of **Inventory**.
+- **Initiative button**: the Combat Checks panel is gone. A round Initiative button next to Fellow rolls 2d6 + bonus, posts a chat card with the formula and bonuses, and sets it on the combat tracker (it adds the character's token to the current combat if needed). Nothing is rolled automatically.
+- **Skill Checks on the Classes tab**: every package check (Technique, Movement, Observation, Knowledge and others) has a class dropdown listing all of the character's classes plus Adventurer level and none, with no restrictions, so homebrew classes and missing compendium data still work. The value is 2d6 + class level + ability modifier. The row turns green when the chosen class grants that check. Click the die to roll; the chat card shows which class was used, whether it grants the check, and the full calculation. Limits are shown as notes only. The redundant Race Abilities panel on the Classes tab was removed.
+- **Custom check modifiers**: a player ± per check and a global ± for all checks. Rules can use `check.<id>.mod` and `check.all.mod` (for example a −4 metal-armour penalty on Tumble or Hide), and every applied modifier is listed in the chat formula. A class's own rule modifiers apply only when that class is chosen for the roll. Monster Knowledge rolls still reveal target weaknesses.
+- Framework only; no rulebook content is included.
+
 ## 3.0.0-ce.21-test2 (2026-11-03) — test pre-release
 - Fix: in ce.21-test no SW25 sheet was registered, so characters, monsters and items opened in Foundry's bare default sheet. The actor sheet's data builder awaited the race-card text without being async, a syntax error that stopped the whole system script from loading. It is now async.
 - New regression test walks the system's module graph from `system.json`, syntax-checks every file and checks that every named import is exported.
