@@ -69,6 +69,9 @@ for (const a of ABILITIES) KEY_ALIASES[`ability.${a}.bonus`] ??= { target: `abil
 
 export function resolveKey(key) {
   if (KEY_ALIASES[key]) return KEY_ALIASES[key];
+  // sw25-ce: per-check / global skill-check modifiers, e.g. check.tumble.mod, check.all.mod (custom penalties & bonuses)
+  const m = String(key ?? "").match(/^check\.([a-z0-9][a-z0-9-]*)\.mod$/);
+  if (m) return { target: "check", kind: "check", checks: [m[1]] };
   return { target: key, kind: "note", unknown: true };
 }
 
@@ -213,7 +216,7 @@ export function collectRules(sources = [], { data = {}, selectors = {} } = {}) {
       const value = evalValue(r.value, { ...data, level, source: { level } }, sel);
       const entry = {
         ...r, mode: MODES.includes(r.mode) ? r.mode : "add", target: alias.target, kind: alias.kind,
-        unknown: !!alias.unknown, value, rawValue: r.value, source: { id: src.id, name: src.name, type: src.type, level, choices: src.choices ?? {} },
+        unknown: !!alias.unknown, keyChecks: alias.checks ?? null, value, rawValue: r.value, source: { id: src.id, name: src.name, type: src.type, level, choices: src.choices ?? {} },
         priority: Number.isFinite(Number(r.priority)) && r.priority !== null && r.priority !== "" ? Number(r.priority) : MODE_PRIORITY[r.mode] ?? 30,
         index: i,
       };
@@ -389,7 +392,8 @@ export function rankCheck(active, item = {}) {
 export function checkMods(active, ctx = {}) {
   return active.filter((r) => r.kind === "check").map((r) => {
     const p = testPredicate(r.predicate, { ...ctx, source: r.source });
-    return { label: r.label || r.key, source: r.source.name, value: Number(r.value) || 0, checks: p.checks ?? [], active: p.ok && !p.situational };
+    const checks = r.keyChecks ? (p.checks ? p.checks.filter((c) => r.keyChecks.includes("all") || r.keyChecks.includes(c)) : r.keyChecks) : (p.checks ?? []);
+    return { label: r.label || r.key, source: r.source.name, sourceId: r.source.id, sourceType: r.source.type, value: Number(r.value) || 0, checks, active: p.ok && !p.situational };
   });
 }
 

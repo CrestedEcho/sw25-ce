@@ -1344,6 +1344,49 @@
       "Magic": {
         "OtherSpells": "Other spells",
         "OtherSpellsTip": "Spells whose school this sheet does not know (homebrew or a missing school). They cast and roll as normal; set the spell's school to move it into a school section."
+      },
+      "Open": "Open",
+      "RaceOnBio": "Race portraits, appearance and description are on the Bio tab",
+      "Initiative": {
+        "Title": "Initiative",
+        "Tip": "Roll Initiative (sets it on the combat tracker and posts the roll)",
+        "NoCombat": "No active combat here: Initiative posted to chat only.",
+        "Added": "Added to the combat tracker.",
+        "NoToken": "No token of this character in the active combat's scene: Initiative posted to chat only.",
+        "Failed": "Could not update the combat tracker (permissions?). Initiative posted to chat.",
+        "Other": "Other modifiers (item, effects)"
+      },
+      "SkillChecks": {
+        "Title": "Skill checks",
+        "Hint": "Pick which class (or Adventurer level, or none) rolls each check. Any class can be chosen; green means the chosen class grants the check. Click the die to roll.",
+        "LegendGrants": "chosen class grants it",
+        "LegendOther": "not granted / no class",
+        "GrantedBy": "Granted by",
+        "Class": "Class used for this check",
+        "Natural": "Natural-environment only for that class",
+        "SitMod": "Situational ± for this check (saved on the character)",
+        "AllMod": "All checks",
+        "AllModTip": "Penalty or bonus added to every skill check (e.g. -2 while hurried). Saved on the character.",
+        "ClickRoll": "Click to roll 2d6. Never rolls by itself.",
+        "RulesHint": "Penalties & bonuses: items, classes and feats can add rules with keys check.<id>.mod (one check, e.g. check.tumble.mod) or check.all.mod, gated by predicates such as armor.metal. A class's own rule only applies when that class is used. Active Effects on All checks / Skill checks / packages also count.",
+        "Custom": "Check items (custom, Fortitude, Willpower, Initiative, Monster Knowledge)",
+        "RolledAs": "Rolled as",
+        "Granted": "granted by this class",
+        "NotGranted": "this class does not grant this check (player/GM: check it is allowed)",
+        "NoClass": "no class (2d6 only)",
+        "Limit": "Limit",
+        "Calc": "Calculation",
+        "Group": {
+          "technique": "Technique",
+          "movement": "Movement",
+          "observation": "Observation",
+          "knowledge": "Knowledge",
+          "other": "Other checks"
+        },
+        "Adventurer": "Adventurer level",
+        "None": "— none (2d6)",
+        "SitModShort": "Situational ±",
+        "AllModShort": "All checks ±"
       }
     },
     "EquipCard": {

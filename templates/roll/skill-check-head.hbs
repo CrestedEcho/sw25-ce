@@ -1,0 +1,11 @@
+{{!-- sw25-ce: Skill check / Initiative chat card header (the roll body is roll-check.hbs; ± keeps this header via flags.sw25.skcHead). Always names the class used and every modifier. --}}
+<div class="sw-skc-card{{#if grants}} grants{{/if}}">
+  <div class="sw-skc-card-head">
+    <b class="sw-skc-card-title">{{title}}</b>
+    <span class="sw-skc-card-class">{{#if none}}{{localize "SW25.V2.SkillChecks.NoClass"}}{{else}}{{localize "SW25.V2.SkillChecks.RolledAs"}} <b>{{className}}</b> Lv {{classLevel}}{{/if}}</span>
+    {{#unless none}}{{#unless adv}}<span class="sw-skc-card-grant">{{#if grants}}<i class="fas fa-check"></i> {{localize "SW25.V2.SkillChecks.Granted"}}{{else}}<i class="fas fa-triangle-exclamation"></i> {{localize "SW25.V2.SkillChecks.NotGranted"}}{{/if}}</span>{{/unless}}{{/unless}}
+    {{#if limit}}<span class="sw-skc-card-limit">{{localize "SW25.V2.SkillChecks.Limit"}}: {{limit}}</span>{{/if}}
+    {{#if natural}}<span class="sw-skc-card-limit">{{localize "SW25.V2.SkillChecks.Natural"}}</span>{{/if}}
+  </div>
+  <div class="sw-skc-card-calc"><span class="lbl">{{localize "SW25.V2.SkillChecks.Calc"}}:</span> 2d6{{#each parts}} <span class="part {{kind}}">{{valueText}} <small>{{label}}</small></span>{{/each}}</div>
+</div>

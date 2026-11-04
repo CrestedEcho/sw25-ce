@@ -564,6 +564,11 @@ export class SW25Actor extends Actor {
           item.system.formula + "+" + item.system.checkbase;
       }
     });
+    // ce.23: rule mods keyed check.initiative.mod also reach the combat tracker
+    for (const m of systemData._rules?.checkMods ?? []) {
+      const v = Number(m.value) || 0;
+      if (m.active && v && (m.checks ?? []).includes("initiative")) systemData.initiativeFormula += v > 0 ? `+${v}` : `${v}`;
+    }
 
     // Polyglot support
     const languages = [];

@@ -1,0 +1,31 @@
+{{!-- sw25-ce: Skill Checks (Classes & Feats tab). View model: module/rules/skill-checks.mjs (context.skillChecks).
+     Any class (or Adventurer level, or none) may be chosen; a row is green when the chosen class's data grants the check.
+     Click the die to roll (never auto-rolls); the chat card names the class used and lists every modifier. --}}
+{{#*inline "skcD6"}}<svg class="d6" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/><circle cx="16" cy="16" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg>{{/inline}}
+<div class="panel sw-skc"><span class="ribbon">{{localize "SW25.V2.SkillChecks.Title"}}</span>
+  <p class="ce7-feat-hint"><i class="fas fa-circle-info"></i> {{localize "SW25.V2.SkillChecks.Hint"}}</p>
+  <div class="skc-legend"><span class="skc-sw grants"></span> {{localize "SW25.V2.SkillChecks.LegendGrants"}} <span class="skc-sw"></span> {{localize "SW25.V2.SkillChecks.LegendOther"}}
+    <label class="skc-allmod" data-tooltip="{{localize 'SW25.V2.SkillChecks.AllModTip'}}"><i class="fa-solid fa-plus-minus"></i> {{localize "SW25.V2.SkillChecks.AllMod"}} <input class="skc-mod" data-check="_all" type="text" value="{{skillChecks.globalMod}}" data-dtype="Number"/></label>
+  </div>
+  {{#each skillChecks.groups as |g|}}
+  <div class="skc-group">
+    <h4 class="skc-h">{{g.label}}{{#if g.ability}} <small>· {{g.ability}}</small>{{/if}}</h4>
+    <ol class="skc-list">
+      {{#each g.rows as |r|}}
+      <li class="skc-row{{#if r.grants}} grants{{/if}}" data-check="{{r.id}}">
+        <span class="skc-name" data-tooltip="{{localize 'SW25.V2.SkillChecks.GrantedBy'}}: {{#if r.grantedBy.length}}{{#each r.grantedBy}}{{#unless @first}}, {{/unless}}{{this}}{{/each}}{{else}}—{{/if}}">{{r.label}}{{#if r.limit}} <small class="skc-limit">({{r.limit}})</small>{{/if}}{{#if r.natural}} <small class="skc-limit" data-tooltip="{{localize 'SW25.V2.SkillChecks.Natural'}}">*</small>{{/if}}</span>
+        <select class="skc-class" data-check="{{r.id}}" aria-label="{{localize 'SW25.V2.SkillChecks.Class'}}">{{#each r.options as |o|}}<option value="{{o.value}}"{{#if o.selected}} selected{{/if}}>{{o.label}}</option>{{/each}}</select>
+        <span class="skc-ab">{{#if r.abilityLabel}}{{r.abilityLabel}} {{numberFormat r.abilityMod decimals=0 sign=true}}{{else}}—{{/if}}</span>
+        <input class="skc-mod" data-check="{{r.id}}" type="text" value="{{#if r.sitMod}}{{r.sitMod}}{{/if}}" placeholder="±" data-dtype="Number" data-tooltip="{{localize 'SW25.V2.SkillChecks.SitMod'}}"/>
+        <a class="cc-roll skc-roll" data-check="{{r.id}}">{{> skcD6}}{{r.value}}<span class="cc-tip" role="tooltip"><span class="sum">{{r.calc}}{{#if r.className}} = 2d6 {{numberFormat r.value decimals=0 sign=true}}{{/if}}</span><br><span class="sub">{{localize "SW25.V2.SkillChecks.ClickRoll"}}</span></span></a>
+      </li>
+      {{/each}}
+    </ol>
+  </div>
+  {{/each}}
+  <p class="hint skc-foot">{{localize "SW25.V2.SkillChecks.RulesHint"}}</p>
+  <details class="skc-items" data-sw25-adv="skcitems" {{#if sw25Adv.skcitems}}open{{/if}}>
+    <summary>{{localize "SW25.V2.SkillChecks.Custom"}} ({{checkItems.length}})</summary>
+    {{> "systems/sw25-ce/templates/actor/parts/actor-checks.hbs" checks=checkItems}}
+  </details>
+</div>

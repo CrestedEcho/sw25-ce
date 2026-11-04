@@ -1331,9 +1331,12 @@ export async function chatButton(chatMessage, buttonType) {
           elements: chatMessage.flags.sw25.elements,
           damage: chatMessage.flags.sw25.damage,
           tags: chatMessage.flags.sw25.tags,
+          skcHead: chatMessage.flags.sw25.skcHead,
+          skillCheck: chatMessage.flags.sw25.skillCheck,
         },
       },
-      content: await foundry.applications.handlebars.renderTemplate(
+      // sw25-ce: skill-check / initiative cards keep their header (class used + calculation) after ±
+      content: (chatMessage.flags.sw25.skcHead ?? "") + await foundry.applications.handlebars.renderTemplate(
         "systems/sw25-ce/templates/roll/roll-check.hbs",
         {
           formula: chatMessage.flags.sw25.formula,

@@ -454,3 +454,55 @@ form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.
 .sw-race-appearance-text { min-height: 60px; }
 .sw-raceinfo-appearance { padding: 4px 6px 6px 40px; font-size: 12px; }
 .sw-raceinfo-appearance-text p { margin: 2px 0; }
+
+/* ===== ce.23 sheet layout: Initiative button, race card on Bio, Skill Checks, skill-check chat card ===== */
+/* Initiative circle button in the header (same .tog circle as Fellow/Grace/Edit) */
+.sw25v2 .v2-toggles .tog.sw-init{position:relative;background:var(--accent);color:#fff8e6;border-color:var(--gold);cursor:pointer;text-decoration:none}
+.sw25v2 .v2-toggles .tog.sw-init:hover{box-shadow:0 0 0 2px rgba(155,44,44,.25),0 0 10px 2px rgba(214,150,60,.75)}
+.sw25v2 .tog.sw-init .sw-init-v{position:absolute;right:-6px;bottom:-5px;min-width:15px;height:15px;padding:0 3px;border-radius:8px;background:var(--gold);color:#2b1d12;font-size:10px;line-height:15px;text-align:center;font-family:sans-serif}
+/* Racial list header points at the Bio tab */
+.sw25v2 .sw-racial-of{font-weight:normal;color:var(--muted);font-variant:normal}
+/* Bio: race card */
+.sw25v2 .sw-bio-race-grid{display:flex;gap:12px;align-items:flex-start}
+.sw25v2 .sw-bio-race-grid .sw-race-portraits{flex:none;margin:0}
+.sw25v2 .sw-bio-race-text{flex:1;min-width:0}
+.sw25v2 .sw-bio-h{margin:8px 0 3px;color:var(--accent);font-variant:small-caps}.sw25v2 .sw-bio-h small{font-weight:normal;color:var(--muted)}
+.sw25v2 .sw-bio-race-desc p,.sw25v2 .sw-raceinfo-appearance-text p{margin:0 0 4px}
+/* Skill Checks */
+.sw25v2 .sw-skc{--skc-green:#2f7a2f;--skc-greenbg:rgba(80,160,70,.16);--cc-btn1:#fffdf6;--cc-btn2:#f1e3c3;--cc-btnb:#a88b5c}
+.sw25v2.theme-dark .sw-skc{--skc-green:#8fd27f;--skc-greenbg:rgba(110,190,90,.16);--cc-btn1:#3d2c1d;--cc-btn2:#2a1d12;--cc-btnb:#8a6a32}
+.sw25v2 .skc-legend{font-size:11.5px;color:var(--muted);display:flex;gap:6px;align-items:center;margin:0 0 4px}
+.sw25v2 .skc-sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid var(--line);background:rgba(255,255,255,.2);margin-left:6px}
+.sw25v2 .skc-sw.grants{border-color:var(--skc-green);background:var(--skc-greenbg)}
+.sw25v2 .skc-h{margin:8px 0 3px;font-variant:small-caps;color:var(--accent);border-bottom:1px solid var(--line)}.sw25v2 .skc-h small{color:var(--muted);font-weight:normal}
+.sw25v2 .skc-list{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.sw25v2 .skc-row{display:grid;grid-template-columns:minmax(0,1fr) 108px 44px 38px 50px;gap:5px;align-items:center;padding:2px 4px;border-radius:5px;border:1px solid transparent;border-left:3px solid transparent}
+.sw25v2 .skc-row .skc-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw25v2 .skc-row .skc-limit{color:var(--muted)}
+.sw25v2 .skc-row select.skc-class{width:108px;font-size:12px;height:22px}
+.sw25v2 .skc-row .skc-ab{font-size:11.5px;color:var(--muted);text-align:center}
+.sw25v2 .skc-row .cc-roll{min-width:48px;height:24px;font-size:14px}
+.sw25v2 .skc-row.grants{background:var(--skc-greenbg);border-color:color-mix(in srgb,var(--skc-green) 45%,transparent);border-left-color:var(--skc-green)}
+.sw25v2 .skc-row.grants .skc-name{color:var(--skc-green);font-weight:bold}
+.sw25v2 .skc-foot{margin:6px 0 0}
+.sw25v2 .skc-legend .skc-allmod{margin-left:auto;display:flex;align-items:center;gap:4px;color:var(--ink)}
+.sw25v2 .skc-legend .skc-allmod input{width:42px;height:20px;text-align:center}
+.sw25v2 .skc-row input.skc-mod{width:38px;height:22px;text-align:center}
+.sw25v2 .skc-row .cc-roll{display:inline-flex;align-items:center;justify-content:center;gap:3px;position:relative}
+.sw25v2 .skc-items{margin-top:6px}.sw25v2 .skc-items>summary{cursor:pointer;color:var(--muted);font-size:12px}
+.sw25v2.theme-dark .skc-row .skc-name,.sw25v2.theme-dark .skc-h small,.sw25v2.theme-dark .skc-legend{color:var(--ink)}
+.sw25v2.theme-dark .skc-row.grants .skc-name{color:var(--skc-green)}
+.sw25v2.theme-dark .sw-bio-race-text,.sw25v2.theme-dark .sw-bio-race-text small{color:var(--ink)}
+@media (max-width:760px){.sw25v2 .skc-list{grid-template-columns:1fr}}
+/* chat card header (above the standard roll-check body; kept after ±) */
+.sw-skc-card{border:1px solid #9a8a70;border-left:4px solid #9a8a70;border-radius:4px;padding:4px 6px;margin-bottom:4px;background:rgba(255,255,255,.35);color:inherit}
+.sw-skc-card.grants{border-left-color:#2f7a2f;background:rgba(80,160,70,.12)}
+.sw-skc-card-head{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline}
+.sw-skc-card-title{font-variant:small-caps;font-size:14px;width:100%}
+.sw-skc-card-class,.sw-skc-card-grant,.sw-skc-card-limit,.sw-skc-card-calc{font-size:12px}
+.sw-skc-card.grants .sw-skc-card-grant i{color:#2f7a2f}.sw-skc-card:not(.grants) .sw-skc-card-grant i{color:#a46a12}
+.sw-skc-card-calc{margin-top:2px}.sw-skc-card-calc .lbl{opacity:.75}.sw-skc-card-calc small{opacity:.75}
+.sw-skc-card-calc .part.rule,.sw-skc-card-calc .part.player{font-weight:bold}
+body.theme-dark .sw-skc-card,.theme-dark .sw-skc-card{background:rgba(0,0,0,.25);border-color:#6b5233}
+body.theme-dark .sw-skc-card.grants,.theme-dark .sw-skc-card.grants{border-left-color:#8fd27f;background:rgba(110,190,90,.14)}
+body.theme-dark .sw-skc-card.grants .sw-skc-card-grant i,.theme-dark .sw-skc-card.grants .sw-skc-card-grant i{color:#8fd27f}

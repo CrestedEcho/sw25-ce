@@ -149,6 +149,9 @@ test("race appearance: portraits optional, default paths, missing files hidden",
   assert.deepEqual(t.portraits, { male: "", female: "" }); assert.equal(t.appearance, "");
   const hbs = fs.readFileSync(new URL("../templates/item/item-race-sheet.hbs", import.meta.url), "utf8");
   assert.ok(hbs.indexOf("sw-race-appearance") < hbs.indexOf('target="system.description"'), "appearance shown before the description");
+  // ce.23: portraits, appearance and description live on the Bio tab; Combat keeps only the racial abilities
+  const bio = fs.readFileSync(new URL("../templates/actor/parts/actor-race-bio.hbs", import.meta.url), "utf8");
+  assert.ok(bio.includes("raceInfo.appearance") && bio.includes("raceInfo.portraits") && bio.includes("raceInfo.description"));
   const card = fs.readFileSync(new URL("../templates/actor/parts/actor-ce7-feats.hbs", import.meta.url), "utf8");
-  assert.ok(card.includes("sw-raceinfo-appearance") && card.includes("raceInfo.portraits"));
+  assert.ok(!card.includes("raceInfo.portraits") && !card.includes("raceInfo.appearance"));
 });

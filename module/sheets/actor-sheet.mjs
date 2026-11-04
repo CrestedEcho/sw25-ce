@@ -27,6 +27,7 @@ import { spellTypeOf, SPELL_TYPES } from "../rules/spell-school.mjs";
 import * as RE from "../rules/engine.mjs";
 import * as RACE from "../rules/race.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
+import { skillCheckModel, initiativeModel, bindSkillCheckListeners } from "./skill-check-ui.mjs";
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -171,9 +172,9 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.rollData = context.actor.getRollData();
 
     // ce.21 F1: race appearance text, enriched for the race card (links, inline roll buttons).
-    if (context.raceInfo?.appearance) {
+    for (const f of ["appearance", "description"]) if (context.raceInfo?.[f]) {
       const TE = foundry.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
-      try { context.raceInfo.appearance = await TE.enrichHTML(context.raceInfo.appearance, { secrets: this.actor.isOwner, rollData: context.rollData }); } catch { /* keep raw */ }
+      try { context.raceInfo[f] = await TE.enrichHTML(context.raceInfo[f], { secrets: this.actor.isOwner, rollData: context.rollData }); } catch { /* keep raw */ }
     }
 
     // Prepare active effects
@@ -757,7 +758,7 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // ce.21 F1: race item (text notes) and creation dice (players roll them; never auto-rolled).
     const raceItem = this.actor.items.find((i) => i.type === "race");
     context.raceInfo = raceItem ? { id: raceItem.id, name: raceItem.name, img: raceItem.img, languages: raceItem.system.languages ?? "", restricted: raceItem.system.restricted ?? "",
-      portraits: RACE.racePortraits(raceItem.system), appearance: String(raceItem.system.appearance ?? "").trim() } : null;   // enriched in getData
+      portraits: RACE.racePortraits(raceItem.system), appearance: String(raceItem.system.appearance ?? "").trim(), description: String(raceItem.system.description ?? "").trim() } : null;   // enriched in getData
     if (context.raceInfo) context.raceInfo.hasAppearance = !!(context.raceInfo.appearance || context.raceInfo.portraits.length);
     context.raceDice = RACE.ABIL_KEYS.some((k) => RACE.diceFormula(this.actor.system.abilities?.[k]?.dice));
     context.bmshow = bmshow;
@@ -791,6 +792,12 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.otherfeaturershow = otherfeatureresources.length > 0;
     context.contentItem = contentItem;
     context.bookmarks = sortedBookmarks;
+    // ce.23: Skill Checks (Classes tab) + Initiative button. Check items stay reachable in the "Custom" list.
+    if (this.actor.type === "character") {
+      try { context.skillChecks = skillCheckModel(this.actor); } catch (e) { console.warn("sw25 | skill checks", e); context.skillChecks = null; }
+      try { context.initiativeInfo = initiativeModel(this.actor); } catch (e) { console.warn("sw25 | initiative", e); context.initiativeInfo = null; }
+      context.checkItems = checks;
+    }
   }
 
   /* -------------------------------------------- */
@@ -843,6 +850,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     // -------------------------------------------------------------
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
+    // ce.23: Skill Checks rows, situational ± and the Initiative button (click only; never auto-rolls)
+    bindSkillCheckListeners(this, html);
 
     // ce.21 F1: creation rolls are always player-initiated; each posts to chat and fills its A-F score.
     html.on("click", ".sw-abroll", (ev) => { ev.preventDefault(); ev.stopPropagation(); RACE.rollAbilityScore(this.actor, ev.currentTarget.dataset.ab); });

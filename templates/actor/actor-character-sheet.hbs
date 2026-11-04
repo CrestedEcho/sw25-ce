@@ -20,6 +20,7 @@
           <label class="tog" data-tooltip="{{#if system.isToken}}{{localize "SW25.SwitchImage" image=(localize "SW25.ActorImage")}}{{else}}{{localize "SW25.SwitchImage" image=(localize "SW25.TokenImage")}}{{/if}}"><input type="checkbox" name="system.isToken" {{#if system.isToken}}checked{{/if}} data-dtype="Boolean"/><i class="fa-solid fa-circle-user"></i></label>
           {{/if}}
           <label class="tog" data-tooltip="{{localize "SW25.Fellow"}}"><input type="checkbox" name="system.toFellow" {{#if system.toFellow}}checked{{/if}} data-dtype="Boolean"/><i class="fa-solid fa-people-group"></i></label>
+          <a class="tog sw-init" data-tooltip="{{localize 'SW25.V2.Initiative.Tip'}}{{#if initiativeInfo}}: {{initiativeInfo.calc}}{{/if}}" aria-label="{{localize 'SW25.V2.Initiative.Title'}}"><i class="fa-solid fa-bolt"></i>{{#if initiativeInfo}}<b class="sw-init-v">{{initiativeInfo.value}}</b>{{/if}}</a>
           <label class="tog" data-tooltip="{{localize "SW25.Attributes.Grace"}}"><input type="checkbox" name="system.attributes.grace" {{#if system.attributes.grace}}checked{{/if}} data-dtype="Boolean"/><i class="fa-solid fa-chess-queen"></i></label>
           <label class="tog edit" data-tooltip="{{localize "SW25.V2.EditMode"}}"><input type="checkbox" name="system.isEdit" {{#if system.isEdit}}checked{{/if}} data-dtype="Boolean"/><i class="fa-solid fa-wrench"></i></label>
         </div>
@@ -209,7 +210,6 @@
   <section class="sheet-body v2-body">
 
     <div class="tab combat" data-group="primary" data-tab="combat">
-      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-wallet.hbs"}}
       <div class="panel">
         <span class="ribbon">{{localize "SW25.V2.Combat"}}</span>
         <div class="combat">
@@ -261,18 +261,14 @@
       <div class="panel ce7-weapons"><span class="ribbon">{{localize "SW25.V2.Weapons"}}</span>
         {{> "systems/sw25-ce/templates/actor/parts/actor-battleweapons.hbs"}}
       </div>
-      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-feats.hbs"}}
       {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-belt.hbs"}}
-      <div class="grid2">
-        <div class="panel"><span class="ribbon">{{localize "SW25.V2.CombatChecks"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-battlechecks.hbs"}}</div>
-        <div class="panel"><span class="ribbon">{{localize "SW25.V2.Resources"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-resources.hbs"}}</div>
-      </div>
+      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-feats.hbs"}}
+      <div class="panel"><span class="ribbon">{{localize "SW25.V2.Resources"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-resources.hbs"}}</div>
     </div>
 
     <div class="tab classes" data-group="primary" data-tab="classes">
       <div class="panel"><span class="ribbon">{{localize "SW25.V2.Classes"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-checkskills.hbs"}}</div>
-      <div class="panel"><span class="ribbon">{{localize "SW25.V2.Checks"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-checks.hbs"}}</div>
-      <div class="panel"><span class="ribbon">{{localize "SW25.V2.RaceAbilities"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-raceabilities.hbs"}}</div>
+      {{> "systems/sw25-ce/templates/actor/parts/actor-skillchecks.hbs"}}
       <div class="panel ce7-classes-feats"><span class="ribbon">{{localize "SW25.V2.Feats.Title"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-combatabilities.hbs"}}</div>
       <div class="panel"><span class="ribbon">{{localize "SW25.V2.NonCombatFeats"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-noncombatfeats.hbs"}}</div>
       
@@ -433,7 +429,7 @@
     </div>
 
     <div class="tab inventory" data-group="primary" data-tab="inventory">
-      <div class="money" data-tooltip="{{localize 'SW25.V2.Tip.Money'}}"><i class="fa-solid fa-coins"></i> {{localize "SW25.Mymoney"}} <b>{{system.money}}</b> G <span class="muted">({{localize "SW25.V2.Deposit"}} {{system.deposit}} G · {{localize "SW25.V2.Debt"}} {{system.debt}} G)</span></div>
+      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-wallet.hbs"}}
       <div class="panel"><span class="ribbon"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/item.svg)"></span> {{localize "SW25.V2.Items"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-items.hbs"}}</div>
       <div class="panel"><span class="ribbon"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/weapon.svg)"></span> {{localize "SW25.V2.Weapons"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-weapons.hbs"}}</div>
       <div class="panel"><span class="ribbon"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/armor.svg)"></span> {{localize "SW25.V2.Armour"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-armors.hbs"}}</div>
@@ -448,6 +444,7 @@
     </div>
 
     <div class="tab bio" data-group="primary" data-tab="bio">
+      {{> "systems/sw25-ce/templates/actor/parts/actor-race-bio.hbs"}}
       <div class="grid2">
         <div class="panel"><span class="ribbon">{{localize "SW25.Languages"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-languages.hbs"}}</div>
         <div class="panel"><span class="ribbon">{{localize "SW25.V2.Details"}}</span>
