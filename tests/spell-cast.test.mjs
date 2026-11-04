@@ -3,10 +3,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as RE from "../module/rules/engine.mjs";
 import * as SC from "../module/rules/spell-cast.mjs";
+import { testWithGeneratedData } from "./helpers/optional-gen-data.mjs";
 
 const load = (p) => JSON.parse(fs.readFileSync(new URL(`../../gen/data/${p}`, import.meta.url)));
 
-test("priest influence surcharge: spell-kind rule, by deity rank, per cast", () => {
+testWithGeneratedData("priest influence surcharge: spell-kind rule, by deity rank, per cast", () => {
   const pr = load("classes/priest.json");
   const { active, notes } = RE.collectRules([{ id: "priest", name: "Priest", type: "skill", level: 3, rules: pr.rules, choices: { god: "tidan" } }]);
   assert.ok(!notes.some((n) => n.key === "spell.mpSurcharge.outOfInfluence"));
@@ -20,7 +21,7 @@ test("priest influence surcharge: spell-kind rule, by deity rank, per cast", () 
   assert.equal(SC.costLabel({ base: 5, surcharge: 1 }), "5 +1 outside influence = 6");
 });
 
-test("Metamagic/Targets: single-target spells only, MP x targets (+ surcharge per cast)", () => {
+testWithGeneratedData("Metamagic/Targets: single-target spells only, MP x targets (+ surcharge per cast)", () => {
   const mm = load("feats/metamagic-targets.json");
   const { active, notes } = RE.collectRules([{ id: "mm", name: "Metamagic/Targets", type: "combatability", level: 1, rules: mm.rules }]);
   assert.equal(notes.length, 0);

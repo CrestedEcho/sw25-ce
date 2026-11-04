@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { prepareStatBlock, parseMovement, dispositionFor, statBlockFromData, STAT_DEFAULTS } from "../module/rules/statblock.mjs";
 import { toDoc } from "../tools/build-compendia.mjs";
-const kobold = JSON.parse(fs.readFileSync(new URL("../../gen/data/monsters/kobold.json", import.meta.url)));
+import { hasGeneratedData, testWithGeneratedData } from "./helpers/optional-gen-data.mjs";
+const kobold = hasGeneratedData
+  ? JSON.parse(fs.readFileSync(new URL("../../gen/data/monsters/kobold.json", import.meta.url)))
+  : null;
 const tpl = JSON.parse(fs.readFileSync(new URL("../template.json", import.meta.url)));
 
 test("template: sb on npc and monster, loot+weakness on both", () => {
@@ -11,7 +14,7 @@ test("template: sb on npc and monster, loot+weakness on both", () => {
   assert.deepEqual(Object.keys(tpl.Actor.monster.sb).sort(), Object.keys(STAT_DEFAULTS()).filter((k) => k !== "movementSpeed").sort());
 });
 
-test("movement: legacy movementSpeed (kobold) and object/string forms", () => {
+testWithGeneratedData("movement: legacy movementSpeed (kobold) and object/string forms", () => {
   const sb = prepareStatBlock(statBlockFromData(kobold));
   assert.equal(sb.movement.ground, 12); assert.equal(sb.movementSpeed, 12);
   assert.deepEqual(parseMovement("10(Quadrupedal)/20(Flight)"), { ground: 10, groundMode: "Quadrupedal", other: 20, otherMode: "Flight" });
@@ -48,7 +51,7 @@ test("hostile toggle / attitude -> disposition", () => {
   assert.equal(dispositionFor({ disposition: "Hostile", neutral: true }, "monster"), "NEUTRAL");
 });
 
-test("kobold builds into monster with sb, loot, prototype disposition", () => {
+testWithGeneratedData("kobold builds into monster with sb, loot, prototype disposition", () => {
   const d = toDoc("monsters", { ...kobold, slug: "kobold" });
   assert.equal(d.type, "monster");
   assert.equal(d.system.sb.loot.length, kobold.loot.length);

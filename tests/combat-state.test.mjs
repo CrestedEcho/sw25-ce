@@ -3,12 +3,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as RE from "../module/rules/engine.mjs";
 import * as CS from "../module/rules/combat-state.mjs";
+import { testWithGeneratedData } from "./helpers/optional-gen-data.mjs";
 
 const load = (p) => JSON.parse(fs.readFileSync(new URL(`../../gen/data/${p}`, import.meta.url)));
 const feat = (j) => ({ id: j.slug, name: j.name, type: "combatability", level: 1, rules: j.rules, choices: {} });
 const sword = { category: "sword", checkskill: "Fighter" };
 
-test("declarations: toggle, one attack, lingering risk, turn start", () => {
+testWithGeneratedData("declarations: toggle, one attack, lingering risk, turn start", () => {
   let s = CS.toggleDeclare(null, ["power-strike"], true);
   assert.deepEqual(s, { active: ["power-strike"], lingering: ["power-strike"] });
   assert.ok(CS.isDeclared(s, "power-strike"));
@@ -20,7 +21,7 @@ test("declarations: toggle, one attack, lingering risk, turn start", () => {
   assert.deepEqual(CS.declaredSlugs(load("feats/power-strike-i.json").rules), ["power-strike"]);
 });
 
-test("Power Strike: +4 only while declared; Evasion -2 until next turn", () => {
+testWithGeneratedData("Power Strike: +4 only while declared; Evasion -2 until next turn", () => {
   const { active } = RE.collectRules([feat(load("feats/power-strike-i.json"))]);
   const dmg = (ctx) => RE.weaponExtras(active, sword, ctx).extraDamage.value;
   const ev = (ctx) => RE.rulesFor(active.filter((r) => r.kind === "actor"), "evasion", ctx).rules.length;
@@ -34,7 +35,7 @@ test("Power Strike: +4 only while declared; Evasion -2 until next turn", () => {
   assert.equal(RE.weaponExtras(active, { category: "bow" }, { declared: ["power-strike"] }).extraDamage.value, 0, "melee only");
 });
 
-test("attack.noStray is a passive flag; equip.rankAllowed checks rank by category", () => {
+testWithGeneratedData("attack.noStray is a passive flag; equip.rankAllowed checks rank by category", () => {
   const tg = RE.collectRules([feat(load("feats/targeting.json"))]);
   assert.equal(tg.notes.length, 0);
   assert.equal(RE.ruleFlags(tg.active).noStray, true);
@@ -52,7 +53,7 @@ test("attack.noStray is a passive flag; equip.rankAllowed checks rank by categor
   assert.equal(RE.rankCheck(a, { type: "weapon", category: "metalarmor", rank: "A" }).ok, false, "armor feat does not cover weapons");
 });
 
-test("Dodge: counter.track defs, manual +/- badge state, @counter value, resets", () => {
+testWithGeneratedData("Dodge: counter.track defs, manual +/- badge state, @counter value, resets", () => {
   const dg = load("feats/dodge.json");
   const src = (counters) => RE.collectRules([feat(dg)], { data: { counters } });
   const { active, notes } = src({ "dodge.evasions": 2 });
@@ -71,7 +72,7 @@ test("Dodge: counter.track defs, manual +/- badge state, @counter value, resets"
   assert.equal(RE.evalValue("-@counter:dodge.evasions", { counters: { "dodge.evasions": 3 } }), -3);
 });
 
-test("Chain Attack: extra attack button only for 1H melee wrestling", () => {
+testWithGeneratedData("Chain Attack: extra attack button only for 1H melee wrestling", () => {
   const { active, notes } = RE.collectRules([feat(load("feats/chain-attack.json"))]);
   assert.equal(notes.length, 0);
   const x = RE.extraAttacks(active, { category: "Wrestling", usage: "1H", ranged: false });
@@ -82,7 +83,7 @@ test("Chain Attack: extra attack button only for 1H melee wrestling", () => {
   assert.equal(RE.extraAttacks(active, { category: "Wrestling", usage: "1H#", ranged: true }).length, 0, "ranged");
 });
 
-test("Cover I: defense.coverAlly is a declared, text-only rule", () => {
+testWithGeneratedData("Cover I: defense.coverAlly is a declared, text-only rule", () => {
   const { active, notes } = RE.collectRules([feat(load("feats/cover-i.json"))], { ctx: { declared: [], lingering: ["cover-i"] } });
   assert.equal(notes.length, 0);
   const r = active.find((x) => x.target === "coverAlly");

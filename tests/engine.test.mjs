@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as RE from "../module/rules/engine.mjs";
+import { testWithGeneratedData } from "./helpers/optional-gen-data.mjs";
 
 const load = (p) => JSON.parse(fs.readFileSync(new URL(`../../gen/data/${p}`, import.meta.url)));
 const cls = (j, level, extra = {}) => ({ id: j.slug, name: j.name, type: "skill", level, rules: j.rules, choices: {}, ...extra });
@@ -44,7 +45,7 @@ test("misc modifier then locked manual override wins", () => {
   assert.ok(rep.evasion.overridden);
 });
 
-test("Fencer (Writer data): crit -1 attack-only, half STR round-up for all gear, legacy shape", () => {
+testWithGeneratedData("Fencer (Writer data): crit -1 attack-only, half STR round-up for all gear, legacy shape", () => {
   const fencer = load("classes/fencer.json");
   const { active, notes } = RE.collectRules([cls(fencer, 2)]);
   assert.equal(notes.length, 0);
@@ -57,7 +58,7 @@ test("Fencer (Writer data): crit -1 attack-only, half STR round-up for all gear,
   assert.equal(L.critMod, 0, "attack-only crit not global");
 });
 
-test("Fighter (Writer data) adds nothing: sheet already adds class level", () => {
+testWithGeneratedData("Fighter (Writer data) adds nothing: sheet already adds class level", () => {
   const { active, notes } = RE.collectRules([cls(load("classes/fighter.json"), 5)]);
   assert.equal(active.length + notes.length, 0);
 });
@@ -72,12 +73,12 @@ test("legacy ce.7 object rules adapt identically", () => {
   assert.deepEqual(RE.normalizeRules(zero), [], "Ellen default rules stay inert");
 });
 
-test("spell.armorPenalty maps onto castPenalty (Sorcerer)", () => {
+testWithGeneratedData("spell.armorPenalty maps onto castPenalty (Sorcerer)", () => {
   const L = RE.toLegacy(RE.collectRules([cls(load("classes/sorcerer.json"), 3)]).active);
   assert.deepEqual(L.castPenalty.Sorcerer, { metal: 4, nonmetal: 2, nonmetalMinStr: 10 });
 });
 
-test("check.penalty is predicate-gated by armour (Scout)", () => {
+testWithGeneratedData("check.penalty is predicate-gated by armour (Scout)", () => {
   const { active } = RE.collectRules([cls(load("classes/scout.json"), 1)]);
   const none = RE.checkMods(active, { armors: [] })[0];
   const metal = RE.checkMods(active, { armors: [{ category: "metalarmor" }] })[0];
@@ -87,7 +88,7 @@ test("check.penalty is predicate-gated by armour (Scout)", () => {
   assert.equal(metal.value, -4);
 });
 
-test("weapon extras: usesThisClass, melee, declared is situational, @choice category", () => {
+testWithGeneratedData("weapon extras: usesThisClass, melee, declared is situational, @choice category", () => {
   const ps = load("feats/power-strike-i.json");
   const wp = load("feats/weapon-proficiency-a.json");
   const src = [{ name: "Power Strike I", type: "combatability", level: 3, rules: ps.rules },
@@ -111,7 +112,7 @@ test("unknown keys and predicates are kept as notes, never errors", () => {
   assert.deepEqual(r.situational[0].notes, ["moon.full"]);
 });
 
-test("Priest surcharge resolves by god rank (spell-kind rule for the cast dialog)", () => {
+testWithGeneratedData("Priest surcharge resolves by god rank (spell-kind rule for the cast dialog)", () => {
   const priest = load("classes/priest.json");
   const { active } = RE.collectRules([{ ...cls(priest, 1), selectors: { godRank: "minor" } }]);
   const r = active.find((x) => x.key === "spell.mpSurcharge.outOfInfluence");
@@ -119,7 +120,7 @@ test("Priest surcharge resolves by god rank (spell-kind rule for the cast dialog
   assert.equal(r.value, 2);
 });
 
-test("every Writer class/feat rule key resolves (or is documented in RULE_KEYS.md, pending engine approval)", () => {
+testWithGeneratedData("every Writer class/feat rule key resolves (or is documented in RULE_KEYS.md, pending engine approval)", () => {
   const dir = new URL("../../gen/data/", import.meta.url);
   const documented = new Set([...fs.readFileSync(new URL("RULE_KEYS.md", dir), "utf8").matchAll(/^\|\s*`([\w.]+)`/gm)].map((m) => m[1]));
   const unknown = [];

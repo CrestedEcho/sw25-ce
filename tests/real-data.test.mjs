@@ -3,21 +3,24 @@ import assert from "node:assert/strict";
 import fs from "node:fs"; import path from "node:path";
 import { planGrants } from "../module/rules/engine.mjs";
 import { listData, toDoc, exptableOf, checkRefs, inlineItems } from "../tools/build-compendia.mjs";
+import { hasGeneratedData, testWithGeneratedData } from "./helpers/optional-gen-data.mjs";
 
 const DATA = new URL("../../gen/data/", import.meta.url).pathname;
 const cats = ["classes", "feats", "spells", "items", "monsters", "gods"];
-const all = cats.flatMap((cat) => listData(path.join(DATA, cat)).map((d) => ({ cat, d })));
+const all = hasGeneratedData
+  ? cats.flatMap((cat) => listData(path.join(DATA, cat)).map((d) => ({ cat, d })))
+  : [];
 const bySlug = (cat) => new Map(all.filter((x) => x.cat === cat).map((x) => [x.d.slug, x.d]));
 const priest = bySlug("classes").get("priest");
 const gods = bySlug("gods"); const spells = bySlug("spells");
 
-test("Priest god choice lists exactly the 30 gods, all present", () => {
+testWithGeneratedData("Priest god choice lists exactly the 30 gods, all present", () => {
   const ch = priest.autoFeats.find((g) => g.choose === "god");
   assert.equal(gods.size, 30);
   assert.deepEqual([...ch.options].sort(), [...gods.keys()].sort());
 });
 
-test("each god's special spells are granted only for that god, at their level, and resolve", () => {
+testWithGeneratedData("each god's special spells are granted only for that god, at their level, and resolve", () => {
   for (const [id, god] of gods) {
     const at15 = planGrants(priest.autoFeats, 15, { god: id }, []);
     const special = at15.add.map((a) => a.ref).filter((r) => r.startsWith("divine-"));
@@ -32,7 +35,7 @@ test("each god's special spells are granted only for that god, at their level, a
   }
 });
 
-test("switching god removes old special spells and adds new ones", () => {
+testWithGeneratedData("switching god removes old special spells and adds new ones", () => {
   const lyphos = planGrants(priest.autoFeats, 5, { god: "lyphos" }, []).want.map((w, i) => ({ id: `i${i}`, ref: w.ref }));
   const p = planGrants(priest.autoFeats, 5, { god: "tidan" }, lyphos);
   const removed = p.remove.map((id) => lyphos.find((g) => g.id === id).ref);
@@ -40,12 +43,12 @@ test("switching god removes old special spells and adds new ones", () => {
   assert.ok(p.add.every((a) => a.ref.startsWith("divine-tidan/")));
 });
 
-test("nested spell slugs are unique (vampiric-weapon exists under several gods)", () => {
+testWithGeneratedData("nested spell slugs are unique (vampiric-weapon exists under several gods)", () => {
   const s = all.filter((x) => x.cat === "spells").map((x) => x.d.slug);
   assert.equal(new Set(s).size, s.length);
 });
 
-test("exptable: major A, minor B on every class", () => {
+testWithGeneratedData("exptable: major A, minor B on every class", () => {
   for (const [slug, c] of bySlug("classes")) {
     const t = toDoc("classes", c).system.exptable;
     assert.equal(t, c.category === "major" ? "A" : "B", slug);
@@ -53,7 +56,7 @@ test("exptable: major A, minor B on every class", () => {
   }
 });
 
-test("unknown new fields kept verbatim in flags", () => {
+testWithGeneratedData("unknown new fields kept verbatim in flags", () => {
   for (const slug of ["dark-hunter", "geomancer", "fairy-tamer", "bard"]) {
     const c = bySlug("classes").get(slug); if (!c) continue;
     assert.deepEqual(toDoc("classes", c).flags["sw25-ce"].data, c);
@@ -61,7 +64,7 @@ test("unknown new fields kept verbatim in flags", () => {
   assert.ok(bySlug("classes").get("fairy-tamer")?.fairyContract);
 });
 
-test("Grappler Throw inline weapon becomes an item; refs report", async () => {
+testWithGeneratedData("Grappler Throw inline weapon becomes an item; refs report", async () => {
   const inl = inlineItems([...bySlug("classes").values()]);
   const thr = inl.find((x) => x.slug === "throw");
   assert.equal(thr.type, "weapon");
