@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Dev-only tooling for sw25-ce. Not needed to run the system; nothing here ships in the release zip.",
   "scripts": {
-    "test": "node --test ../tests/",
+    "test": "node --test ../tests/*.test.mjs",
     "check": "node check-syntax.mjs",
     "packs:unpack": "node packs.mjs unpack",
     "packs:build": "node packs.mjs build",
