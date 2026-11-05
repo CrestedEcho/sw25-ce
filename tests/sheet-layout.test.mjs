@@ -27,6 +27,10 @@ test("classes tab: skill checks replace Checks + Race Abilities panels", () => {
   assert.ok(p.includes("skc-class") && p.includes("skc-roll") && p.includes("skc-mod") && p.includes("actor-checks.hbs"));
   assert.ok(!/\bname="/.test(p.replace(/actor-checks\.hbs[^}]*}}/, "")), "selects/inputs save via flags, not form names");
 });
+test("Skill Checks partial is preloaded under the referenced filename", () => {
+  const preloader = rd("module/helpers/templates.mjs");
+  assert.ok(preloader.includes("systems/sw25-ce/templates/actor/parts/actor-skillchecks.hbs"));
+});
 test("bio tab has the race card; initiative button sits next to Fellow", () => {
   assert.ok(tab("bio").includes("actor-race-bio"));
   const fel = sheet.indexOf("toFellow"), init = sheet.indexOf("sw-init");

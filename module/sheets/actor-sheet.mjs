@@ -29,6 +29,20 @@ import * as RACE from "../rules/race.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
 import { skillCheckModel, initiativeModel, bindSkillCheckListeners } from "./skill-check-ui.mjs";
 
+/** Convert embedded Documents to source data before Foundry deep-merges sheet options. */
+function plainRenderOptions(value, seen = new WeakMap()) {
+  if (!value || typeof value !== "object") return value;
+  if (typeof value.toObject === "function" && typeof value.documentName === "string") {
+    return plainRenderOptions(value.toObject(), seen);
+  }
+  if (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) return value;
+  if (seen.has(value)) return seen.get(value);
+  const copy = Array.isArray(value) ? [] : {};
+  seen.set(value, copy);
+  for (const [key, child] of Object.entries(value)) copy[key] = plainRenderOptions(child, seen);
+  return copy;
+}
+
 /**
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {ActorSheet}
@@ -121,7 +135,13 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
   /** @override */
   async _render(force, options) {
     try {
-      const r = await super._render(force, options);
+      // Foundry's V1 renderer deep-merges application options. A live
+      // TokenDocument nested in those options has a read-only _id, so the
+      // merge can fail. Preserve document data while leaving this.actor
+      // (including synthetic token actors) untouched.
+      if (this.options) this.options = plainRenderOptions(this.options);
+      const renderOptions = options ? plainRenderOptions(options) : options;
+      const r = await super._render(force, renderOptions);
       globalThis.sw25ApplyTheme?.(this.element?.[0] ?? this.element);
       this._sw25BindDrop(this.element?.[0]);
       this._sw25EqcNarrow();

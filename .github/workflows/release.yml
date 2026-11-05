@@ -125,6 +125,7 @@ jobs:
                   "module/sw25.mjs",
                   "css/sw25.css",
                   "lang/en.json",
+                  "templates/actor/parts/actor-skillchecks.hbs",
               }
               missing = required - names
               assert not missing, f"Missing required root-level files: {sorted(missing)}"
