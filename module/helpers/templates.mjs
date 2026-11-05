@@ -43,6 +43,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/sw25-ce/templates/actor/parts/actor-essenceweave.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-otherfeature.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-raceabilities.hbs",
+    "systems/sw25-ce/templates/actor/parts/actor-race-bio.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-languages.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells.hbs",
     "systems/sw25-ce/templates/actor/parts/actor-spells-sorcerer.hbs",

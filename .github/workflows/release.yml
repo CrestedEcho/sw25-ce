@@ -126,6 +126,7 @@ jobs:
                   "css/sw25.css",
                   "lang/en.json",
                   "templates/actor/parts/actor-skillchecks.hbs",
+                  "templates/actor/parts/actor-race-bio.hbs",
               }
               missing = required - names
               assert not missing, f"Missing required root-level files: {sorted(missing)}"
