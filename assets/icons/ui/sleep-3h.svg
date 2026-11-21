@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" aria-hidden="true">
+  <title>Sleep 3 hours</title>
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M 292 28
+    C 214 36, 154 108, 154 192
+    C 154 280, 226 348, 316 348
+    C 286 312, 276 264, 276 216
+    C 276 128, 322 60, 386 40
+    C 358 32, 324 28, 292 28
+    Z"/>
+  <path fill="currentColor" d="
+    M 140 336
+    L 400 336
+    A 62 62 0 0 1 400 460
+    L 140 460
+    Z"/>
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M 140 322
+    A 70 70 0 1 1 139.99 322
+    Z
+    M 140 364
+    A 30 30 0 1 1 139.99 364
+    Z"/>
+  <path fill="currentColor" d="
+    M 268 312
+    H 332
+    A 16 16 0 0 1 332 344
+    H 268
+    A 16 16 0 0 1 268 312
+    Z"/>
+</svg>

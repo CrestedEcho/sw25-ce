@@ -506,13 +506,13 @@ form.sw25v2-lite .fairylight{color:rgb(var(--fairy-light-color))!important}form.
 body.theme-dark .sw-skc-card,.theme-dark .sw-skc-card{background:rgba(0,0,0,.25);border-color:#6b5233}
 body.theme-dark .sw-skc-card.grants,.theme-dark .sw-skc-card.grants{border-left-color:#8fd27f;background:rgba(110,190,90,.14)}
 body.theme-dark .sw-skc-card.grants .sw-skc-card-grant i,.theme-dark .sw-skc-card.grants .sw-skc-card-grant i{color:#8fd27f}
-/* ---- ce.25: icon slots. Each icon is ONE file; replace the file (same name) or change the url here. Mono masks (currentColor). ---- */
-.sw25v2 .ico.i-soulscars{--i:url(../assets/icons/soulscars.svg)}
-.sw25v2 .ico.i-sleep-3h{--i:url(../assets/icons/sleep-3h.svg)}
-.sw25v2 .ico.i-sleep-6h{--i:url(../assets/icons/sleep-6h.svg)}
-.sw25v2 .ico.i-stance-1h{--i:url(../assets/icons/stance-1h.svg)}
-.sw25v2 .ico.i-stance-2h{--i:url(../assets/icons/stance-2h.svg)}
-.sw25v2 .ico.i-natural{--i:url(../assets/icons/ranger-natural.svg)}
+/* ---- ce.25: icon slots (Artist's icons in assets/icons/ui/; PNG fallbacks beside them). One file per icon; change the url here to swap. Mono masks (currentColor). ---- */
+.sw25v2 .ico.i-soulscars{--i:url(../assets/icons/ui/soulscars.svg)}
+.sw25v2 .ico.i-sleep-3h{--i:url(../assets/icons/ui/sleep-3h.svg)}
+.sw25v2 .ico.i-sleep-6h{--i:url(../assets/icons/ui/sleep-6h.svg)}
+.sw25v2 .ico.i-stance-1h{--i:url(../assets/icons/ui/stance-1h.svg)}
+.sw25v2 .ico.i-stance-2h{--i:url(../assets/icons/ui/stance-2h.svg)}
+.sw25v2 .ico.i-natural{--i:url(../assets/icons/ui/ranger-nature.svg)}
 /* ce.25: Soulscars + Sleep row */
 .sw25v2 .sw-vitals2{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
 .sw25v2 .sw-soulscars{display:flex;align-items:center;gap:5px;border:2px solid var(--gold);border-radius:12px;padding:0 10px;height:24px;background:rgba(0,0,0,.08);font-weight:bold}
@@ -529,7 +529,7 @@ body.theme-dark .sw-skc-card.grants .sw-skc-card-grant i,.theme-dark .sw-skc-car
 .sw25v2 .sw-skc:not(.sw-advrolls) .skc-row{grid-template-columns:minmax(0,1fr) 100px 46px 44px 38px 50px}
 .sw25v2 .skc-row .skc-time{font-size:11px;color:var(--muted);font-style:italic;text-align:center;white-space:nowrap}
 .sw25v2 .skc-row.flat{opacity:.55}.sw25v2 .skc-row.flat:hover{opacity:.9}
-.sw25v2 .skc-row .skc-natural{width:13px;height:13px;color:#2e6b34;vertical-align:-.1em}
+.sw25v2 .skc-row .skc-natural{width:1em;height:1em;color:#2e6b34;vertical-align:-.1em}
 /* ce.25: modifier "why" */
 .sw25v2 .sw-mods-why{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px}
 .sw25v2 .sw-mods-why .modf-head{grid-column:1/-1;display:none}

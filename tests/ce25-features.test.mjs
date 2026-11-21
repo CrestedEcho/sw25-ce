@@ -203,9 +203,9 @@ test("sheet: Soulscars on impurity, sleep buttons, Session Notes tab, Background
 });
 test("icon slots: one file per icon, referenced from one CSS block", () => {
   const css = rd("css/sw25-sheet-v2.css");
-  for (const f of ["soulscars", "sleep-3h", "sleep-6h", "stance-1h", "stance-2h", "ranger-natural"]) {
-    assert.ok(fs.existsSync(new URL(`../assets/icons/${f}.svg`, import.meta.url)), f);
-    assert.equal((css.match(new RegExp(`assets/icons/${f}\\.svg`, "g")) ?? []).length, 1, f);
+  for (const f of ["soulscars", "sleep-3h", "sleep-6h", "stance-1h", "stance-2h", "ranger-nature"]) {
+    for (const ext of [".svg", "-64.png", "-128.png"]) assert.ok(fs.existsSync(new URL(`../assets/icons/ui/${f}${ext}`, import.meta.url)), f + ext);
+    assert.equal((css.match(new RegExp(`assets/icons/ui/${f}\\.svg`, "g")) ?? []).length, 1, f);
   }
 });
 test("new ce.25 logic never hardcodes class names", () => {

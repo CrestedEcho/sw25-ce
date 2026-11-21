@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" aria-hidden="true">
+  <title>Two-handed stance</title>
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M 256 10
+    L 292 78
+    L 286 198
+    L 352 194
+    L 374 206
+    L 356 234
+    L 286 224
+    L 286 242
+    L 226 242
+    L 226 224
+    L 156 234
+    L 138 206
+    L 160 194
+    L 226 198
+    L 220 78
+    Z
+    M 256 48
+    L 270 86
+    L 266 184
+    L 246 184
+    L 242 86
+    Z"/>
+  <path fill="currentColor" d="M 226 242 H 286 V 256 H 226 Z"/>
+  <path fill="currentColor" d="
+    M 226 256
+    C 208 250, 170 246, 152 262
+    C 136 278, 148 298, 178 304
+    C 190 307, 204 304, 216 300
+    L 218 342
+    C 222 354, 236 360, 256 360
+    L 298 360
+    C 330 360, 354 346, 354 320
+    C 354 300, 338 288, 326 284
+    C 342 274, 340 256, 318 256
+    Z"/>
+  <path fill="currentColor" d="M 226 360 H 286 V 374 H 226 Z"/>
+  <path fill="currentColor" d="
+    M 226 374
+    C 206 368, 166 364, 146 380
+    C 128 396, 140 418, 174 424
+    C 186 427, 204 424, 216 420
+    L 218 462
+    C 222 474, 236 480, 256 480
+    L 300 480
+    C 334 480, 360 466, 360 438
+    C 360 418, 344 404, 330 400
+    C 346 390, 344 372, 320 374
+    Z"/>
+  <path fill="currentColor" d="M 226 478 H 286 V 486 H 226 Z"/>
+  <circle fill="currentColor" cx="256" cy="492" r="18"/>
+</svg>

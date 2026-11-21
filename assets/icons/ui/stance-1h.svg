@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" aria-hidden="true">
+  <title>One-handed stance</title>
+  <path fill="currentColor" fill-rule="evenodd" d="
+    M 256 12
+    L 294 84
+    L 288 240
+    L 354 236
+    L 376 248
+    L 358 278
+    L 288 268
+    L 288 292
+    L 224 292
+    L 224 268
+    L 154 278
+    L 136 248
+    L 158 236
+    L 224 240
+    L 218 84
+    Z
+    M 256 54
+    L 272 94
+    L 268 224
+    L 244 224
+    L 240 94
+    Z"/>
+  <path fill="currentColor" d="M 224 292 H 288 V 322 H 224 Z"/>
+  <path fill="currentColor" d="
+    M 224 322
+    C 204 316, 168 312, 148 328
+    C 132 344, 144 366, 176 372
+    C 188 375, 204 372, 216 368
+    L 218 444
+    C 222 460, 236 468, 256 468
+    L 300 468
+    C 336 468, 364 452, 366 420
+    C 368 396, 350 382, 336 376
+    C 352 364, 350 338, 326 322
+    Z"/>
+  <path fill="currentColor" d="M 224 466 H 288 V 478 H 224 Z"/>
+  <circle fill="currentColor" cx="256" cy="490" r="22"/>
+</svg>
