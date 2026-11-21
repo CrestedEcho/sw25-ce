@@ -29,9 +29,11 @@ test("grantsOf: single-check packages, array limits become notes, multi-section 
 test("shipped catalog has no class names and excludes nothing important", () => {
   const src = fs.readFileSync(new URL("../module/data/skill-check-catalog.mjs", import.meta.url), "utf8");
   assert.doesNotMatch(src, /scout|ranger|sage|rider|bard|fighter|geomancer|alchemist|tactician/i);
-  for (const id of ["tumble", "search", "monster-knowledge", "jump", "swim", "insight"]) assert.ok(SKILL_CHECK_CATALOG.some((c) => c.id === id), id);
-  assert.equal(SKILL_CHECK_CATALOG.find((c) => c.id === "jump").ability, "agi");
-  assert.equal(SKILL_CHECK_CATALOG.find((c) => c.id === "swim").ability, "agi");
+  for (const id of ["tumble", "search", "monster-knowledge", "insight", "performance"]) assert.ok(SKILL_CHECK_CATALOG.some((c) => c.id === id), id);
+  // ce.25: Jump and Swim moved to the Adventurer Rolls card (Adventurer level + Agi), so they don't show twice
+  for (const id of ["jump", "swim"]) assert.ok(!SKILL_CHECK_CATALOG.some((c) => c.id === id), id);
+  assert.equal(SK.ADVENTURER_CHECKS.find((c) => c.id === "jump").ability, "agi");
+  assert.equal(SK.ADVENTURER_CHECKS.find((c) => c.id === "swim").ability, "agi");
 });
 
 test("default class = highest-level granting class; green only when the chosen class grants", () => {

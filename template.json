@@ -436,7 +436,8 @@
           "value": null,
           "locked": false
         }
-      }
+      },
+      "background": ""
     },
     "npc": {
       "templates": [
@@ -855,7 +856,15 @@
       "usage": "",
       "hit": 0,
       "dmod": 0,
-      "range": ""
+      "range": "",
+      "altgrip": {
+        "usage": "",
+        "hit": 0,
+        "dmod": 0,
+        "power": "",
+        "cvalue": 10,
+        "reqstr": ""
+      }
     },
     "armor": {
       "templates": [

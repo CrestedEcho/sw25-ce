@@ -12,10 +12,29 @@ export const GROUP_ORDER = ["technique", "movement", "observation", "knowledge",
 export const ABILITY_KEYS = ["dex", "agi", "str", "vit", "int", "mnd"];
 /** Checks with a fixed ability that are not in a class package (or whose package has no ability). */
 export const EXTRA_CHECKS = [
-  { id: "jump", group: "other", ability: "agi" },
-  { id: "swim", group: "other", ability: "agi" },
   { id: "performance", group: "other", ability: "mnd" },
 ];
+/** ce.25 Adventurer Rolls card: Adventurer level + ability bonus (always available). Jump / Swim live here, not in the class list. */
+export const ADVENTURER_CHECKS = [
+  { id: "climb", ability: "str", times: ["1min"] },
+  { id: "strength", ability: "str", times: ["1round"] },
+  { id: "jump", ability: "agi", times: ["1round"] },
+  { id: "detect", ability: "int", times: ["1round"] },
+  { id: "swim", ability: "agi", times: ["1min", "1round"] },
+];
+export const ADV_PREFIX = "adv-";
+/** How long a check takes (data only; unknown ids show blank). Codes are localized as SW25.V2.SkillChecks.Time.<code>. */
+export const CHECK_TIMES = {
+  acrobatics: "1min", appraise: "10min", appraisal: "10min", archaeology: "10min", cartography: "10min", climb: "1min",
+  conceal: "1min", concealment: "1min", "danger-sense": "instant", "sense-danger": "instant", detect: "1round",
+  "disable-device": "1min", disable: "1min", disguise: "10min", "evade-trap": "instant", "spot-trap": "instant", evocation: "instant",
+  "first-aid": "10min", follow: "10min", herbology: "1min", hide: "1min", stealth: "1min", insight: "10sec", investigation: "1hour",
+  jump: "10sec", knowledge: "instant", "monster-knowledge": "instant", listen: "10sec", medicine: "10min", pathology: "10min",
+  notice: "instant", perception: "instant", performance: "instant", pickpocket: "10sec", literature: "10min", reference: "10min",
+  riding: "1min", ride: "1min", search: "10min", "set-trap": "10min", strength: "10sec", swim: "1min", "swim-combat": "10sec",
+  track: "1min", tumble: "instant", weakness: "instant", meteorology: "1min", weather: "1min",
+};
+export const checkTime = (id) => CHECK_TIMES[String(id ?? "")] ?? "";
 /** Packages that are not a list of checks (Heritor's multi-section checks are skipped; Initiative has its own button). */
 export const SKIP_PACKAGES = ["multi-section-checks"];
 export const EXCLUDE_CHECKS = ["initiative"];
@@ -156,7 +175,7 @@ export function buildSkillChecks({ catalog = [], classes = [], advLevel = 0, abi
     const value = parts.reduce((t, p) => t + num(p.value), 0);
     rows.push({
       id: c.id, label, group: c.group, homebrew: !!c.homebrew, selected: sel, grants: !!grant,
-      limit: grant?.limit ?? null, natural: !!grant?.natural,
+      limit: grant?.limit ?? null, natural: !!grant?.natural, flat: sel === NONE, time: checkTime(c.id),
       grantedBy: granting.map((x) => x.k.name + (x.g.limit ? ` (${x.g.limit})` : "") + (x.g.natural ? " *" : "")),
       options: [
         { value: NONE, label: labels.none ?? "— none (2d6)", selected: sel === NONE, grants: false },
@@ -172,6 +191,24 @@ export function buildSkillChecks({ catalog = [], classes = [], advLevel = 0, abi
   const groups = GROUP_ORDER.map((g) => ({ key: g, label: labels.group?.[g] ?? checkLabel(g), ability: PACKAGE_ABILITY[g] ? (ABBR[PACKAGE_ABILITY[g]]) : null,
     rows: rows.filter((r) => r.group === g).sort((a, b) => a.label.localeCompare(b.label)) })).filter((g) => g.rows.length);
   return { groups, rows, globalMod: num(globalMod) };
+}
+
+/** Adventurer Rolls card rows: 2d6 + Adventurer level + ability bonus + the usual check modifiers (saved under "adv-<id>"). */
+export function buildAdventurerChecks({ advLevel = 0, abilities = {}, saved = {}, globalMod = 0, effects = {}, ruleMods = [], labels = {} } = {}) {
+  const ABBR = { dex: "Dex", agi: "Agi", str: "Str", vit: "Vit", int: "Int", mnd: "Spi", ...(labels.ability ?? {}) };
+  return ADVENTURER_CHECKS.map((c) => {
+    const key = ADV_PREFIX + c.id, s = saved[key] ?? {};
+    const label = labels.advCheck?.[c.id] ?? checkLabel(c.id);
+    const amod = num(abilities?.[c.ability]?.mod);
+    const base = [
+      { value: num(advLevel), label: `${labels.adv ?? "Adventurer"} Lv ${num(advLevel)}`, kind: "class", always: true },
+      { value: amod, label: ABBR[c.ability] ?? c.ability, kind: "ability", always: true },
+    ];
+    const parts = [...base, ...modParts({ id: c.id, label, pkg: "other", saved: s, globalMod, effects, ruleMods, classId: null, labels })];
+    const value = parts.reduce((t, p) => t + num(p.value), 0);
+    return { id: key, checkId: c.id, label, ability: c.ability, abilityLabel: ABBR[c.ability] ?? c.ability, abilityMod: amod, sitMod: num(s.mod),
+      times: c.times.map((t, i) => ({ code: t, combat: i > 0 })), parts, value, valueText: signed(value), formula: rollFormula(parts), calc: calcText(parts) };
+  });
 }
 
 /** Initiative breakdown from the Initiative check item's total (checkbase) plus rule-engine initiative mods. */

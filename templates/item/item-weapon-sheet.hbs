@@ -215,6 +215,19 @@
           <input class="property--value" id="{{item._id}}system.range" type="text" name="system.range" value="{{system.range}}" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/>
         </div>
 
+        {{!-- ce.25: optional second grip (e.g. 1H / 2H). Filled in -> the character sheet shows a 1H/2H switch. --}}
+        <div class="grid-span-10 sw-altgrip" data-tooltip="{{localize 'SW25.V2.Stance.AltGripTip'}}"><b>{{localize "SW25.V2.Stance.AltGrip"}}</b></div>
+        <div class="grid-span-2 property-col">
+          <label class="property--label-col">{{localize "SW25.Item.Weapon.Usage"}}</label>
+          <select class="property--value" name="system.altgrip.usage"{{#unless system.isEdit}} disabled{{/unless}}>{{selectOptions config.weaponUsages selected=system.altgrip.usage localize=true blank="-"}}</select>
+        </div>
+        <div class="grid-span-1 property-col"><label class="property--label-col">{{localize "SW25.Item.Reqstr"}}</label><input class="property--value" type="text" name="system.altgrip.reqstr" value="{{system.altgrip.reqstr}}" data-dtype="Number"{{#unless system.isEdit}} disabled{{/unless}}/></div>
+        <div class="grid-span-1 property-col"><label class="property--label-col">{{localize "SW25.Item.Weapon.Hit"}}</label><input class="property--value" type="text" name="system.altgrip.hit" value="{{system.altgrip.hit}}" data-dtype="Number"{{#unless system.isEdit}} disabled{{/unless}}/></div>
+        <div class="grid-span-1 property-col"><label class="property--label-col">{{localize "SW25.Item.Weapon.Dmod"}}</label><input class="property--value" type="text" name="system.altgrip.dmod" value="{{system.altgrip.dmod}}" data-dtype="Number"{{#unless system.isEdit}} disabled{{/unless}}/></div>
+        <div class="grid-span-1 property-col"><label class="property--label-col">{{localize "SW25.Item.Power"}}</label><input class="property--value" type="text" name="system.altgrip.power" value="{{system.altgrip.power}}" data-dtype="String"{{#unless system.isEdit}} disabled{{/unless}}/></div>
+        <div class="grid-span-1 property-col"><label class="property--label-col">{{localize "SW25.Item.Cvalue"}}</label><input class="property--value" type="text" name="system.altgrip.cvalue" value="{{system.altgrip.cvalue}}" data-dtype="Number"{{#unless system.isEdit}} disabled{{/unless}}/></div>
+        <div class="grid-span-3"></div>
+
         {{!-- Elements Category --}}
         <div class="grid-span-10">
           {{> "systems/sw25-ce/templates/item/parts/item-elements.hbs" isMagic=true isPhysical=true}}

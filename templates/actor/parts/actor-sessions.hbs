@@ -1,0 +1,78 @@
+{{!-- ce.25 Session Notes tab. Everything is stored on the character (flags.sw25-ce.sessionLog); see module/sheets/session-ui.mjs.
+     Inputs have no form names: they save through their own handlers, never through the sheet form. --}}
+<div class="sw-sess-grid">
+  <div class="panel sw-sess-list">
+    <span class="ribbon">{{localize "SW25.V2.Session.ListTitle"}}</span>
+    <div class="sw-sess-bar">
+      <button type="button" class="sw-sess-new" {{#if sessions.creating}}disabled{{/if}}><i class="fas fa-plus"></i> {{localize "SW25.V2.Session.New"}}</button>
+      <input type="search" class="sw-sess-search" value="{{sessions.view.query}}" placeholder="{{localize 'SW25.V2.Session.Search'}}" aria-label="{{localize 'SW25.V2.Session.Search'}}"/>
+      <button type="button" class="sw-sess-export"><i class="fas fa-file-export"></i> {{localize "SW25.V2.Export.Button"}}</button>
+    </div>
+    {{#if sessions.view.query}}<p class="hint">{{localize "SW25.V2.Session.Matches" n=sessions.view.matches total=sessions.view.total}}</p>{{/if}}
+    {{#each sessions.view.groups as |g|}}
+    <div class="sw-sess-arcgroup">
+      <a class="sw-sess-arc" data-arc="{{g.key}}"><i class="fas {{#if g.collapsed}}fa-caret-right{{else}}fa-caret-down{{/if}}"></i> {{#if g.arc}}{{localize "SW25.V2.Session.ArcShort"}}: {{g.arc}}{{else}}{{localize "SW25.V2.Session.NoArc"}}{{/if}} <small>({{g.total}})</small></a>
+      {{#unless g.collapsed}}
+      <ol class="sw-sess-rows">
+        {{#each g.rows as |s|}}
+        <li class="sw-sess-row{{#if s.active}} active{{/if}}" data-session-id="{{s.id}}">
+          <span class="num">{{s.number}}</span>
+          <span class="date">{{s.date}}</span>
+          <a class="ttl sw-sess-open">{{#if s.title}}{{s.title}}{{else}}<i>{{localize "SW25.V2.Session.Untitled"}}</i>{{/if}}</a>
+          {{#if s.active}}<span class="act" data-tooltip="{{localize 'SW25.V2.Session.ActiveTip'}}">● {{localize "SW25.V2.Session.Active"}}</span>{{/if}}
+          <a class="sw-sess-pin{{#if s.pinned}} on{{/if}}" data-tooltip="{{#if s.pinned}}{{localize 'SW25.V2.Session.Unpin'}}{{else}}{{localize 'SW25.V2.Session.Pin'}}{{/if}}"><i class="fas fa-thumbtack"></i></a>
+          <button type="button" class="sw-sess-open">{{localize "SW25.V2.Session.Open"}}</button>
+        </li>
+        {{/each}}
+      </ol>
+      {{/unless}}
+    </div>
+    {{else}}
+    <p class="hint">{{#if sessions.view.query}}{{localize "SW25.V2.Session.NoMatch"}}{{else}}{{localize "SW25.V2.Session.Empty"}}{{/if}}</p>
+    {{/each}}
+    {{#if sessions.view.multiPage}}
+    <div class="sw-sess-pages">
+      {{#if sessions.view.hasPrev}}<a class="sw-sess-page" data-page="{{sessions.view.prevPage}}">◂</a>{{/if}}
+      {{#each sessions.view.pageList as |p|}}{{#if p.gap}}<span>…</span>{{else}}<a class="sw-sess-page{{#if p.current}} current{{/if}}" data-page="{{p.n}}">{{p.n}}</a>{{/if}}{{/each}}
+      {{#if sessions.view.hasNext}}<a class="sw-sess-page" data-page="{{sessions.view.nextPage}}">▸</a>{{/if}}
+      <small>({{localize "SW25.V2.Session.PerPage"}})</small>
+    </div>
+    {{/if}}
+    <p class="hint">{{localize "SW25.V2.Session.Hint"}}</p>
+  </div>
+
+  <div class="sw-sess-side">
+    <div class="panel sw-todo">
+      <span class="ribbon">{{localize "SW25.V2.Todo.Title"}}</span>
+      <ol class="sw-todo-rows">
+        {{#each sessions.todo.rows as |t|}}
+        <li class="sw-todo-row{{#if t.done}} done{{/if}}" data-todo-id="{{t.id}}">
+          <label><input type="checkbox" class="sw-todo-check" {{#if t.done}}checked{{/if}}/> <span class="txt">{{t.text}}</span></label>
+          <small class="when">{{#if t.done}}{{#if t.doneIn}}{{localize "SW25.V2.Todo.DoneShort" n=t.doneIn}}{{/if}}{{else}}{{#if t.addedIn}}{{localize "SW25.V2.Todo.AddedShort" n=t.addedIn}}{{/if}}{{/if}}</small>
+          <a class="sw-todo-del" data-tooltip="{{localize 'SW25.V2.Todo.Delete'}}"><i class="fas fa-xmark"></i></a>
+        </li>
+        {{else}}<li class="hint">{{localize "SW25.V2.Todo.Empty"}}</li>{{/each}}
+      </ol>
+      <div class="sw-todo-bar">
+        <input type="text" class="sw-todo-new" placeholder="{{localize 'SW25.V2.Todo.NewPlaceholder'}}"/>
+        <button type="button" class="sw-todo-add"><i class="fas fa-plus"></i> {{localize "SW25.V2.Todo.Add"}}</button>
+      </div>
+      <div class="sw-todo-bar">
+        <button type="button" class="sw-todo-hide">{{#if sessions.todo.hideDone}}{{localize "SW25.V2.Todo.ShowDone"}}{{#if sessions.todo.hidden}} ({{sessions.todo.hidden}}){{/if}}{{else}}{{localize "SW25.V2.Todo.HideDone"}}{{/if}}</button>
+        <button type="button" class="sw-todo-clear" {{#unless sessions.todo.doneCount}}disabled{{/unless}}>{{localize "SW25.V2.Todo.ClearDone"}}</button>
+      </div>
+      <p class="hint">{{localize "SW25.V2.Todo.Hint"}}</p>
+    </div>
+
+    <div class="panel sw-misc">
+      <span class="ribbon">{{localize "SW25.V2.Misc.Title"}}</span>
+      <textarea class="sw-misc-text" rows="5" placeholder="{{localize 'SW25.V2.Misc.Placeholder'}}">{{sessions.misc}}</textarea>
+      <div class="sw-todo-bar">
+        <button type="button" class="sw-misc-add"><i class="fas fa-arrow-right"></i> {{#if sessions.view.active}}{{localize "SW25.V2.Misc.AddTo" n=sessions.view.active.number}}{{else}}{{localize "SW25.V2.Misc.AddToNone"}}{{/if}}</button>
+        <button type="button" class="sw-misc-new"><i class="fas fa-arrow-right"></i> {{localize "SW25.V2.Misc.StartNew"}}</button>
+        <button type="button" class="sw-misc-clear"><i class="fas fa-trash"></i> {{localize "SW25.V2.Misc.Clear"}}</button>
+      </div>
+      <p class="hint">{{localize "SW25.V2.Misc.Hint"}}</p>
+    </div>
+  </div>
+</div>

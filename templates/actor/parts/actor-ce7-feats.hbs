@@ -1,4 +1,4 @@
-<div class="panel ce7-feats"><span class="ribbon">{{localize "SW25.V2.Feats.Title"}}</span>
+<div class="panel ce7-feats ce7-feats-merged"><span class="ribbon">{{localize "SW25.V2.Feats.Title"}}</span>
   <p class="ce7-feat-hint"><i class="fas fa-circle-info"></i> {{localize "SW25.V2.Feats.Hint"}}</p>
   <h4 class="ce7-feat-h">{{localize "SW25.V2.Feats.Chosen"}}</h4>
   <div class="ce7-feat-slots">
@@ -27,4 +27,11 @@
       {{#each ce7feats.racial as |it|}}<div class="item ce7-row ce7-drag{{#if it.inactive}} sw-inactive{{/if}}" draggable="true" data-item-id="{{it.id}}"><i class="fas fa-grip-vertical grip"></i><img src="{{it.img}}" alt=""/><a class="ce7-feat-show" data-tooltip="{{localize 'SW25.V2.Feats.ShowTip'}}">{{it.name}}</a>{{#if it.raceLevel}}<span class="sw-race-lvpill" data-tooltip="{{#if it.inactive}}{{localize 'SW25.RaceItem.Inactive' level=it.raceLevel}}{{/if}}">{{localize "SW25.RaceItem.Applies" level=it.raceLevel}}</span>{{/if}}<a class="rollable ce7-roll" data-roll-type="item" draggable="false" data-tooltip="Roll / post card"><i class="fas fa-dice-d6"></i></a><span class="sw-acts"></span><a class="item-edit" data-tooltip="Open"><i class="fas fa-pen-to-square"></i></a></div>{{/each}}
     </div>
   </div>
+  {{!-- ce.25: one Feats panel (Classes tab). Non-combat feats and the full feat item list moved here. --}}
+  <h4 class="ce7-feat-h">{{localize "SW25.V2.NonCombatFeats"}}</h4>
+  {{> "systems/sw25-ce/templates/actor/parts/actor-noncombatfeats.hbs"}}
+  <details class="ce7-feat-all" data-sw25-adv="featitems" {{#if @root.sw25Adv.featitems}}open{{/if}}>
+    <summary>{{localize "SW25.V2.Feats.AllItems"}} ({{@root.combatabilities.length}})</summary>
+    {{> "systems/sw25-ce/templates/actor/parts/actor-combatabilities.hbs"}}
+  </details>
 </div>

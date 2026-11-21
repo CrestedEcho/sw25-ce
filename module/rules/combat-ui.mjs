@@ -147,7 +147,7 @@ function counterBadges(actor, root) {
 
 const CHIP = "flex:0 0 auto;margin:0 4px;padding:0 4px;border:1px solid #888;border-radius:3px;font-size:0.8em;cursor:pointer";
 /** Rows that show an owned item: classic list rows and the ce7 feat-slot / racial rows. */
-const itemRows = (root) => root.querySelectorAll("li.item[data-item-id], .ce7-row[data-item-id], .ce7-feat-slot[data-item-id]");
+const itemRows = (root) => root.querySelectorAll("li.item[data-item-id], .ce7-row[data-item-id], .ce7-feat-slot[data-item-id], .ce7-qf[data-item-id]");
 const actsOf = (li) => li.querySelector(".sw-acts") ?? li.querySelector(".item-name") ?? li;
 
 function declareChips(actor, root) {

@@ -1317,7 +1317,12 @@
         "ClickToChoose": "Click to choose",
         "PickTitle": "Level {level} slot: choose a combat feat",
         "PickRowTip": "Put {item} in the Level {level} slot",
-        "PickNone": "All your combat feats are already in a slot. Add a new feat from the Items sidebar or a compendium, then click the slot again."
+        "PickNone": "All your combat feats are already in a slot. Add a new feat from the Items sidebar or a compendium, then click the slot again.",
+        "AllItems": "All feat items (list view)",
+        "Quick": "Feats (quick use)",
+        "QuickTip": "Post this feat's card",
+        "QuickMore": "All feats on the Classes tab",
+        "QuickMoreTip": "Open the Feats panel on the Classes tab"
       },
       "Belt": {
         "Title": "Consumables Belt",
@@ -1386,7 +1391,137 @@
         "Adventurer": "Adventurer level",
         "None": "— none (2d6)",
         "SitModShort": "Situational ±",
-        "AllModShort": "All checks ±"
+        "AllModShort": "All checks ±",
+        "Check": "Check",
+        "Ability": "Ability",
+        "TimeCol": "Time",
+        "Mod": "Roll",
+        "NaturalOnly": "Ranger: natural environments only",
+        "FlatTip": "No class chosen: flat 2d6 (no class level, no ability bonus).",
+        "FlatHint": "Greyed rows have no class chosen and roll a flat 2d6.",
+        "Time": {
+          "instant": "instant",
+          "10sec": "10 sec",
+          "1round": "1 round",
+          "1min": "1 min",
+          "10min": "10 min",
+          "1hour": "1 hour"
+        }
+      },
+      "Background": "Background",
+      "Soulscars": {
+        "Label": "Soulscars",
+        "Tip": "Soulscars (stored as the character's Impurity value). Use + / − to change it."
+      },
+      "Rest": {
+        "Title": "Sleep {hours}h",
+        "Sleep3": "Sleep 3h",
+        "Sleep6": "Sleep 6h",
+        "Tip3": "Sleep 3 hours: HP +10% of max (rounded up), MP +half of max. Asks first; never automatic.",
+        "Tip6": "Sleep 6 hours: HP +20% of max (rounded up), MP back to max. Asks first; never automatic.",
+        "Question": "Is the character fed, sheltered and with bedding?",
+        "NoRecovery": "{name} slept {hours}h: no recovery (not fed, sheltered or with bedding)",
+        "Slept": "{name} slept {hours}h",
+        "Rule3": "3h sleep: HP +10% of max HP (rounded up), MP +50% of max MP (rounded up), never above max.",
+        "Rule6": "6h sleep: HP +20% of max HP (rounded up), MP fully restored, never above max.",
+        "Cap": "Sleeping more than 6 hours in a day gives no extra recovery."
+      },
+      "AdvRolls": {
+        "Title": "Adventurer Rolls",
+        "Hint": "Adventurer level + ability bonus; always available. Swim has a 1-minute roll and a combat (1 round) roll.",
+        "Combat": "Combat",
+        "CombatTip": "Swim in combat (1 round). Click to roll 2d6.",
+        "Check": {
+          "climb": "Climb",
+          "strength": "Strength",
+          "jump": "Jump",
+          "detect": "Detect",
+          "swim": "Swim"
+        }
+      },
+      "Why": {
+        "Placeholder": "why? (e.g. Targeting feat)",
+        "Tip": "Why this modifier is here. Shown in the roll card's formula tooltip.",
+        "Modifier": "Modifier",
+        "Why": "Why"
+      },
+      "Stance": {
+        "AltGrip": "Second grip (optional, e.g. 2H stats of a 1H/2H weapon)",
+        "AltGripTip": "Fill in the other grip's stats; the character sheet then shows a 1H/2H switch that swaps them.",
+        "Tip": "Switch grip: accuracy, power and the attack card use the selected grip."
+      },
+      "Session": {
+        "Tab": "Session Notes",
+        "ListTitle": "Sessions (newest first)",
+        "New": "New Session",
+        "Search": "Search all sessions…",
+        "Matches": "{n} of {total} sessions match",
+        "ArcShort": "Arc",
+        "NoArc": "No arc",
+        "Untitled": "untitled",
+        "Active": "Active",
+        "ActiveTip": "Active session: the latest one unless another is pinned. Misc notes and ticked to-dos go here.",
+        "Pin": "Pin as the active session",
+        "Unpin": "Unpin (the latest session becomes active again)",
+        "Open": "Open",
+        "NoMatch": "No session matches the search.",
+        "Empty": "No sessions yet. Click New Session to start one.",
+        "PerPage": "20 per page",
+        "Hint": "Everything is saved on the character. Export gives Journal or .txt for one session, an arc, or everything.",
+        "Date": "Date",
+        "TitleField": "Title",
+        "Campaign": "Campaign",
+        "Arc": "Arc (optional)",
+        "Create": "Create",
+        "NewTitle": "New session {n}",
+        "Renumbered": "Another session already had that number, so this one is now session {n}.",
+        "Notes": "Session notes",
+        "Loot": "Loot found",
+        "ImageHint": "Images: use links or drag them from the file browser. Pasted images are removed on save so the character stays small.",
+        "Session": "Session",
+        "Save": "Save",
+        "Delete": "Delete",
+        "DeleteConfirm": "Delete session {n} ({title})? This can't be undone.",
+        "NumberTaken": "Session {n} already exists; the number was not changed.",
+        "NothingToExport": "Nothing to export yet."
+      },
+      "Todo": {
+        "Title": "To-Do (persists across all sessions)",
+        "DoneShort": "done S{n}",
+        "AddedShort": "added S{n}",
+        "Delete": "Delete task",
+        "Empty": "No tasks.",
+        "NewPlaceholder": "New task…",
+        "Add": "Add task",
+        "ShowDone": "Show completed",
+        "HideDone": "Hide completed",
+        "ClearDone": "Clear completed",
+        "Hint": "Ticking a box notes which session it was done in. Completed tasks can be hidden or cleared.",
+        "ClearConfirm": "Remove {n} completed task(s)?",
+        "DoneIn": "done in session"
+      },
+      "Misc": {
+        "Title": "Misc / quick notes (persists)",
+        "Placeholder": "Quick notes…",
+        "AddTo": "Add to active session (S{n})",
+        "AddToNone": "Add to active session",
+        "StartNew": "Start new session with these",
+        "Clear": "Clear",
+        "Hint": "Either button copies the notes into that session. The box keeps its text until you clear it.",
+        "Empty": "The misc box is empty.",
+        "Added": "Added to session {n}.",
+        "ClearConfirm": "Clear the misc notes box?"
+      },
+      "Export": {
+        "Button": "Export",
+        "Title": "Export session notes",
+        "Session": "One session",
+        "Arc": "An arc",
+        "All": "Everything (all sessions, to-do and misc)",
+        "Txt": "Download .txt",
+        "Journal": "Export to Journal",
+        "JournalDone": "Journal entry created: {name}",
+        "NoJournalPerm": "Your Foundry role can't create journal entries. Ask the GM to allow it, or use Download .txt."
       }
     },
     "EquipCard": {

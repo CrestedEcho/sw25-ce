@@ -35,12 +35,12 @@ export function pcAccuracy(sys, weaponSys = {}) {
 }
 
 /** PC Evasion: 2d6 + dodgebase. */
-export function pcEvasion(sys = {}) {
+export function pcEvasion(sys = {}, why = {}) {
   const all = num(sys.effect?.allsc) + num(sys.effect?.allac);
   return check("Evasion", sys.dodgebase, [
     { label: "Evasion class level + Agility bonus", value: sys.skillagidodge },
     { label: "Armor and shield", value: sys.itemdodge },
-    { label: "Evasion modifier", value: sys.attributes?.dodgemod },
+    { label: why.dodgemod ? `Evasion modifier (${why.dodgemod})` : "Evasion modifier", value: sys.attributes?.dodgemod },
     { label: "Effects", value: sys.attributes?.efdodgemod },
     { label: "Effects on all checks", value: all },
   ]);

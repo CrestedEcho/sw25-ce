@@ -1,3 +1,4 @@
+import { whyOf, withWhy } from "../rules/mod-why.mjs";
 import { defaultCheckFor, checkClassList, classMatches, defaultWeaponClass } from "../rules/class-pick.mjs";
 import { abNum } from "../rules/ability-num.mjs";
 import { powerRoll } from "../helpers/powerroll.mjs";
@@ -1270,17 +1271,19 @@ export class SW25Item extends Item {
 
     if (itemData.type == "weapon") {
       const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+      // ce.25: the player's "why" note for actor-wide modifiers rides along in the card's formula tooltip.
+      const whyFlags = itemData.actor?.flags;
       // sw25-ce attack card: where each part of Accuracy / damage bonus comes from (labels only; sums match checkbase / powerbase).
       systemData._accParts = [
         { label: "Class level", value: n(checklevelmod) }, { label: "Ability bonus", value: n(checkabimod) },
         { label: "Check modifier", value: n(systemData.checkmod) }, { label: "Effects on all checks", value: cond ? n(allscMod) + n(allacMod) : 0 },
-        { label: "Weapon accuracy", value: n(systemData.hit) }, { label: "Accuracy modifier", value: n(actorData.attributes?.hitmod) },
+        { label: "Weapon accuracy", value: n(systemData.hit) }, { label: withWhy("Accuracy modifier", whyOf(whyFlags, "hitmod")), value: n(actorData.attributes?.hitmod) },
         { label: "Accuracy effects", value: n(actorData.attributes?.efhitmod) },
       ];
       systemData._dmgParts = [
         { label: "Class level", value: n(powerlevelmod) }, { label: "Ability bonus", value: n(powerabimod) },
         { label: "Power modifier", value: n(systemData.powermod) }, { label: "Weapon damage modifier", value: n(systemData.dmod) },
-        { label: "Damage modifier", value: n(actorData.attributes?.dmod) }, { label: "Damage effects", value: n(actorData.attributes?.efdmod) },
+        { label: withWhy("Damage modifier", whyOf(whyFlags, "dmod")), value: n(actorData.attributes?.dmod) }, { label: "Damage effects", value: n(actorData.attributes?.efdmod) },
         { label: "Half-power bonus", value: n(systemData.halfpowmod) + n(actorData.attributes?.efwphalfmod) },
       ];
       systemData.checkbase =

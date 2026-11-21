@@ -58,6 +58,20 @@
         </div>
         {{#if system.toFellow}}<div class="roll-actiontable action-button chip"><i class="fas fa-dice-d6"></i> {{localize "SW25.ActionRoll"}}</div>{{/if}}
       </div>
+      {{#unless system.toFellow}}
+      <div class="sw-vitals2">
+        <div class="sw-soulscars" data-tooltip="{{localize 'SW25.V2.Soulscars.Tip'}}">
+          <span class="ico i-soulscars"></span> <span class="lbl">{{localize "SW25.V2.Soulscars.Label"}}</span>
+          {{#if editable}}<a class="sw-soulscar-adj" data-delta="-1" aria-label="−1"><i class="fas fa-minus"></i></a>{{/if}}
+          <b class="v">{{#if system.attributes.impurity}}{{system.attributes.impurity}}{{else}}0{{/if}}</b>
+          {{#if editable}}<a class="sw-soulscar-adj" data-delta="1" aria-label="+1"><i class="fas fa-plus"></i></a>{{/if}}
+        </div>
+        {{#if editable}}
+        <a class="sw-sleep chip" data-hours="3" data-tooltip="{{localize 'SW25.V2.Rest.Tip3'}}"><span class="ico i-sleep-3h"></span> {{localize "SW25.V2.Rest.Sleep3"}}</a>
+        <a class="sw-sleep chip" data-hours="6" data-tooltip="{{localize 'SW25.V2.Rest.Tip6'}}"><span class="ico i-sleep-6h"></span> {{localize "SW25.V2.Rest.Sleep6"}}</a>
+        {{/if}}
+      </div>
+      {{/unless}}
     </div>
   </header>
 
@@ -205,6 +219,7 @@
     <a class="item" data-tab="inventory"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/item.svg)"></span> {{localize "SW25.V2.TabInventory"}}</a>
     <a class="item" data-tab="effects"><i class="fa-solid fa-hand-sparkles"></i> {{localize "SW25.V2.TabEffects"}}</a>
     <a class="item" data-tab="bio"><span class="ico" style="--i:url(/systems/sw25-ce/assets/icons/truespeech.svg)"></span> {{localize "SW25.V2.TabBio"}}</a>
+    <a class="item" data-tab="sessions"><i class="fa-solid fa-book-open"></i> {{localize "SW25.V2.Session.Tab"}}</a>
   </nav>
 
   <section class="sheet-body v2-body">
@@ -244,17 +259,17 @@
         </div>
         <details class="advanced" data-sw25-adv="combat" {{#if sw25Adv.combat}}open{{/if}}>
           <summary>{{localize "SW25.V2.Advanced"}}</summary>
-          <div class="mods">
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.HitMod'}}"><i class="fa-solid fa-bullseye"></i><span>{{localize "SW25.V2.HitMod"}}</span><input type="text" name="system.attributes.hitmod" value="{{system.attributes.hitmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DamageMod'}}"><i class="fa-solid fa-hand-fist"></i><span>{{localize "SW25.V2.DamageMod"}}</span><input type="text" name="system.attributes.dmod" value="{{system.attributes.dmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.LethalTech'}}"><i class="fa-solid fa-hashtag"></i><span>{{localize "SW25.V2.LethalTech"}}</span><input type="text" name="system.attributes.ltmod" value="{{system.attributes.ltmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.CriticalRay'}}"><i class="fa-solid fa-dollar-sign"></i><span>{{localize "SW25.V2.CriticalRay"}}</span><input type="text" name="system.attributes.crmod" value="{{system.attributes.crmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DodgeMod'}}"><i class="fa-solid fa-wind"></i><span>{{localize "SW25.V2.DodgeMod"}}</span><input type="text" name="system.attributes.dodgemod" value="{{system.attributes.dodgemod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DReduce'}}"><i class="fa-solid fa-shield-halved"></i><span>{{localize "SW25.V2.DReduce"}}</span><input type="text" name="system.attributes.dreduce" value="{{system.attributes.dreduce}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.PpMod'}}"><i class="fa-solid fa-shield"></i><span>{{localize "SW25.V2.PpMod"}}</span><input type="text" name="system.attributes.ppmod" value="{{system.attributes.ppmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.MppMod'}}"><i class="fa-solid fa-star-of-david"></i><span>{{localize "SW25.V2.MppMod"}}</span><input type="text" name="system.attributes.mppmod" value="{{system.attributes.mppmod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.MoveMod'}}"><i class="fa-solid fa-person-running"></i><span>{{localize "SW25.V2.MoveMod"}}</span><input type="text" name="system.attributes.move.movemod" value="{{system.attributes.move.movemod}}" data-dtype="Number"/></label>
-            <label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.LootMod'}}"><i class="fa-solid fa-coins"></i><span>{{localize "SW25.V2.LootMod"}}</span><input type="text" name="system.lootmod" value="{{system.lootmod}}" data-dtype="Number"/></label>
+          <div class="mods sw-mods-why"><div class="modf-head"><span>{{localize "SW25.V2.Why.Modifier"}}</span><span>{{localize "SW25.V2.Why.Why"}}</span></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.HitMod'}}"><i class="fa-solid fa-bullseye"></i><span>{{localize "SW25.V2.HitMod"}}</span><input type="text" name="system.attributes.hitmod" value="{{system.attributes.hitmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.hitmod" value="{{lookup @root.modWhy "hitmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DamageMod'}}"><i class="fa-solid fa-hand-fist"></i><span>{{localize "SW25.V2.DamageMod"}}</span><input type="text" name="system.attributes.dmod" value="{{system.attributes.dmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.dmod" value="{{lookup @root.modWhy "dmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.LethalTech'}}"><i class="fa-solid fa-hashtag"></i><span>{{localize "SW25.V2.LethalTech"}}</span><input type="text" name="system.attributes.ltmod" value="{{system.attributes.ltmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.ltmod" value="{{lookup @root.modWhy "ltmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.CriticalRay'}}"><i class="fa-solid fa-dollar-sign"></i><span>{{localize "SW25.V2.CriticalRay"}}</span><input type="text" name="system.attributes.crmod" value="{{system.attributes.crmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.crmod" value="{{lookup @root.modWhy "crmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DodgeMod'}}"><i class="fa-solid fa-wind"></i><span>{{localize "SW25.V2.DodgeMod"}}</span><input type="text" name="system.attributes.dodgemod" value="{{system.attributes.dodgemod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.dodgemod" value="{{lookup @root.modWhy "dodgemod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.DReduce'}}"><i class="fa-solid fa-shield-halved"></i><span>{{localize "SW25.V2.DReduce"}}</span><input type="text" name="system.attributes.dreduce" value="{{system.attributes.dreduce}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.dreduce" value="{{lookup @root.modWhy "dreduce"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.PpMod'}}"><i class="fa-solid fa-shield"></i><span>{{localize "SW25.V2.PpMod"}}</span><input type="text" name="system.attributes.ppmod" value="{{system.attributes.ppmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.ppmod" value="{{lookup @root.modWhy "ppmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.MppMod'}}"><i class="fa-solid fa-star-of-david"></i><span>{{localize "SW25.V2.MppMod"}}</span><input type="text" name="system.attributes.mppmod" value="{{system.attributes.mppmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.mppmod" value="{{lookup @root.modWhy "mppmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.MoveMod'}}"><i class="fa-solid fa-person-running"></i><span>{{localize "SW25.V2.MoveMod"}}</span><input type="text" name="system.attributes.move.movemod" value="{{system.attributes.move.movemod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.movemod" value="{{lookup @root.modWhy "movemod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
+            <div class="modf-row"><label class="modf" data-tooltip="{{localize 'SW25.V2.Tip.LootMod'}}"><i class="fa-solid fa-coins"></i><span>{{localize "SW25.V2.LootMod"}}</span><input type="text" name="system.lootmod" value="{{system.lootmod}}" data-dtype="Number"/></label><input class="sw-why" type="text" name="flags.sw25-ce.modWhy.lootmod" value="{{lookup @root.modWhy "lootmod"}}" placeholder="{{localize 'SW25.V2.Why.Placeholder'}}" data-dtype="String" data-tooltip="{{localize 'SW25.V2.Why.Tip'}}"/></div>
           </div>
         </details>
       </div>
@@ -262,15 +277,14 @@
         {{> "systems/sw25-ce/templates/actor/parts/actor-battleweapons.hbs"}}
       </div>
       {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-belt.hbs"}}
-      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-feats.hbs"}}
+      {{> "systems/sw25-ce/templates/actor/parts/actor-feats-quick.hbs"}}
       <div class="panel"><span class="ribbon">{{localize "SW25.V2.Resources"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-resources.hbs"}}</div>
     </div>
 
     <div class="tab classes" data-group="primary" data-tab="classes">
       <div class="panel"><span class="ribbon">{{localize "SW25.V2.Classes"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-checkskills.hbs"}}</div>
       {{> "systems/sw25-ce/templates/actor/parts/actor-skillchecks.hbs"}}
-      <div class="panel ce7-classes-feats"><span class="ribbon">{{localize "SW25.V2.Feats.Title"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-combatabilities.hbs"}}</div>
-      <div class="panel"><span class="ribbon">{{localize "SW25.V2.NonCombatFeats"}}</span>{{> "systems/sw25-ce/templates/actor/parts/actor-noncombatfeats.hbs"}}</div>
+      {{> "systems/sw25-ce/templates/actor/parts/actor-ce7-feats.hbs"}}
       
       {{#if eashow}}<div class="panel">{{> "systems/sw25-ce/templates/actor/parts/actor-enhancearts.hbs"}}</div>{{else}}{{#if system.attributes.showfeature}}<div class="panel">{{> "systems/sw25-ce/templates/actor/parts/actor-enhancearts.hbs"}}</div>{{/if}}{{/if}}
       {{#if msshow}}<div class="panel">{{> "systems/sw25-ce/templates/actor/parts/actor-magicalsongs.hbs"}}</div>{{else}}{{#if system.attributes.showfeature}}<div class="panel">{{> "systems/sw25-ce/templates/actor/parts/actor-magicalsongs.hbs"}}</div>{{/if}}{{/if}}
@@ -477,6 +491,13 @@
       <div class="panel bio-editor"><span class="ribbon">{{localize "SW25.Biography"}}</span>
         {{editor system.biography target="system.biography" rollData=rollData button=true owner=owner editable=editable}}
       </div>
+      <div class="panel bio-editor sw-background"><span class="ribbon">{{localize "SW25.V2.Background"}}</span>
+        {{editor system.background target="system.background" rollData=rollData button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class="tab sessions" data-group="primary" data-tab="sessions">
+      {{> "systems/sw25-ce/templates/actor/parts/actor-sessions.hbs"}}
     </div>
   </section>
   {{/unless}}

@@ -8,6 +8,7 @@
  *   pt    = power table array for powerRoll (bonus lives in pt[POWMOD] + pt[HALFPOWMOD])
  */
 import { formatDamage } from "./damage-display.mjs";
+import { stanceView } from "./weapon-grip.mjs";
 
 export const PTI = { POWER: 0, CVALUE: 1, POWMOD: 13, HALFPOW: 14, HALFPOWMOD: 15, LETHALTECH: 16, CRITICALRAY: 17 };
 const n = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -53,6 +54,6 @@ export function weaponCardRow(item, b, extra = {}) {
     equipped: !!s.equip, cls: s.showskill || s.checkskill || "—",
     acc: b?.acc == null ? "—" : String(b.acc),
     dmg: formatDamage(b?.power, b?.crit, n(b?.bonus)), power: b?.power ?? "—", crit: b?.crit ?? "—", bonus: n(b?.bonus),
-    range: s.range || "", ...extra,
+    range: s.range || "", stance: stanceView(s, extra.gripLabel), ...extra,
   };
 }

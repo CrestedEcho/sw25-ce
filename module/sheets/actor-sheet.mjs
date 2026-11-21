@@ -28,6 +28,9 @@ import * as RE from "../rules/engine.mjs";
 import * as RACE from "../rules/race.mjs";
 import { buildClassCard } from "../rules/class-card.mjs";
 import { skillCheckModel, initiativeModel, bindSkillCheckListeners } from "./skill-check-ui.mjs";
+import { bindRestListeners } from "./rest-ui.mjs";
+import { sessionContext, bindSessionListeners } from "./session-ui.mjs";
+import { gripSwapUpdate } from "../rules/weapon-grip.mjs";
 
 /** Convert embedded Documents to source data before Foundry deep-merges sheet options. */
 function plainRenderOptions(value, seen = new WeakMap()) {
@@ -724,7 +727,8 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     context.battleweapons = battleweapons;
     // sw25-ce: Combat-tab Weapons list cards (all weapons; equipped first, unequipped dimmed)
     context.weaponCards = [...weapons].sort((a, b) => Number(!!b.system.equip) - Number(!!a.system.equip))
-      .map((w) => weaponCardRow(w, w.system._battle ?? pcWeaponBattle(w.system, this.actor.system), { description: w.system.description ?? "", dedicated: !!w.system.dedicated }));
+      .map((w) => weaponCardRow(w, w.system._battle ?? pcWeaponBattle(w.system, this.actor.system), { description: w.system.description ?? "", dedicated: !!w.system.dedicated,
+        gripLabel: (u) => (u && game.i18n.has?.(`SW25.Item.Weapon.${u}`) ? game.i18n.localize(`SW25.Item.Weapon.${u}`) : String(u ?? "")) }));
     context.armors = armors;
     context.battlearmors = battlearmors;
     context.accessories = accessories;
@@ -817,6 +821,9 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
       try { context.skillChecks = skillCheckModel(this.actor); } catch (e) { console.warn("sw25 | skill checks", e); context.skillChecks = null; }
       try { context.initiativeInfo = initiativeModel(this.actor); } catch (e) { console.warn("sw25 | initiative", e); context.initiativeInfo = null; }
       context.checkItems = checks;
+      // ce.25: modifier "why" notes, Session Notes tab
+      context.modWhy = this.actor.flags?.["sw25-ce"]?.modWhy ?? {};
+      try { context.sessions = sessionContext(this); } catch (e) { console.warn("sw25 | sessions", e); context.sessions = null; }
     }
   }
 
@@ -872,6 +879,18 @@ export class SW25ActorSheet extends foundry.appv1.sheets.ActorSheet {
     if (!this.isEditable) return;
     // ce.23: Skill Checks rows, situational ± and the Initiative button (click only; never auto-rolls)
     bindSkillCheckListeners(this, html);
+    // ce.25: Sleep 3h / 6h, Soulscars +/-, Session Notes tab, 1H/2H stance switch, quick-feat "more" link
+    if (this.actor.type === "character") {
+      bindRestListeners(this, html);
+      bindSessionListeners(this, html);
+      html.on("click", ".sw-stance-opt", (ev) => {
+        ev.preventDefault(); ev.stopPropagation();
+        const it = this.actor.items.get(ev.currentTarget.closest("[data-item-id]")?.dataset.itemId);
+        const up = it ? gripSwapUpdate(it._source?.system ?? it.system, ev.currentTarget.dataset.usage) : null;
+        if (up) it.update(up);
+      });
+      html.on("click", ".sw-goto-tab", (ev) => { ev.preventDefault(); ev.stopPropagation(); this._tabs?.[0]?.activate?.(ev.currentTarget.dataset.tab); });
+    }
 
     // ce.21 F1: creation rolls are always player-initiated; each posts to chat and fills its A-F score.
     html.on("click", ".sw-abroll", (ev) => { ev.preventDefault(); ev.stopPropagation(); RACE.rollAbilityScore(this.actor, ev.currentTarget.dataset.ab); });

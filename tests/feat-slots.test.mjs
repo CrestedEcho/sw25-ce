@@ -29,5 +29,7 @@ test("sheet: feat rows and belt items are draggable, unassigned list is a drop z
   assert.match(js, /dragSelector: "li\.item, \.ce7-drag"/);
   assert.doesNotMatch(js, /dropEffect = "copy"/);
   const classes = sheet.slice(sheet.indexOf('class="tab classes"'));
-  assert.match(classes.slice(0, 2000), /actor-combatabilities\.hbs/);
+  // ce.25: one Feats panel on the Classes tab (slots, auto, racial, non-combat, full feat list)
+  assert.match(classes.slice(0, 2000), /actor-ce7-feats\.hbs/);
+  assert.match(feats, /actor-combatabilities\.hbs/); assert.match(feats, /actor-noncombatfeats\.hbs/);
 });

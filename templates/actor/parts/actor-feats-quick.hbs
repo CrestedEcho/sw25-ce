@@ -1,0 +1,12 @@
+{{!-- ce.25: Combat-tab quick-use row of feat buttons (chosen slots + automatic). The full Feats panel lives on the Classes tab. --}}
+<div class="panel ce7-featbar"><span class="ribbon">{{localize "SW25.V2.Feats.Quick"}}</span>
+  <div class="ce7-qf-row">
+    {{#each ce7feats.slots as |s|}}{{#if s.item}}
+    <span class="item ce7-qf" data-item-id="{{s.item.id}}"><a class="rollable" data-roll-type="item" data-tooltip="{{localize 'SW25.V2.Feats.QuickTip'}}"><img src="{{s.item.img}}" alt=""/> {{s.item.name}}</a><span class="sw-acts"></span></span>
+    {{/if}}{{/each}}
+    {{#each ce7feats.auto as |it|}}
+    <span class="item ce7-qf auto" data-item-id="{{it.id}}"><a class="rollable" data-roll-type="item" data-tooltip="{{localize 'SW25.V2.Feats.QuickTip'}}"><img src="{{it.img}}" alt=""/> {{it.name}}</a><span class="sw-acts"></span></span>
+    {{/each}}
+    <a class="ce7-qf-more sw-goto-tab" data-tab="classes" data-tooltip="{{localize 'SW25.V2.Feats.QuickMoreTip'}}"><i class="fas fa-arrow-right"></i> {{localize "SW25.V2.Feats.QuickMore"}}</a>
+  </div>
+</div>

@@ -6,9 +6,10 @@ const rd = (p) => fs.readFileSync(new URL("../" + p, import.meta.url), "utf8");
 const sheet = rd("templates/actor/actor-character-sheet.hbs");
 const tab = (name) => { const i = sheet.indexOf(`data-tab="${name}"`, sheet.indexOf("sheet-body")); assert.ok(i > 0, name); const j = sheet.indexOf('<div class="tab ', i + 10); return sheet.slice(i, j > 0 ? j : undefined); };
 
-test("combat tab: weapons, belt, then feats; no combat-check panel; no wallet", () => {
+test("combat tab: weapons, belt, then the quick feat row; no combat-check panel; no wallet", () => {
   const c = tab("combat");
-  const w = c.indexOf("ce7-weapons"), b = c.indexOf("ce7-belt"), f = c.indexOf("ce7-feats");
+  const w = c.indexOf("ce7-weapons"), b = c.indexOf("ce7-belt"), f = c.indexOf("actor-feats-quick");
+  assert.ok(!c.includes("actor-ce7-feats.hbs"), "full Feats panel moved to the Classes tab (ce.25)");
   assert.ok(w >= 0 && b > w && f > b, `order w${w} b${b} f${f}`);
   assert.ok(!c.includes("CombatChecks") && !c.includes("battlechecks"));
   assert.ok(!c.includes("ce7-wallet"));

@@ -28,7 +28,7 @@ function corePart(actor) {
 }
 function evasionFor(actor, part = null) {
   if (!actor) return null;
-  if (actor.type === "character") return pcEvasion(actor.system);
+  if (actor.type === "character") return pcEvasion(actor.system, actor.flags?.["sw25-ce"]?.modWhy ?? {});
   if (actor.system?.sb) {
     const p = part == null ? corePart(actor) : sbParts(actor)[part];
     return p ? monsterCheck(part == null ? "Evasion" : `Evasion (${p.name || "Part"})`, p.evasion) : null;

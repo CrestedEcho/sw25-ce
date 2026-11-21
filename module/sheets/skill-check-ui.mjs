@@ -11,7 +11,8 @@ function labelsFor() {
   const ab = {}; for (const k of SK.ABILITY_KEYS) ab[k] = i18n(`SW25.Ability.${k[0].toUpperCase()}${k.slice(1)}.abbr`, k);
   const group = {}; for (const g of SK.GROUP_ORDER) group[g] = i18n(`SW25.V2.SkillChecks.Group.${g}`, SK.checkLabel(g));
   const check = {}; for (const c of SKILL_CHECK_CATALOG) { const k = `SW25.V2.SkillChecks.Check.${c.id}`; if (game.i18n.has?.(k)) check[c.id] = game.i18n.localize(k); }
-  return { ability: ab, group, check, adv: i18n("SW25.V2.SkillChecks.Adventurer", "Adventurer"), none: i18n("SW25.V2.SkillChecks.None", "— none (2d6)"),
+  const advCheck = {}; for (const c of SK.ADVENTURER_CHECKS) advCheck[c.id] = i18n(`SW25.V2.AdvRolls.Check.${c.id}`, SK.checkLabel(c.id));
+  return { ability: ab, group, check, advCheck, adv: i18n("SW25.V2.SkillChecks.Adventurer", "Adventurer"), none: i18n("SW25.V2.SkillChecks.None", "— none (2d6)"),
     situational: i18n("SW25.V2.SkillChecks.SitModShort", "Situational ±"), global: i18n("SW25.V2.SkillChecks.AllModShort", "All checks ±") };
 }
 
@@ -30,11 +31,12 @@ function effectMods(actor) {
 export function skillCheckModel(actor) {
   const saved = actor.flags?.[FLAG]?.skillChecks ?? {};
   const eng = actor.system?._rules;
-  return SK.buildSkillChecks({
-    catalog: SKILL_CHECK_CATALOG, classes: actorClasses(actor), advLevel: Number(actor.system?.attributes?.advlevel?.value) || 0,
-    abilities: actor.system?.abilities ?? {}, saved, globalMod: Number(saved._all?.mod) || 0,
-    effects: effectMods(actor), ruleMods: eng?.checkMods ?? [], labels: labelsFor(),
-  });
+  const labels = labelsFor();
+  const common = { advLevel: Number(actor.system?.attributes?.advlevel?.value) || 0, abilities: actor.system?.abilities ?? {}, saved,
+    globalMod: Number(saved._all?.mod) || 0, effects: effectMods(actor), ruleMods: eng?.checkMods ?? [], labels };
+  const model = SK.buildSkillChecks({ catalog: SKILL_CHECK_CATALOG, classes: actorClasses(actor), ...common });
+  model.adventurer = SK.buildAdventurerChecks(common);
+  return model;
 }
 
 /** Initiative from the Initiative check item (its total feeds the combat tracker) plus initiative rule mods. */
@@ -72,14 +74,29 @@ async function postCard(actor, { title, head, parts, roll }) {
 }
 
 /** Click on a Skill Checks die: roll 2d6 + parts, post the card. Never called automatically. */
-export async function rollSkillCheck(actor, id) {
-  const row = skillCheckModel(actor).rows.find((r) => r.id === id);
+export async function rollSkillCheck(actor, id, { combat = false } = {}) {
+  const model = skillCheckModel(actor);
+  if (String(id).startsWith(SK.ADV_PREFIX)) return rollAdventurerCheck(actor, model.adventurer.find((r) => r.id === id), { combat });
+  const row = model.rows.find((r) => r.id === id);
   if (!row) return null;
   const roll = await new Roll(row.formula).evaluate();
   const msg = await postCard(actor, { title: row.label, roll, parts: row.parts, head: {
     checkId: row.id, kind: "skill", className: row.className, classLevel: row.classLevel, grants: row.grants, none: row.selected === SK.NONE,
     adv: row.selected === SK.ADV, limit: row.limit, natural: row.natural, calc: row.calc } });
   if (id === "monster-knowledge") revealWeakness(game.user.targets, roll.total);
+  return { roll, msg };
+}
+
+/** Adventurer Rolls card: 2d6 + Adventurer level + ability bonus (+ check modifiers). */
+async function rollAdventurerCheck(actor, row, { combat = false } = {}) {
+  if (!row) return null;
+  const t = row.times.find((x) => !!x.combat === !!combat) ?? row.times[0];
+  const time = t?.code ? i18n(`SW25.V2.SkillChecks.Time.${t.code}`, t.code) : "";
+  const title = `${row.label}${combat && row.times.length > 1 ? ` (${i18n("SW25.V2.AdvRolls.Combat", "Combat")})` : ""}${time ? ` · ${time}` : ""}`;
+  const roll = await new Roll(row.formula).evaluate();
+  const msg = await postCard(actor, { title, roll, parts: row.parts, head: {
+    checkId: row.id, kind: "skill", className: i18n("SW25.V2.SkillChecks.Adventurer", "Adventurer"), classLevel: Number(actor.system?.attributes?.advlevel?.value) || 0,
+    grants: true, none: false, adv: true, calc: row.calc } });
   return { roll, msg };
 }
 
@@ -115,7 +132,7 @@ export function saveSkillCheck(actor, id, field, value) {
 
 export function bindSkillCheckListeners(sheet, html) {
   const actor = sheet.actor;
-  html.on("click", ".skc-roll", (ev) => { ev.preventDefault(); ev.stopPropagation(); rollSkillCheck(actor, ev.currentTarget.dataset.check); });
+  html.on("click", ".skc-roll", (ev) => { ev.preventDefault(); ev.stopPropagation(); rollSkillCheck(actor, ev.currentTarget.dataset.check, { combat: ev.currentTarget.dataset.combat === "1" }); });
   html.on("change", ".skc-class", (ev) => { ev.stopPropagation(); saveSkillCheck(actor, ev.currentTarget.dataset.check, "class", ev.currentTarget.value); });
   html.on("change", ".skc-mod", (ev) => { ev.stopPropagation(); saveSkillCheck(actor, ev.currentTarget.dataset.check, "mod", ev.currentTarget.value); });
   html.on("click", ".sw-init", (ev) => { ev.preventDefault(); ev.stopPropagation(); rollInitiativeButton(actor); });

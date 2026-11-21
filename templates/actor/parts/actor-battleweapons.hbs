@@ -10,6 +10,7 @@
         <div class="sw25-wc-nm">
           <b class="item-label" data-tooltip="Show description, edit and delete">{{w.name}}{{#if w.dedicated}} ({{localize "SW25.Item.Dedicated"}}){{/if}}</b>
           {{#if w.sub}}<small>{{w.sub}}</small>{{/if}}
+          {{#if w.stance}}<span class="sw-stance" data-tooltip="{{localize 'SW25.V2.Stance.Tip'}}">{{#each w.stance.options as |o|}}<a class="sw-stance-opt{{#if o.active}} on{{/if}}" data-usage="{{o.usage}}"><span class="ico i-{{o.icon}}"></span>{{o.label}}</a>{{/each}}</span>{{/if}}
           <label class="sw25-wc-eq{{#if w.equipped}} on{{/if}}" data-tooltip="Click to equip / unequip this weapon">
             <input class="eq-change" type="checkbox" name="system.equip" data-dtype="Boolean" {{#if w.equipped}}checked{{/if}} {{#unless @root.isOwner}}disabled{{/unless}}/>
             {{#if w.equipped}}&#10003; Equipped{{else}}Not equipped{{/if}}
