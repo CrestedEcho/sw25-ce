@@ -5,6 +5,25 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.27-release (2026-11-20)
+- **Soulscars** counter next to HP/MP with + / − (it is the existing Impurity value, so existing characters keep their count).
+- **Sleep 3h / Sleep 6h** buttons: ask whether the character is fed, sheltered and has bedding. No: a chat card says there was no recovery. Yes: 3h gives HP +10% of max (rounded up) and MP +half of max; 6h gives HP +20% of max (rounded up) and full MP; never above max. The chat card shows the gains with before → after and notes that more than 6 hours a day gives nothing extra.
+- **Adventurer Rolls** card on the Classes tab: Climb, Strength, Jump, Detect and Swim (1 minute or combat 1 round), each Adventurer level + ability bonus. Jump and Swim no longer appear in the class list.
+- **Class checks**: a time column on every check, greyed rows when no class is chosen (flat 2d6), and a tree marker on natural-environment-only checks.
+- **1H/2H stance switch** on weapons that have a second grip (new optional "Second grip" fields on the weapon sheet). Accuracy, power and the attack card follow the selected grip.
+- **"Why" notes** next to each combat modifier, shown in the attack / evasion card breakdown.
+- **Feats**: one Feats panel on the Classes tab (chosen slots, automatic, racial, non-combat, full list); the Combat tab has a quick-use row of feat buttons.
+- **Background** text block under Biography.
+- **Session Notes tab**, saved on the character: New Session (auto number, date, campaign, title, optional arc; double clicks can't duplicate), newest-first list grouped by arc with collapsible arcs, 20 per page and search, a pop-up to read / edit notes and loot, a persistent To-Do list (records the session a task was done in; hide / clear completed) and Misc notes (add to the active session or start a new one; text stays until cleared), and Export to Journal or a .txt download for one session, an arc or everything. Pasted images are removed so characters stay small.
+- New icons by the team Artist for Soulscars, Sleep 3h / 6h, the 1H / 2H stance switch and the natural-environment marker.
+- New data defaults on existing characters; no migration. Framework only; no rulebook content is included.
+
+## 3.0.0-ce.26-release (2026-11-04)
+- Fix: the race biography partial is preloaded, so the Bio tab renders.
+
+## 3.0.0-ce.25-release (2026-11-04)
+- Fix: character sheet rendering and the Skill Checks template preload.
+
 ## 3.0.0-ce.24-release (2026-11-04)
 - Fix: on a new character whose race values (Technique/Body/Mind) or A–F scores were still blank, class skill bases came out in the hundreds or thousands (for example 1502 instead of 3). The blank values were joined as text instead of added as numbers, e.g. after rolling A–F with the race dice buttons and dropping a class before typing the race values. Ability parts are now always added as numbers, with blanks counting as 0. Saving the sheet used to hide the problem. These values are only calculated, never stored, so existing characters need no migration.
 - Framework only; no rulebook content is included.
