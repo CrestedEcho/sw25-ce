@@ -46,6 +46,7 @@ import { preparePolyglot } from "./helpers/sw25languageprovider.mjs";
 import { Migrator } from "./helpers/migrator.mjs";
 import { registerNoAutoEquip } from "./rules/no-autoequip.mjs";
 import { registerCe7Settings, registerCe7Hooks, runCe7Migration, runBeltConsumableMigration } from "./ce7/equipcard.mjs";
+import { tokenDefaultsFor, registerTokenLinkSettings, runCharacterTokenLinkFix } from "./rules/token-link.mjs";
 import { formatDamage, formatDamageFormula } from "./rules/damage-display.mjs";
 import { magicPowerText, schoolBlankLabel } from "./rules/magic-power.mjs";
 
@@ -204,6 +205,7 @@ Hooks.once("init", function () {
 
   // ce.7: Equipment Card / belt settings and data-sync hooks
   registerCe7Settings();
+  registerTokenLinkSettings();
   registerCe7Hooks();
   registerNoAutoEquip();
   registerRulesUI();
@@ -241,6 +243,7 @@ Hooks.once("ready", async () => {
     // ce.7 one-time, non-destructive Equipment Card / feat-slot setup
     await runCe7Migration();
     await runBeltConsumableMigration();
+    await runCharacterTokenLinkFix();
   }
 });
 
@@ -1192,93 +1195,12 @@ Hooks.once("ready", async function () {
     } catch (err) { console.error("sw25-ce | sword shard follow failed", err); }
   });
 
-  // preCreateActor hook
-  Hooks.on("preCreateActor", (actor, options, userId) => {
-    // Set default token
-    let displayName,
-      actorLink,
-      appendNumber,
-      prependAdjective,
-      disposition,
-      displayBars;
-    /*
-    let displayName = 0;
-    let actorLink = false;
-    let appendNumber = false;
-    let prependAdjective = false;
-    let disposition = 0;
-    let displayBars = 0;
-    */
-    switch (actor.type) {
-      case "character":
-        displayName = 50;
-        actorLink = true;
-        appendNumber = false;
-        prependAdjective = false;
-        disposition = 1;
-        displayBars = 50;
-        break;
-      case "npc":
-        displayName = 30;
-        actorLink = true;
-        appendNumber = false;
-        prependAdjective = false;
-        disposition = 0;
-        displayBars = 0;
-        break;
-      case "monster":
-        //displayName = 30;
-        actorLink = false;
-        //appendNumber = true;
-        //prependAdjective = true;
-        //disposition = -1;
-        //displayBars = 40;
-        break;
-      default:
-      /*
-        displayName = 0;
-        actorLink = false;
-        appendNumber = false;
-        prependAdjective = false;
-        disposition = 0;
-        displayBars = 0;
-      */
-    }
-    if (
-      actor._stats?.compendiumSource ||
-      options._stats?.compendiumSource ||
-      actor.folder ||
-      options.folder
-    ) {
-      displayName = actor.prototypeToken.hasOwnProperty("displayName")
-        ? actor.prototypeToken.displayName
-        : displayName;
-      actorLink = actor.prototypeToken.hasOwnProperty("actorLink")
-        ? actor.prototypeToken.actorLink
-        : actorLink;
-      appendNumber = actor.prototypeToken.hasOwnProperty("appendNumber")
-        ? actor.prototypeToken.appendNumber
-        : appendNumber;
-      prependAdjective = actor.prototypeToken.hasOwnProperty("prependAdjective")
-        ? actor.prototypeToken.prependAdjective
-        : prependAdjective;
-      disposition = actor.prototypeToken.hasOwnProperty("disposition")
-        ? actor.prototypeToken.disposition
-        : disposition;
-      displayBars = actor.prototypeToken.hasOwnProperty("displayBars")
-        ? actor.prototypeToken.displayBars
-        : displayBars;
-    }
-
-    // Update actor
-    actor.updateSource({
-      "prototypeToken.displayName": displayName,
-      "prototypeToken.actorLink": actorLink,
-      "prototypeToken.appendNumber": appendNumber,
-      "prototypeToken.prependAdjective": prependAdjective,
-      "prototypeToken.disposition": disposition,
-      "prototypeToken.displayBars": displayBars,
-    });
+  // preCreateActor hook: default prototype token. The 2nd argument is the raw creation data; only values the
+  // creator actually passed are kept (the document's prototypeToken always has every field, so it can't tell).
+  // Player characters are always linked.
+  Hooks.on("preCreateActor", (actor, data, options, userId) => {
+    const update = tokenDefaultsFor(actor.type, data);
+    if (Object.keys(update).length) actor.updateSource(update);
   });
 
   // createActor hook

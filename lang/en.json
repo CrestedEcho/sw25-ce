@@ -1702,6 +1702,12 @@
       "Male": "Male",
       "Female": "Female",
       "NoPortrait": "No portrait yet"
+    },
+    "TokenLink": {
+      "Title": "Player character tokens linked",
+      "Fixed": "Linked the prototype token of {n} player character(s), so their token and sheet are now the same character:",
+      "Stale": "{n} token(s) already placed on scenes are still unlinked copies, so edits made on them don't reach the sheet:",
+      "StaleHow": "Copy anything the player changed on that token (HP, MP, items, notes) onto the character sheet, then delete the token and drag the character back onto the scene."
     }
   },
   "TYPES": {

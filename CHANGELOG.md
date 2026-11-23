@@ -5,6 +5,11 @@ older are the original system's history, kept as it was written. The 3.0.0-ce.* 
 Builds ce.10 to ce.18 were **test pre-releases** (`-test` tags on GitHub). **ce.19 is the first full release.**
 All builds are framework only, and no rulebook content packs are included.
 
+## 3.0.0-ce.28-release (2026-11-23)
+- Fix: player character tokens were not linked to their character. A character created inside a folder, copied from a compendium or duplicated kept Foundry's default of an unlinked token, so changes made on the placed token (HP, MP, items, effects) stayed on that token and never reached the character sheet. The creation hook read the new actor's token settings, which always contain every field, instead of what the creator actually passed. Player characters are now always linked; NPCs and monsters keep a value passed by a compendium or duplicate and otherwise default to linked (NPC) or unlinked (monster).
+- One-time fix on world load (active GM): every player character whose token is unlinked gets **Link Actor Data** switched on, and the GM gets a whispered list of the characters fixed. Tokens already placed on scenes are **not** changed, so nothing a player edited on them is lost; the message lists them so their changes can be copied onto the sheet before the token is deleted and the character dragged back in.
+- Framework only; no rulebook content is included.
+
 ## 3.0.0-ce.27-release (2026-11-20)
 - **Soulscars** counter next to HP/MP with + / − (it is the existing Impurity value, so existing characters keep their count).
 - **Sleep 3h / Sleep 6h** buttons: ask whether the character is fed, sheltered and has bedding. No: a chat card says there was no recovery. Yes: 3h gives HP +10% of max (rounded up) and MP +half of max; 6h gives HP +20% of max (rounded up) and full MP; never above max. The chat card shows the gains with before → after and notes that more than 6 hours a day gives nothing extra.
